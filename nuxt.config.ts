@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'url'
+import Aura from '@primevue/themes/aura'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -17,12 +18,24 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    '@nuxt/content',
     '@nuxt/eslint',
     '@nuxt/hints',
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/test-utils',
-    '@nuxt/ui'
+    '@nuxtjs/tailwindcss',
+    ['@primevue/nuxt-module', {
+      options: {
+        theme: {
+          preset: Aura,
+          options: {
+            cssLayer: {
+              name: 'primevue',
+              order: 'tailwind-base, primevue, tailwind-utilities'
+            }
+          }
+        }
+      }
+    }]
   ]
 })
