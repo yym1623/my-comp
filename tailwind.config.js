@@ -1,3 +1,5 @@
+import primeui from 'tailwindcss-primeui'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -15,8 +17,6 @@ export default {
         mono: ['JetBrains Mono', 'monospace']
       },
       colors: {
-        primary: '#00dc82',
-        secondary: '#1e1e1e',
         brand: {
           50: '#fef2f2',
           100: '#fee2e2',
@@ -33,5 +33,5 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [primeui]
 }
