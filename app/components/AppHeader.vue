@@ -1,17 +1,29 @@
 <template>
-  <header class="app-header">
-    <nav>
-      <NuxtLink to="/">홈</NuxtLink>
-      <NuxtLink to="/about">About</NuxtLink>
-      <NuxtLink to="/users">Users</NuxtLink>
-    </nav>
-    <Button
-      :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
-      :severity="isDark ? 'warn' : 'secondary'"
-      rounded
-      text
-      @click="toggleTheme"
-    />
+  <header class="py-3 px-6 flex justify-between items-center border-b border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900">
+    <NuxtLink to="/" class="flex items-center gap-2 no-underline">
+      <span class="logo-icon">
+        <span class="rounded-sm bg-primary-500" />
+        <span class="rounded-sm bg-primary-400" />
+        <span class="rounded-sm bg-primary-300" />
+        <span class="rounded-sm bg-primary-600" />
+      </span>
+      <span class="text-lg font-bold text-surface-800 dark:text-surface-100">MyComp</span>
+    </NuxtLink>
+    <div class="flex items-center gap-1">
+      <Button
+        icon="pi pi-search"
+        severity="secondary"
+        rounded
+        text
+      />
+      <Button
+        :icon="isDark ? 'pi pi-moon' : 'pi pi-sun'"
+        :severity="isDark ? 'secondary' : 'warn'"
+        rounded
+        text
+        @click="toggleTheme"
+      />
+    </div>
   </header>
 </template>
 
@@ -24,24 +36,18 @@ function toggleTheme() {
 }
 
 onMounted(() => {
-  // 시스템 다크모드 감지
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  isDark.value = prefersDark
-  document.documentElement.classList.toggle('dark', prefersDark)
+  // HTML에 설정된 초기 dark 클래스 여부 확인
+  isDark.value = document.documentElement.classList.contains('dark')
 })
 </script>
 
 <style lang="scss" scoped>
-.app-header {
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-nav {
-  display: flex;
-  gap: 1rem;
+.logo-icon {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
 }
 </style>
 

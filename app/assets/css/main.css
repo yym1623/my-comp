@@ -1,3 +1,6 @@
+/* PrimeIcons */
+@import 'primeicons/primeicons.css';
+
 /* CSS Layer 설정 - PrimeVue + Tailwind 연동 */
 @layer tailwind-base, primevue, tailwind-utilities;
 
@@ -9,3 +12,4 @@
   @tailwind components;
   @tailwind utilities;
 }
+
