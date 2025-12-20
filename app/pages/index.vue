@@ -1,9 +1,220 @@
 <template>
   <div class="flex h-screen w-full bg-surface-50 dark:bg-surface-900 overflow-hidden">
+
+    <!-- 모바일 메뉴 모달 -->
+    <Transition name="slide-left">
+      <div 
+        v-if="panelStore.isMobileMenuOpen"
+        class="fixed inset-0 z-[100] bg-surface-0 dark:bg-surface-800 flex flex-col"
+      >
+        <!-- 메뉴 헤더 -->
+        <div class="p-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between">
+          <span class="text-lg font-bold text-surface-800 dark:text-surface-100">메뉴</span>
+          <Button
+            icon="pi pi-times"
+            severity="secondary"
+            text
+            rounded
+            @click="panelStore.closeMobileMenu()"
+          />
+        </div>
+
+        <!-- 메뉴 버튼들 또는 패널 내용 -->
+        <div class="flex-1 overflow-hidden">
+          <!-- 메뉴 선택 화면 -->
+          <Transition name="slide-left" mode="out-in">
+            <div v-if="!panelStore.activeMobilePanel" key="menu" class="p-4 flex flex-col gap-3">
+              <button
+                class="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 transition-all text-left"
+                @click="panelStore.openPanel('elements')"
+              >
+                <div class="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="pi pi-th-large text-xl text-primary-600 dark:text-primary-400" />
+                </div>
+                <div>
+                  <div class="font-semibold text-surface-800 dark:text-surface-100">Elements</div>
+                  <div class="text-sm text-surface-500">컴포넌트 추가</div>
+                </div>
+                <i class="pi pi-angle-right ml-auto text-surface-400" />
+              </button>
+
+              <button
+                class="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 transition-all text-left"
+                @click="panelStore.openPanel('pages')"
+              >
+                <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <i class="pi pi-file text-xl text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <div class="font-semibold text-surface-800 dark:text-surface-100">Page</div>
+                  <div class="text-sm text-surface-500">페이지 선택</div>
+                </div>
+                <i class="pi pi-angle-right ml-auto text-surface-400" />
+              </button>
+
+              <button
+                class="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 transition-all text-left"
+                @click="panelStore.openPanel('options')"
+              >
+                <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <i class="pi pi-cog text-xl text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <div class="font-semibold text-surface-800 dark:text-surface-100">Options</div>
+                  <div class="text-sm text-surface-500">속성 편집</div>
+                </div>
+                <i class="pi pi-angle-right ml-auto text-surface-400" />
+              </button>
+            </div>
+
+            <!-- Elements 패널 -->
+            <div v-else-if="panelStore.activeMobilePanel === 'elements'" key="elements" class="h-full flex flex-col">
+              <div class="p-3 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
+                <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="panelStore.closePanel()" />
+                <span class="font-semibold text-surface-700 dark:text-surface-200">Elements</span>
+              </div>
+              <div class="flex-1 overflow-y-auto p-3">
+                <div class="grid gap-2">
+                  <div
+                    v-for="comp in components"
+                    :key="comp.id"
+                    class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
+                    @click="addComponent(comp); panelStore.closeMobileMenu()"
+                  >
+                    <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+                      <i :class="comp.icon" class="text-lg text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
+                      <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pages 패널 -->
+            <div v-else-if="panelStore.activeMobilePanel === 'pages'" key="pages" class="h-full flex flex-col">
+              <div class="p-3 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
+                <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="panelStore.closePanel()" />
+                <span class="font-semibold text-surface-700 dark:text-surface-200">Page</span>
+              </div>
+              <div class="flex-1 overflow-y-auto p-3">
+                <div class="grid gap-2">
+                  <div
+                    v-for="page in pages"
+                    :key="page.id"
+                    class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border"
+                    :class="currentPage?.id === page.id 
+                      ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20' 
+                      : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600'"
+                    @click="selectPage(page); panelStore.closeMobileMenu()"
+                  >
+                    <div 
+                      class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                      :class="currentPage?.id === page.id 
+                        ? 'bg-primary-200 dark:bg-primary-900/50' 
+                        : 'bg-surface-200 dark:bg-surface-600'"
+                    >
+                      <i class="pi pi-file text-lg" :class="currentPage?.id === page.id ? 'text-primary-600 dark:text-primary-400' : 'text-surface-500'" />
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="text-sm font-semibold" :class="currentPage?.id === page.id ? 'text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-200'">{{ page.name }}</span>
+                      <span class="text-xs text-surface-400">페이지</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Options 패널 -->
+            <div v-else-if="panelStore.activeMobilePanel === 'options'" key="options" class="h-full flex flex-col">
+              <div class="p-3 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
+                <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="panelStore.closePanel()" />
+                <span class="font-semibold text-surface-700 dark:text-surface-200">Options</span>
+              </div>
+              <div class="flex-1 overflow-y-auto p-4">
+                <template v-if="selectedIndex !== null && selectedItem">
+                  <!-- Header 속성 -->
+                  <template v-if="selectedItem.type === 'header'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">제목</label>
+                      <InputText v-model="selectedItem.props.title" class="w-full" />
+                    </div>
+                  </template>
+                  <!-- Button 속성 -->
+                  <template v-else-if="selectedItem.type === 'button'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">라벨</label>
+                      <InputText v-model="selectedItem.props.label" class="w-full" />
+                    </div>
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">스타일</label>
+                      <Select v-model="selectedItem.props.severity" :options="severityOptions" class="w-full" />
+                    </div>
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">아웃라인</label>
+                      <ToggleSwitch v-model="selectedItem.props.outlined" />
+                    </div>
+                  </template>
+                  <!-- Input 속성 -->
+                  <template v-else-if="selectedItem.type === 'input'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">Placeholder</label>
+                      <InputText v-model="selectedItem.props.placeholder" class="w-full" />
+                    </div>
+                  </template>
+                  <!-- Text 속성 -->
+                  <template v-else-if="selectedItem.type === 'text'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">내용</label>
+                      <Textarea v-model="selectedItem.props.content" rows="4" class="w-full" />
+                    </div>
+                  </template>
+                  <!-- Image 속성 -->
+                  <template v-else-if="selectedItem.type === 'image'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">Alt 텍스트</label>
+                      <InputText v-model="selectedItem.props.alt" class="w-full" />
+                    </div>
+                  </template>
+                  <!-- Card 속성 -->
+                  <template v-else-if="selectedItem.type === 'card'">
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">제목</label>
+                      <InputText v-model="selectedItem.props.title" class="w-full" />
+                    </div>
+                    <div class="mb-4">
+                      <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">내용</label>
+                      <Textarea v-model="selectedItem.props.content" rows="3" class="w-full" />
+                    </div>
+                  </template>
+                </template>
+                <div v-else class="text-center text-surface-400 py-8">
+                  <i class="pi pi-info-circle text-2xl mb-2" />
+                  <p class="text-sm">편집할 요소를 선택하세요</p>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </div>
+    </Transition>
+
     <!-- 왼쪽: Elements / Page 탭 -->
-    <aside class="w-[300px] min-w-[300px] h-full bg-surface-0 dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 flex flex-col shrink-0 overflow-hidden">
-      <Tabs v-model:value="leftTab" class="flex flex-col h-full">
-        <TabList class=" border-b border-surface-200 dark:border-surface-700">
+    <aside 
+      class="h-full bg-surface-0 dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 flex flex-col shrink-0 transition-all duration-300"
+      :class="[
+        isMobile 
+          ? (isLeftPanelOpen ? 'fixed top-0 bottom-0 left-0 z-50 w-full overflow-hidden' : 'fixed top-0 bottom-0 -left-full z-50 w-full') 
+          : (isLeftPanelOpen ? 'relative w-[300px] min-w-[300px] overflow-visible' : 'relative w-0 min-w-0 border-r-0 overflow-visible')
+      ]"
+    >
+ 
+
+      
+      <Tabs v-model:value="leftTab" class="flex flex-col h-full overflow-hidden">
+        <TabList class="border-b border-surface-200 dark:border-surface-700">
           <Tab value="elements" class="flex-1 px-4 py-3 text-sm data-[p-active=true]:!bg-surface-100 dark:data-[p-active=true]:!bg-surface-700">Elements</Tab>
           <Tab value="pages" class="flex-1 px-4 py-3 text-sm !border-l !border-surface-200 dark:!border-surface-700 data-[p-active=true]:!bg-surface-100 dark:data-[p-active=true]:!bg-surface-700">Page</Tab>
         </TabList>
@@ -15,6 +226,7 @@
                 v-for="comp in components"
                 :key="comp.id"
                 class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
+                :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
                 draggable="true"
                 @dragstart="onDragStart(comp)"
                 @click="addComponent(comp)"
@@ -58,14 +270,60 @@
           </TabPanel>
         </TabPanels>
       </Tabs>
+      
+      <!-- 오른쪽 바깥 버튼 바 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute top-2 -right-[52px] flex flex-col gap-2 z-20">
+        <Button
+          :icon="isLeftPanelOpen ? 'pi pi-angle-left' : 'pi pi-angle-right'"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          v-tooltip.right="isLeftPanelOpen ? '패널 닫기' : '패널 열기'"
+          @click="isLeftPanelOpen = !isLeftPanelOpen"
+        />
+        <Button
+          :icon="isPreviewMode ? 'pi pi-pencil' : 'pi pi-eye'"
+          :severity="isPreviewMode ? 'primary' : 'secondary'"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          v-tooltip.right="isPreviewMode ? '편집 모드' : '미리보기'"
+          @click="isPreviewMode = !isPreviewMode"
+        />
+      </div>
+
+      <!-- 모바일 닫기 버튼 -->
+      <div v-if="isMobile && isLeftPanelOpen" class="absolute top-1 right-3 z-10 flex gap-2">
+        <Button
+          icon="pi pi-times"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9"
+          @click="isLeftPanelOpen = false"
+        />
+      </div>
     </aside>
 
     <!-- 중앙: 프리뷰 영역 -->
-    <main class="flex-1 h-full flex items-center justify-center p-10 overflow-hidden">
+    <main class="flex-1 h-full flex items-center justify-center p-10 overflow-hidden relative">
+      <!-- 프리뷰 모드 표시 배지 -->
+      <div 
+        v-if="isPreviewMode" 
+        class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary-500 text-white text-xs font-medium rounded-full flex items-center gap-2 shadow-lg z-10"
+      >
+        <i class="pi pi-eye text-xs" />
+        미리보기 모드
+      </div>
       <div
-        class="w-[min(560px,calc(100%-40px))] h-[min(670px,calc(100%-40px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg"
-        @dragover.prevent
-        @drop="onDrop"
+        class="w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg"
+        :class="{ 'ring-2 ring-primary-500': isPreviewMode }"
+        @dragover.prevent="!isPreviewMode"
+        @drop="!isPreviewMode && onDrop()"
       >
         <div v-if="canvasItems.length === 0" class="flex-1 flex flex-col items-center justify-center text-center">
           <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4">
@@ -83,8 +341,8 @@
           v-for="(item, index) in canvasItems"
           :key="item.uid"
           class="canvas-item"
-          :class="{ selected: selectedIndex === index }"
-          @click="selectItem(index)"
+          :class="{ selected: selectedIndex === index && !isPreviewMode, 'pointer-events-none': isPreviewMode }"
+          @click="!isPreviewMode && selectItem(index)"
         >
           <!-- Header -->
           <div v-if="item.type === 'header'" class="bg-surface-100 dark:bg-surface-800 py-3 px-4 rounded-md font-semibold text-sm">
@@ -123,24 +381,33 @@
     </main>
 
     <!-- 오른쪽: 트리 + 속성 패널 -->
-    <aside class="w-[300px] min-w-[300px] h-full bg-surface-0 dark:bg-surface-800 border-l border-surface-200 dark:border-surface-700 flex flex-col shrink-0 overflow-hidden relative">
+    <aside 
+      class="h-full bg-surface-0 dark:bg-surface-800 border-l border-surface-200 dark:border-surface-700 flex flex-col shrink-0 transition-all duration-300"
+      :class="[
+        isMobile 
+          ? (isRightPanelOpen ? 'fixed top-0 bottom-0 right-0 z-50 w-full overflow-hidden' : 'fixed top-0 bottom-0 -right-full z-50 w-full') 
+          : (isRightPanelOpen ? 'relative w-[300px] min-w-[300px] overflow-visible' : 'relative w-0 min-w-0 border-l-0 overflow-visible')
+      ]"
+    >
+
       <!-- 메인 패널: 페이지 + 트리 -->
-      <div class="flex flex-col h-full">
+      <div class="flex flex-col h-full overflow-hidden">
         <!-- 현재 페이지 헤더 -->
-        <div class="px-4 py-3 text-sm border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
+        <div v-if="currentPage" class="px-4 py-3 text-sm border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
           <i class="pi pi-file text-primary-500" />
           <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ currentPage?.name }}</span>
         </div>
         <!-- Element 트리 -->
         <div class="flex-1 overflow-y-auto p-2">
-          <div v-if="canvasItems.length === 0" class="flex flex-col items-center justify-center h-full text-center p-4">
+          <div v-if="!currentPage" class="flex flex-col items-center justify-center h-full text-center p-4">
             <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3">
               <i class="pi pi-sitemap text-xl text-surface-400" />
             </div>
-            <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1">비어있음</h4>
-            <p class="text-xs text-surface-400 leading-relaxed">캔버스에 컴포넌트를<br />추가하면 여기에 표시됩니다</p>
+            <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1">페이지 추가</h4>
+            <p class="text-xs text-surface-400 leading-relaxed">페이지를 선택하면<br />여기에 표시됩니다</p>
           </div>
           <div
+            v-if="currentPage"
             v-for="(item, index) in canvasItems"
             :key="item.uid"
             class="flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all text-surface-700 dark:text-surface-300"
@@ -164,7 +431,33 @@
         </div>
       </div>
 
-      <!-- 슬라이드 속성 패널 -->
+      <!-- 모바일 닫기 버튼 -->
+      <div v-if="isMobile && isRightPanelOpen" class="absolute top-1 right-3 z-10">
+        <Button
+          icon="pi pi-times"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9"
+          @click="isRightPanelOpen = false"
+        />
+      </div>
+      <!-- 왼쪽 바깥 버튼 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute top-2 -left-[52px] flex flex-col gap-2 z-20">
+        <Button
+          :icon="isRightPanelOpen ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          v-tooltip.left="isRightPanelOpen ? '패널 닫기' : '패널 열기'"
+          @click="isRightPanelOpen = !isRightPanelOpen"
+        />
+      </div>
+
+      <!-- 옵션 패널 -->
       <Transition name="slide">
         <div
           v-if="selectedIndex !== null && selectedItem"
@@ -255,6 +548,11 @@
 </template>
 
 <script lang="ts" setup>
+import { usePanelStore } from '../stores/panel'
+
+// Pinia store
+const panelStore = usePanelStore()
+
 interface ComponentDef {
   id: string
   name: string
@@ -278,12 +576,48 @@ interface Page {
 // 왼쪽 탭 상태
 const leftTab = ref('elements')
 
+// 패널 상태
+const isLeftPanelOpen = ref(true)
+const isRightPanelOpen = ref(true)
+const isPreviewMode = ref(false)
+
+// 반응형 상태 (lg = 1024px)
+const LG_BREAKPOINT = 1024
+const isMobile = ref(false)
+
+// 화면 크기 감지
+function checkScreenSize() {
+  const wasSmall = isMobile.value
+  const isSmall = window.innerWidth < LG_BREAKPOINT
+  isMobile.value = isSmall
+  
+  // 크기 변경 시에만 패널 상태 변경
+  if (wasSmall !== isSmall) {
+    if (isSmall) {
+      isLeftPanelOpen.value = false
+      isRightPanelOpen.value = false
+    } else {
+      isLeftPanelOpen.value = true
+      isRightPanelOpen.value = true
+    }
+  }
+}
+
+onMounted(() => {
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkScreenSize)
+})
+
 // 목데이터: 페이지 목록
 const pages: Page[] = [
   { id: '1', name: 'MyForm' }
 ]
 
-const currentPage = ref<Page | null>(pages[0])
+const currentPage = ref<Page | null>(null)
 
 const components: ComponentDef[] = [
   { id: '1', name: '헤더', description: '페이지 상단 네비게이션', icon: 'pi pi-bars', type: 'header', defaultProps: { title: '헤더 제목' } },
@@ -317,6 +651,13 @@ const severityOptions = ['primary', 'secondary', 'success', 'info', 'warn', 'dan
 const canvasItems = ref<CanvasItem[]>([])
 const selectedIndex = ref<number | null>(null)
 const draggedComponent = ref<ComponentDef | null>(null)
+
+// 프리뷰 모드 전환 시 선택 해제
+watch(isPreviewMode, (preview) => {
+  if (preview) {
+    selectedIndex.value = null
+  }
+})
 
 const selectedItem = computed(() => {
   if (selectedIndex.value === null) return null
@@ -396,7 +737,7 @@ function getComponentLabel(item: CanvasItem) {
   }
 }
 
-// 슬라이드 트랜지션
+// 슬라이드 트랜지션 (오른쪽에서)
 .slide-enter-active,
 .slide-leave-active {
   transition: transform 0.25s ease;
@@ -408,6 +749,20 @@ function getComponentLabel(item: CanvasItem) {
 
 .slide-leave-to {
   transform: translateX(100%);
+}
+
+// 슬라이드 트랜지션 (왼쪽에서)
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-left-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-left-leave-to {
+  transform: translateX(-100%);
 }
 
 
