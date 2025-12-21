@@ -18,6 +18,7 @@
         severity="secondary"
         rounded
         text
+        @click="openSearch"
       />
       <Button
         :icon="isDark ? 'pi pi-moon' : 'pi pi-sun'"
@@ -47,12 +48,14 @@
     </div>
 
     <AppUser ref="userPanelRef" />
+    <AppSearch v-model:visible="isSearchOpen" />
   </header>
 </template>
 
 <script lang="ts" setup>
 import { usePanelStore } from '@app/stores/panel'
 import AppUser from './AppUser.vue'
+import AppSearch from './AppSearch.vue'
 
 const panelStore = usePanelStore()
 
@@ -60,10 +63,15 @@ const isDark = ref(false)
 const isMobile = ref(false)
 const userButtonRef = ref()
 const userPanelRef = ref()
+const isSearchOpen = ref(false)
 const LG_BREAKPOINT = 1024
 
 function toggleUserPanel(event: Event) {
   userPanelRef.value?.toggle(event)
+}
+
+function openSearch() {
+  isSearchOpen.value = true
 }
 
 function toggleTheme() {

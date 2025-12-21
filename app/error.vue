@@ -1,9 +1,9 @@
 <template>
-  <div class="error-page">
+  <!-- <div class="error-page">
     <h1>{{ error?.statusCode || 500 }}</h1>
     <p>{{ error?.message || '오류가 발생했습니다' }}</p>
     <button @click="handleError">홈으로 돌아가기</button>
-  </div>
+  </div> -->
 </template>
 
 <script setup lang="ts">

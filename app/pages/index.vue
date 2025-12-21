@@ -316,8 +316,49 @@
         </TabPanels>
       </Tabs>
       
-      <!-- 오른쪽 바깥 버튼 바 (데스크탑만) -->
+      <!-- 최상단 버튼 바 (데스크탑만) -->
       <div v-if="!isMobile" class="absolute top-2 -right-[52px] flex flex-col gap-2 z-20">
+        <Button
+          icon="pi pi-pencil"
+          :severity="!isPreviewMode ? 'primary' : 'secondary'"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border shadow-sm"
+          :class="!isPreviewMode 
+            ? 'border-primary-500 dark:border-primary-400' 
+            : 'border-surface-200 dark:border-surface-700'"
+          v-tooltip.right="'편집 모드'"
+          @click="setEditMode"
+        />
+        <Button
+          icon="pi pi-eye"
+          :severity="isPreviewMode ? 'primary' : 'secondary'"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border shadow-sm"
+          :class="isPreviewMode 
+            ? 'border-primary-500 dark:border-primary-400' 
+            : 'border-surface-200 dark:border-surface-700'"
+          v-tooltip.right="'미리보기'"
+          @click="setPreviewMode"
+        />
+        <Button
+          icon="pi pi-refresh"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          v-tooltip.right="'컴포넌트 초기화'"
+          :disabled="!currentPage || canvasItems.length === 0"
+          @click="resetPageComponents"
+        />
+      </div>
+      
+      <!-- 최하단 버튼 바 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute bottom-2 -right-[52px] flex flex-col gap-2 z-20">
         <Button
           :icon="isLeftPanelOpen ? 'pi pi-angle-left' : 'pi pi-angle-right'"
           severity="secondary"
@@ -327,16 +368,6 @@
           class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
           v-tooltip.right="isLeftPanelOpen ? '패널 닫기' : '패널 열기'"
           @click="isLeftPanelOpen = !isLeftPanelOpen"
-        />
-        <Button
-          :icon="isPreviewMode ? 'pi pi-pencil' : 'pi pi-eye'"
-          :severity="isPreviewMode ? 'primary' : 'secondary'"
-          text
-          rounded
-          size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
-          v-tooltip.right="isPreviewMode ? '편집 모드' : '미리보기'"
-          @click="isPreviewMode = !isPreviewMode"
         />
       </div>
 
@@ -446,7 +477,35 @@
         <!-- 현재 페이지 헤더 -->
         <div v-if="currentPage" class="px-4 py-3 text-sm border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
           <i class="pi pi-file text-primary-500" />
-          <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ currentPage?.name }}</span>
+          <InputText
+            v-if="isEditingPageName"
+            v-model="editingPageName"
+            class="flex-1 text-sm font-semibold border-primary-300 dark:border-primary-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            @blur="savePageName"
+            @keyup.enter="savePageName"
+            @keyup.esc="cancelEditPageName"
+            autofocus
+          />
+          <span v-else class="text-sm font-semibold text-surface-700 dark:text-surface-200 flex-1">{{ currentPage?.name }}</span>
+          <Button
+            :icon="isEditingPageName ? 'pi pi-check' : 'pi pi-pencil'"
+            :severity="isEditingPageName ? 'success' : 'secondary'"
+            text
+            rounded
+            size="small"
+            class="w-6 h-6 !p-0 shrink-0"
+            @mousedown.prevent
+            @click.stop="isEditingPageName ? savePageName() : startEditPageName()"
+          />
+          <Button
+            icon="pi pi-trash"
+            severity="danger"
+            text
+            rounded
+            size="small"
+            class="w-6 h-6 !p-0 shrink-0"
+            @click="deletePage"
+          />
         </div>
         <!-- Element 트리 -->
         <div class="flex-1 overflow-y-auto p-2 relative">
@@ -460,25 +519,40 @@
             </div>
           </Transition>
           <Transition name="fade">
-            <div v-if="currentPage">
+            <div v-if="currentPage" class="py-2 relative">
+              <!-- 트리 세로선 (전체) -->
+              <div class="absolute left-4 top-2 bottom-2 w-px bg-surface-200 dark:bg-surface-700" />
               <div
                 v-for="(item, index) in canvasItems"
                 :key="item.uid"
-                class="flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all text-surface-700 dark:text-surface-300"
+                class="relative flex items-center gap-2 py-1.5 pl-8 pr-3 rounded-lg transition-all text-surface-700 dark:text-surface-300 group"
                 :class="selectedIndex === index 
                   ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
-                  : 'hover:bg-surface-100 dark:hover:bg-surface-700'"
-                @click="selectItem(index)"
+                  : ''"
               >
-                <i :class="getComponentIcon(item.type)" class="text-sm w-5 text-center shrink-0" />
+                <!-- 트리 가로선 -->
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-px bg-surface-200 dark:bg-surface-700" />
+                <!-- 컴포넌트 아이콘 배경 -->
+                <div class="relative z-10 w-6 h-6 rounded bg-surface-200 dark:bg-surface-600 flex items-center justify-center shrink-0">
+                  <i :class="getComponentIcon(item.type)" class="text-xs text-surface-600 dark:text-surface-300" />
+                </div>
                 <span class="text-sm flex-1 truncate">{{ getComponentLabel(item) }}</span>
+                <Button
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  text
+                  rounded
+                  size="small"
+                  class="w-6 h-6 !p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  @click.stop="selectItem(index)"
+                />
                 <Button
                   icon="pi pi-trash"
                   severity="danger"
                   text
                   rounded
                   size="small"
-                  class="w-6 h-6 !p-0 shrink-0"
+                  class="w-6 h-6 !p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   @click.stop="deleteItem(index)"
                 />
               </div>
@@ -499,8 +573,8 @@
           @click="isRightPanelOpen = false"
         />
       </div>
-      <!-- 왼쪽 바깥 버튼 (데스크탑만) -->
-      <div v-if="!isMobile" class="absolute top-2 -left-[52px] flex flex-col gap-2 z-20">
+      <!-- 최하단 패널 닫기/열기 버튼 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute bottom-2 -left-[52px] z-20">
         <Button
           :icon="isRightPanelOpen ? 'pi pi-angle-right' : 'pi pi-angle-left'"
           severity="secondary"
@@ -637,6 +711,24 @@ const isLeftPanelOpen = ref(true)
 const isRightPanelOpen = ref(true)
 const isPreviewMode = ref(false)
 
+// 편집 모드/미리보기 모드 전환 함수
+const setEditMode = () => {
+  if (!isPreviewMode.value) return // 이미 편집 모드면 동작 안 함
+  isPreviewMode.value = false
+}
+
+const setPreviewMode = () => {
+  if (isPreviewMode.value) return // 이미 미리보기 모드면 동작 안 함
+  isPreviewMode.value = true
+}
+
+// 페이지 컴포넌트 초기화
+const resetPageComponents = () => {
+  if (!currentPage.value) return
+  pagesData.value[currentPage.value.id] = []
+  selectedIndex.value = null
+}
+
 // 반응형 상태 (lg = 1024px)
 const LG_BREAKPOINT = 1024
 const isMobile = ref(false)
@@ -676,6 +768,8 @@ const pages: Page[] = [
 ]
 
 const currentPage = ref<Page | null>(null)
+const isEditingPageName = ref(false)
+const editingPageName = ref('')
 
 const components: ComponentDef[] = [
   { id: '1', name: '헤더', description: '페이지 상단 네비게이션', icon: 'pi pi-bars', type: 'header', defaultProps: { title: '헤더 제목' } },
@@ -783,11 +877,46 @@ function selectPage(page: Page) {
   selectedIndex.value = null
 }
 
+// 페이지 이름 수정 시작
+function startEditPageName() {
+  if (!currentPage.value) return
+  editingPageName.value = currentPage.value.name
+  isEditingPageName.value = true
+}
+
+// 페이지 이름 저장
+function savePageName() {
+  const page = currentPage.value
+  if (!page) return
+  const trimmedName = editingPageName.value.trim()
+  if (trimmedName) {
+    // pages 배열에서 해당 페이지 찾아서 이름 업데이트
+    const pageIndex = pages.findIndex(p => p.id === page.id)
+    if (pageIndex !== -1) {
+      pages[pageIndex].name = trimmedName
+      page.name = trimmedName
+    }
+  }
+  isEditingPageName.value = false
+}
+
+// 페이지 이름 수정 취소
+function cancelEditPageName() {
+  isEditingPageName.value = false
+  editingPageName.value = ''
+}
+
+// 페이지 삭제 (선택 해제)
+function deletePage() {
+  currentPage.value = null
+  selectedIndex.value = null
+}
+
 function addComponent(comp: ComponentDef) {
   // 페이지가 선택되지 않았으면 Toast 메시지 표시
   if (!currentPage.value) {
     toast.add({
-      severity: 'warn',
+      severity: 'secondary',
       summary: '페이지 선택 필요',
       detail: '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.',
       life: 3000
@@ -808,7 +937,7 @@ function addComponent(comp: ComponentDef) {
   }
   const pageItems = pagesData.value[pageId]
   pageItems.push(newItem)
-  selectedIndex.value = pageItems.length - 1
+  // 옵션 패널 자동 열기 제거 - 사용자가 개별 선택 시에만 열림
 }
 
 function onDragStart(comp: ComponentDef) {
@@ -859,6 +988,7 @@ function getComponentLabel(item: CanvasItem) {
 </script>
 
 <style lang="scss" scoped>
+
 // 캔버스 아이템 선택 상태
 .canvas-item {
   @apply p-2 border-2 border-transparent rounded-lg transition-all cursor-pointer;
@@ -939,4 +1069,5 @@ function getComponentLabel(item: CanvasItem) {
 .p-tablist-active-bar {
   display: none !important;
 }
+
 </style>
