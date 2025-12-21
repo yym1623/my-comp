@@ -1,5 +1,6 @@
 <template>
   <div class="flex h-screen w-full bg-surface-50 dark:bg-surface-900 overflow-hidden">
+    <Toast />
 
     <!-- 모바일 메뉴 모달 -->
     <Transition name="slide-left">
@@ -73,10 +74,20 @@
                 <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="panelStore.closePanel()" />
                 <span class="font-semibold text-surface-700 dark:text-surface-200">Elements</span>
               </div>
+              <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700">
+                <div class="relative">
+                  <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
+                  <InputText
+                    v-model="componentSearchQuery"
+                    placeholder="컴포넌트 검색..."
+                    class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                </div>
+              </div>
               <div class="flex-1 overflow-y-auto p-3">
                 <div class="grid gap-2">
                   <div
-                    v-for="comp in components"
+                    v-for="comp in filteredComponents"
                     :key="comp.id"
                     class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
                     @click="addComponent(comp); panelStore.closeMobileMenu()"
@@ -99,10 +110,20 @@
                 <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="panelStore.closePanel()" />
                 <span class="font-semibold text-surface-700 dark:text-surface-200">Page</span>
               </div>
+              <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700">
+                <div class="relative">
+                  <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
+                  <InputText
+                    v-model="pageSearchQuery"
+                    placeholder="페이지 검색..."
+                    class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                </div>
+              </div>
               <div class="flex-1 overflow-y-auto p-3">
                 <div class="grid gap-2">
                   <div
-                    v-for="page in pages"
+                    v-for="page in filteredPages"
                     :key="page.id"
                     class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border"
                     :class="currentPage?.id === page.id 
@@ -220,17 +241,28 @@
         </TabList>
         <TabPanels class="flex-1 overflow-hidden">
           <!-- Elements 탭 -->
-          <TabPanel value="elements" class="h-full overflow-y-auto">
-            <div class="grid gap-2">
-              <div
-                v-for="comp in components"
-                :key="comp.id"
-                class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
-                :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
-                draggable="true"
-                @dragstart="onDragStart(comp)"
-                @click="addComponent(comp)"
-              >
+          <TabPanel value="elements" class="h-full flex flex-col overflow-hidden">
+            <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700">
+              <div class="relative">
+                <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
+                <InputText
+                  v-model="componentSearchQuery"
+                  placeholder="컴포넌트 검색..."
+                  class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                />
+              </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3">
+              <div class="grid gap-2">
+                <div
+                  v-for="comp in filteredComponents"
+                  :key="comp.id"
+                  class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
+                  :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
+                  draggable="true"
+                  @dragstart="onDragStart(comp)"
+                  @click="addComponent(comp)"
+                >
                 <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
                   <i :class="comp.icon" class="text-lg text-primary-600 dark:text-primary-400" />
                 </div>
@@ -238,21 +270,33 @@
                   <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
                   <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
                 </div>
+                </div>
               </div>
             </div>
           </TabPanel>
           <!-- Page 탭 -->
-          <TabPanel value="pages" class="h-full overflow-y-auto">
-            <div class="grid gap-2">
-              <div
-                v-for="page in pages"
-                :key="page.id"
-                class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border"
-                :class="currentPage?.id === page.id 
-                  ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20' 
-                  : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600'"
-                @click="selectPage(page)"
-              >
+          <TabPanel value="pages" class="h-full flex flex-col overflow-hidden">
+            <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700">
+              <div class="relative">
+                <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
+                <InputText
+                  v-model="pageSearchQuery"
+                  placeholder="페이지 검색..."
+                  class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                />
+              </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3">
+              <div class="grid gap-2">
+                <div
+                  v-for="page in filteredPages"
+                  :key="page.id"
+                  class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border"
+                  :class="currentPage?.id === page.id 
+                    ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20' 
+                    : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600'"
+                  @click="selectPage(page)"
+                >
                 <div 
                   class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
                   :class="currentPage?.id === page.id 
@@ -264,6 +308,7 @@
                 <div class="flex flex-col min-w-0">
                   <span class="text-sm font-semibold" :class="currentPage?.id === page.id ? 'text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-200'">{{ page.name }}</span>
                   <span class="text-xs text-surface-400">페이지</span>
+                </div>
                 </div>
               </div>
             </div>
@@ -320,63 +365,69 @@
         미리보기 모드
       </div>
       <div
-        class="w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg"
+        class="w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
         :class="{ 'ring-2 ring-primary-500': isPreviewMode }"
         @dragover.prevent="!isPreviewMode"
         @drop="!isPreviewMode && onDrop()"
       >
-        <div v-if="canvasItems.length === 0" class="flex-1 flex flex-col items-center justify-center text-center">
-          <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4">
-            <i class="pi pi-objects-column text-2xl text-primary-500" />
+        <Transition name="fade">
+          <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4 shrink-0">
+              <i class="pi pi-objects-column text-2xl text-primary-500" />
+            </div>
+            <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-1 whitespace-nowrap">컴포넌트 추가</h3>
+            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">{{ isMobile ? '메뉴' : '왼쪽' }}에서 컴포넌트를 드래그하거나 클릭하여 추가하세요</p>
+            <div class="flex items-center gap-2 mt-4 text-xs text-surface-400 shrink-0">
+              <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">드래그</span>
+              <span class="whitespace-nowrap">또는</span>
+              <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">클릭</span>
+            </div>
           </div>
-          <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-1">컴포넌트 추가</h3>
-          <p class="text-xs text-surface-400 leading-relaxed max-w-[170px]">왼쪽에서 컴포넌트를 드래그하거나 클릭하여 추가하세요</p>
-          <div class="flex items-center gap-2 mt-4 text-xs text-surface-400">
-            <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded">드래그</span>
-            <span>또는</span>
-            <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded">클릭</span>
+        </Transition>
+        <Transition name="fade">
+          <div v-if="canvasItems.length > 0">
+            <div
+              v-for="(item, index) in canvasItems"
+              :key="item.uid"
+              class="canvas-item"
+              :class="{ selected: selectedIndex === index && !isPreviewMode, 'pointer-events-none': isPreviewMode }"
+              @click="!isPreviewMode && selectItem(index)"
+            >
+              <!-- Header -->
+              <div v-if="item.type === 'header'" class="bg-surface-100 dark:bg-surface-800 py-3 px-4 rounded-md font-semibold text-sm">
+                <span>{{ item.props.title }}</span>
+              </div>
+              <!-- Button -->
+              <Button
+                v-else-if="item.type === 'button'"
+                :label="item.props.label"
+                :severity="item.props.severity"
+                :outlined="item.props.outlined"
+                class="w-full"
+              />
+              <!-- Input -->
+              <InputText
+                v-else-if="item.type === 'input'"
+                :placeholder="item.props.placeholder"
+                class="w-full"
+              />
+              <!-- Text -->
+              <p v-else-if="item.type === 'text'" class="text-sm text-surface-600 dark:text-surface-400 m-0 leading-relaxed">
+                {{ item.props.content }}
+              </p>
+              <!-- Image -->
+              <div v-else-if="item.type === 'image'" class="bg-surface-100 dark:bg-surface-800 p-8 rounded-lg flex flex-col items-center gap-2 text-surface-400">
+                <i class="pi pi-image text-2xl" />
+                <span class="text-xs">{{ item.props.alt }}</span>
+              </div>
+              <!-- Card -->
+              <Card v-else-if="item.type === 'card'">
+                <template #title>{{ item.props.title }}</template>
+                <template #content>{{ item.props.content }}</template>
+              </Card>
+            </div>
           </div>
-        </div>
-        <div
-          v-for="(item, index) in canvasItems"
-          :key="item.uid"
-          class="canvas-item"
-          :class="{ selected: selectedIndex === index && !isPreviewMode, 'pointer-events-none': isPreviewMode }"
-          @click="!isPreviewMode && selectItem(index)"
-        >
-          <!-- Header -->
-          <div v-if="item.type === 'header'" class="bg-surface-100 dark:bg-surface-800 py-3 px-4 rounded-md font-semibold text-sm">
-            <span>{{ item.props.title }}</span>
-          </div>
-          <!-- Button -->
-          <Button
-            v-else-if="item.type === 'button'"
-            :label="item.props.label"
-            :severity="item.props.severity"
-            :outlined="item.props.outlined"
-            class="w-full"
-          />
-          <!-- Input -->
-          <InputText
-            v-else-if="item.type === 'input'"
-            :placeholder="item.props.placeholder"
-            class="w-full"
-          />
-          <!-- Text -->
-          <p v-else-if="item.type === 'text'" class="text-sm text-surface-600 dark:text-surface-400 m-0 leading-relaxed">
-            {{ item.props.content }}
-          </p>
-          <!-- Image -->
-          <div v-else-if="item.type === 'image'" class="bg-surface-100 dark:bg-surface-800 p-8 rounded-lg flex flex-col items-center gap-2 text-surface-400">
-            <i class="pi pi-image text-2xl" />
-            <span class="text-xs">{{ item.props.alt }}</span>
-          </div>
-          <!-- Card -->
-          <Card v-else-if="item.type === 'card'">
-            <template #title>{{ item.props.title }}</template>
-            <template #content>{{ item.props.content }}</template>
-          </Card>
-        </div>
+        </Transition>
       </div>
     </main>
 
@@ -398,36 +449,41 @@
           <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ currentPage?.name }}</span>
         </div>
         <!-- Element 트리 -->
-        <div class="flex-1 overflow-y-auto p-2">
-          <div v-if="!currentPage" class="flex flex-col items-center justify-center h-full text-center p-4">
-            <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3">
-              <i class="pi pi-sitemap text-xl text-surface-400" />
+        <div class="flex-1 overflow-y-auto p-2 relative">
+          <Transition name="fade">
+            <div v-if="!currentPage" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
+              <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3 shrink-0">
+                <i class="pi pi-sitemap text-xl text-surface-400" />
+              </div>
+              <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1 whitespace-nowrap">페이지 추가</h4>
+              <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">페이지를 선택하면 여기에 표시됩니다</p>
             </div>
-            <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1">페이지 추가</h4>
-            <p class="text-xs text-surface-400 leading-relaxed">페이지를 선택하면<br />여기에 표시됩니다</p>
-          </div>
-          <div
-            v-if="currentPage"
-            v-for="(item, index) in canvasItems"
-            :key="item.uid"
-            class="flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all text-surface-700 dark:text-surface-300"
-            :class="selectedIndex === index 
-              ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
-              : 'hover:bg-surface-100 dark:hover:bg-surface-700'"
-            @click="selectItem(index)"
-          >
-            <i :class="getComponentIcon(item.type)" class="text-sm w-5 text-center" />
-            <span class="text-sm flex-1 truncate">{{ getComponentLabel(item) }}</span>
-            <Button
-              icon="pi pi-trash"
-              severity="danger"
-              text
-              rounded
-              size="small"
-              class="w-6 h-6 !p-0"
-              @click.stop="deleteItem(index)"
-            />
-          </div>
+          </Transition>
+          <Transition name="fade">
+            <div v-if="currentPage">
+              <div
+                v-for="(item, index) in canvasItems"
+                :key="item.uid"
+                class="flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-all text-surface-700 dark:text-surface-300"
+                :class="selectedIndex === index 
+                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
+                  : 'hover:bg-surface-100 dark:hover:bg-surface-700'"
+                @click="selectItem(index)"
+              >
+                <i :class="getComponentIcon(item.type)" class="text-sm w-5 text-center shrink-0" />
+                <span class="text-sm flex-1 truncate">{{ getComponentLabel(item) }}</span>
+                <Button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  text
+                  rounded
+                  size="small"
+                  class="w-6 h-6 !p-0 shrink-0"
+                  @click.stop="deleteItem(index)"
+                />
+              </div>
+            </div>
+          </Transition>
         </div>
       </div>
 
@@ -460,7 +516,7 @@
       <!-- 옵션 패널 -->
       <Transition name="slide">
         <div
-          v-if="selectedIndex !== null && selectedItem"
+          v-if="currentPage && selectedIndex !== null && selectedItem"
           class="absolute inset-0 bg-surface-0 dark:bg-surface-800 flex flex-col z-10"
         >
           <!-- 속성 패널 헤더 -->
@@ -548,7 +604,7 @@
 </template>
 
 <script lang="ts" setup>
-import { usePanelStore } from '../stores/panel'
+import { usePanelStore } from '@app/stores/panel'
 
 // Pinia store
 const panelStore = usePanelStore()
@@ -614,7 +670,9 @@ onUnmounted(() => {
 
 // 목데이터: 페이지 목록
 const pages: Page[] = [
-  { id: '1', name: 'MyForm' }
+  { id: '1', name: 'MyForm' },
+  { id: '2', name: 'Home' },
+  { id: '3', name: 'About' }
 ]
 
 const currentPage = ref<Page | null>(null)
@@ -648,7 +706,53 @@ const componentIcons: Record<string, string> = {
 
 const severityOptions = ['primary', 'secondary', 'success', 'info', 'warn', 'danger']
 
-const canvasItems = ref<CanvasItem[]>([])
+// Toast 인스턴스
+const toast = useToast()
+
+// 검색 쿼리
+const componentSearchQuery = ref('')
+const pageSearchQuery = ref('')
+
+// 필터링된 컴포넌트
+const filteredComponents = computed(() => {
+  if (!componentSearchQuery.value.trim()) {
+    return components
+  }
+  const query = componentSearchQuery.value.toLowerCase()
+  return components.filter(comp => 
+    comp.name.toLowerCase().includes(query)
+  )
+})
+
+// 필터링된 페이지
+const filteredPages = computed(() => {
+  if (!pageSearchQuery.value.trim()) {
+    return pages
+  }
+  const query = pageSearchQuery.value.toLowerCase()
+  return pages.filter(page => 
+    page.name.toLowerCase().includes(query)
+  )
+})
+
+// 페이지별 컴포넌트 저장 (목업 데이터)
+const pagesData = ref<Record<string, CanvasItem[]>>({
+  '1': [], // MyForm 페이지 초기 데이터
+  '2': [], // Home 페이지 초기 데이터
+  '3': []  // About 페이지 초기 데이터
+})
+
+const canvasItems = computed({
+  get: () => {
+    if (!currentPage.value) return []
+    return pagesData.value[currentPage.value.id] || []
+  },
+  set: (value) => {
+    if (!currentPage.value) return
+    pagesData.value[currentPage.value.id] = value
+  }
+})
+
 const selectedIndex = ref<number | null>(null)
 const draggedComponent = ref<ComponentDef | null>(null)
 
@@ -660,8 +764,10 @@ watch(isPreviewMode, (preview) => {
 })
 
 const selectedItem = computed(() => {
-  if (selectedIndex.value === null) return null
-  return canvasItems.value[selectedIndex.value]
+  if (selectedIndex.value === null || !currentPage.value) return null
+  const pageItems = pagesData.value[currentPage.value.id]
+  if (!pageItems || selectedIndex.value >= pageItems.length) return null
+  return pageItems[selectedIndex.value]
 })
 
 function generateUid() {
@@ -670,16 +776,39 @@ function generateUid() {
 
 function selectPage(page: Page) {
   currentPage.value = page
+  // 페이지 선택 시 해당 페이지의 컴포넌트 로드
+  if (!pagesData.value[page.id]) {
+    pagesData.value[page.id] = []
+  }
+  selectedIndex.value = null
 }
 
 function addComponent(comp: ComponentDef) {
+  // 페이지가 선택되지 않았으면 Toast 메시지 표시
+  if (!currentPage.value) {
+    toast.add({
+      severity: 'warn',
+      summary: '페이지 선택 필요',
+      detail: '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.',
+      life: 3000
+    })
+    return
+  }
+
   const newItem: CanvasItem = {
     uid: generateUid(),
     type: comp.type,
     props: { ...comp.defaultProps }
   }
-  canvasItems.value.push(newItem)
-  selectedIndex.value = canvasItems.value.length - 1
+  
+  // 현재 페이지의 컴포넌트 배열에 추가
+  const pageId = currentPage.value.id
+  if (!pagesData.value[pageId]) {
+    pagesData.value[pageId] = []
+  }
+  const pageItems = pagesData.value[pageId]
+  pageItems.push(newItem)
+  selectedIndex.value = pageItems.length - 1
 }
 
 function onDragStart(comp: ComponentDef) {
@@ -698,7 +827,13 @@ function selectItem(index: number) {
 }
 
 function deleteItem(index: number) {
-  canvasItems.value.splice(index, 1)
+  if (!currentPage.value) return
+  
+  const pageId = currentPage.value.id
+  const pageItems = pagesData.value[pageId]
+  if (!pageItems) return
+  
+  pageItems.splice(index, 1)
   if (selectedIndex.value === index) {
     selectedIndex.value = null
   } else if (selectedIndex.value !== null && selectedIndex.value > index) {
@@ -765,6 +900,16 @@ function getComponentLabel(item: CanvasItem) {
   transform: translateX(-100%);
 }
 
+// 페이드 트랜지션
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
 /* PrimeVue Tabs 배경 오버라이드 */
 .p-tabs {
@@ -780,6 +925,7 @@ function getComponentLabel(item: CanvasItem) {
   border-bottom: 1px solid var(--p-surface-700) !important;
 }
 .p-tabpanels {
+  padding: 0;
   background: transparent !important;
 }
 .p-tab {
