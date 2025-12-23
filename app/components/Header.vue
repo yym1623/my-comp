@@ -47,24 +47,23 @@
       />
     </div>
 
-    <AppUser ref="userPanelRef" />
-    <AppSearch v-model:visible="isSearchOpen" />
+    <ModalsUser ref="userPanelRef" />
+    <ModalsSearch v-model:visible="isSearchOpen" />
   </header>
 </template>
 
 <script lang="ts" setup>
-import { usePanelStore } from '@app/stores/panel'
-import AppUser from './AppUser.vue'
-import AppSearch from './AppSearch.vue'
+import { usePanelStore } from '@/stores/panel'
+import { useResponsive } from '~/composables/useResponsive'
 
+// Pinia store
 const panelStore = usePanelStore()
+const { isMobile } = useResponsive()
 
-const isDark = ref(false)
-const isMobile = ref(false)
-const userButtonRef = ref()
+// 초기 테마를 다크 모드 기준으로 설정 (app.head.htmlAttrs.class = 'dark'와 일치)
+const isDark = ref(true)
 const userPanelRef = ref()
 const isSearchOpen = ref(false)
-const LG_BREAKPOINT = 1024
 
 function toggleUserPanel(event: Event) {
   userPanelRef.value?.toggle(event)
@@ -76,24 +75,16 @@ function openSearch() {
 
 function toggleTheme() {
   isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-}
-
-function checkScreenSize() {
-  isMobile.value = window.innerWidth < LG_BREAKPOINT
+  if (process.client) {
+    document.documentElement.classList.toggle('dark', isDark.value)
+  }
 }
 
 onMounted(() => {
   // HTML에 설정된 초기 dark 클래스 여부 확인
-  isDark.value = document.documentElement.classList.contains('dark')
-  
-  // 화면 크기 감지
-  checkScreenSize()
-  window.addEventListener('resize', checkScreenSize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkScreenSize)
+  if (process.client) {
+    isDark.value = document.documentElement.classList.contains('dark')
+  }
 })
 </script>
 

@@ -36,3 +36,5 @@ export const usePanelStore = defineStore('panel', () => {
     closePanel
   }
 })
+
+

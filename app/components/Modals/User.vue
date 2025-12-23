@@ -1,5 +1,15 @@
 <template>
   <Teleport to="body">
+    <!-- 로그아웃 확인 모달 -->
+    <ModalsConfirm
+      v-model="isLogoutConfirmOpen"
+      header="로그아웃"
+      message="로그아웃 하시겠어요?"
+      action-type="delete"
+      to="/auth"
+      @confirm="close"
+    />
+
     <Transition name="fade">
       <div
         v-if="visible"
@@ -38,7 +48,7 @@
             <button
               v-else
               class="w-full px-5 py-3 flex items-center gap-3 text-left hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors group"
-              @click="menu.action && handleMenuClick(menu.action)"
+              @click="menu.action === 'logout' ? isLogoutConfirmOpen = true : menu.action && handleMenuClick(menu.action)"
             >
               <div 
                 class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
@@ -78,23 +88,7 @@
 </template>
 
 <script lang="ts" setup>
-interface UserData {
-  id: string
-  name: string
-  email: string
-  role: string
-  joinedDate: string
-}
-
-interface MenuItem {
-  id: string
-  title?: string
-  description?: string
-  icon?: string
-  action?: string
-  isDanger?: boolean
-  divider?: boolean
-}
+import type { UserData, MenuItem } from '~/types/user'
 
 // 목데이터
 const userData: UserData = {
@@ -135,6 +129,7 @@ const visible = ref(false)
 const panelRef = ref<HTMLElement>()
 const buttonElement = ref<HTMLElement>()
 const panelStyle = ref({ top: '0px', right: '0px' })
+const isLogoutConfirmOpen = ref(false)
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
@@ -145,15 +140,6 @@ function formatDate(dateString: string): string {
 }
 
 function handleMenuClick(action: string) {
-  if (action === 'logout') {
-    // 로그아웃 처리 - auth 페이지로 이동
-    navigateTo('/auth')
-    close()
-    return
-  }
-  
-  // 다른 메뉴 액션은 나중에 구현
-  console.log(`Menu clicked: ${action}`)
   close()
 }
 
@@ -241,3 +227,4 @@ defineExpose({
   transform: translateY(-10px) scale(0.95);
 }
 </style>
+

@@ -139,18 +139,7 @@
 </template>
 
 <script lang="ts" setup>
-interface SearchResult {
-  title: string
-  description: string
-  icon: string
-  category: string
-  action?: () => void
-}
-
-interface ResultGroup {
-  title: string
-  results: SearchResult[]
-}
+import type { SearchResult, ResultGroup } from '~/types/search'
 
 const visible = defineModel<boolean>('visible', { default: false })
 const searchInputRef = ref<HTMLElement>()
@@ -477,3 +466,4 @@ kbd {
   }
 }
 </style>
+
