@@ -13,5 +13,7 @@ export interface PreviewEmits {
   (e: 'delete', index: number): void
   (e: 'drop'): void
   (e: 'deselect'): void
+  (e: 'grid-drop', data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }): void
+  (e: 'group-drop', data: { groupElement: CanvasItem; event: DragEvent }): void
 }
 

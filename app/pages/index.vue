@@ -1,45 +1,5 @@
 <template>
   <div class="flex h-screen w-full bg-surface-50 dark:bg-surface-900 overflow-hidden">
-    <Toast />
-
-    <!-- 페이지 생성 모달 -->
-    <ModalsCreatePage
-      v-model="isCreatePageModalOpen"
-      @create="handleCreatePage"
-    />
-
-    <!-- 페이지 삭제 확인 모달 -->
-    <ModalsConfirm
-      v-model="isDeletePageConfirmOpen"
-      header="페이지 삭제"
-      message="현재 페이지의 컴포넌트 구성을 삭제하시겠어요?"
-      action-type="delete"
-      @confirm="confirmDeletePage"
-    />
-
-    <!-- 모바일 메뉴 -->
-    <MobileMenu
-      :is-open="panelStore.isMobileMenuOpen"
-      :active-panel="panelStore.activeMobilePanel"
-      :current-page="currentPage"
-      :current-page-id="currentPage?.id"
-      :canvas-items="canvasItems"
-      :selected-index="selectedIndex"
-      :selected-item="selectedItem ?? null"
-      :is-preview-mode="isPreviewMode"
-      @close="panelStore.closeMobileMenu()"
-      @open-panel="(panel: string) => panelStore.openPanel(panel as 'elements' | 'pages' | 'options')"
-      @close-panel="panelStore.closePanel()"
-      @update:pages="handleUpdatePages"
-      @add-component="addComponent"
-      @select-page="handleSelectPage"
-      @create-page="openCreatePageModal"
-      @update:canvas-items="handleUpdateCanvasItems"
-      @select-item="selectItem"
-      @delete-item="deleteItem"
-      @save-page="saveCurrentPage"
-    />
-
     <!-- 왼쪽: Elements / Page 탭 -->
     <aside 
       class="h-full bg-surface-0 dark:bg-surface-800 border-r border-surface-200 dark:border-surface-700 flex flex-col shrink-0"
@@ -154,6 +114,8 @@
       @delete="deleteItem"
       @drop="onDrop"
       @deselect="selectedIndex = null"
+      @grid-drop="handleGridDrop"
+      @group-drop="handleGroupDrop"
     />
 
     <!-- 오른쪽: 트리 + 속성 패널 -->
@@ -174,13 +136,54 @@
       @close-options="selectedIndex = null"
       @update-page-name="handleUpdatePageName"
     />
+
+    <!-- 페이지 생성 모달 -->
+    <ModalsCreatePage
+      v-model="isCreatePageModalOpen"
+      @create="handleCreatePage"
+    />
+
+    <!-- 페이지 삭제 확인 모달 -->
+    <ModalsConfirm
+      v-model="isDeletePageConfirmOpen"
+      header="페이지 삭제"
+      message="현재 페이지의 컴포넌트 구성을 삭제하시겠어요?"
+      action-type="delete"
+      @confirm="confirmDeletePage"
+    />
+
+    <!-- 모바일 메뉴 -->
+    <MobileMenu
+      :is-open="panelStore.isMobileMenuOpen"
+      :active-panel="panelStore.activeMobilePanel"
+      :current-page="currentPage"
+      :current-page-id="currentPage?.id"
+      :canvas-items="canvasItems"
+      :selected-index="selectedIndex"
+      :selected-item="selectedItem ?? null"
+      :is-preview-mode="isPreviewMode"
+      @close="panelStore.closeMobileMenu()"
+      @open-panel="(panel: string) => panelStore.openPanel(panel as 'elements' | 'pages' | 'options')"
+      @close-panel="panelStore.closePanel()"
+      @update:pages="handleUpdatePages"
+      @add-component="addComponent"
+      @select-page="handleSelectPage"
+      @create-page="openCreatePageModal"
+      @update:canvas-items="handleUpdateCanvasItems"
+      @select-item="selectItem"
+      @delete-item="deleteItem"
+      @save-page="saveCurrentPage"
+    />
+
+    <!-- 전역 Toast -->
+    <Toast />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { usePanelStore } from '@/stores/panel'
 import type { ComponentDef, CanvasItem, Page } from '~/types/component'
-import { useComponents } from '~/composables/useComponents'
+import { useElements } from '~/composables/useElements'
 import { useCanvas } from '~/composables/useCanvas'
 import { useResponsive } from '~/composables/useResponsive'
 import { usePages } from '~/composables/usePages'
@@ -189,7 +192,7 @@ import { usePages } from '~/composables/usePages'
 const panelStore = usePanelStore()
 
 // Composables
-const { generateUid } = useComponents()
+const { generateUid } = useElements()
 const { cloneCanvasItems } = useCanvas()
 const { isMobile, checkScreenSize } = useResponsive()
 const { pages } = usePages()
@@ -445,6 +448,18 @@ function addComponent(comp: ComponentDef) {
     props: { ...comp.defaultProps }
   }
   
+  // 그리드 타입인 경우 items 배열 초기화 (columns 수만큼 빈 배열 생성)
+  if (comp.type === 'grid' && newItem.props.columns) {
+    newItem.props.items = Array(newItem.props.columns).fill([]).map(() => [])
+  }
+  
+  // 테이블 타입인 경우 rows 배열 초기화
+  if (comp.type === 'table' && newItem.props.columns) {
+    if (!newItem.props.rows) {
+      newItem.props.rows = [newItem.props.columns.map(() => '데이터')]
+    }
+  }
+  
   // 현재 페이지의 컴포넌트 배열에 추가
   const pageId = currentPage.value.id
   if (!pagesData.value[pageId]) {
@@ -482,6 +497,73 @@ function deleteItem(index: number) {
   } else if (selectedIndex.value !== null && selectedIndex.value > index) {
     selectedIndex.value--
   }
+}
+
+function handleGridDrop(data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }) {
+  if (!draggedComponent.value || !currentPage.value) return
+  
+  const pageId = currentPage.value.id
+  const pageItems = pagesData.value[pageId]
+  if (!pageItems) return
+  
+  // 그리드 요소 찾기
+  const gridIndex = pageItems.findIndex(item => item.uid === data.gridElement.uid)
+  if (gridIndex === -1) return
+  
+  const gridItem = pageItems[gridIndex]
+  if (!gridItem) return
+  
+  // items 배열 초기화 (없으면)
+  if (!gridItem.props.items) {
+    gridItem.props.items = Array(gridItem.props.columns || 2).fill([]).map(() => [])
+  }
+  
+  // 새로운 컴포넌트 생성
+  const newItem: CanvasItem = {
+    uid: generateUid(),
+    type: draggedComponent.value.type,
+    props: { ...draggedComponent.value.defaultProps }
+  }
+  
+  // 해당 셀에 추가 (하나만 가능, 기존 컴포넌트가 있으면 교체)
+  if (!gridItem.props.items[data.cellIndex]) {
+    gridItem.props.items[data.cellIndex] = []
+  }
+  gridItem.props.items[data.cellIndex] = [newItem] // 하나만 가능하도록 교체
+  
+  draggedComponent.value = null
+}
+
+function handleGroupDrop(data: { groupElement: CanvasItem; event: DragEvent }) {
+  if (!draggedComponent.value || !currentPage.value) return
+  
+  const pageId = currentPage.value.id
+  const pageItems = pagesData.value[pageId]
+  if (!pageItems) return
+  
+  // 그룹 요소 찾기
+  const groupIndex = pageItems.findIndex(item => item.uid === data.groupElement.uid)
+  if (groupIndex === -1) return
+  
+  const groupItem = pageItems[groupIndex]
+  if (!groupItem) return
+  
+  // items 배열 초기화 (없으면)
+  if (!groupItem.props.items) {
+    groupItem.props.items = []
+  }
+  
+  // 새로운 컴포넌트 생성
+  const newItem: CanvasItem = {
+    uid: generateUid(),
+    type: draggedComponent.value.type,
+    props: { ...draggedComponent.value.defaultProps }
+  }
+  
+  // 그룹에는 하나의 컴포넌트만 가능 (기존 컴포넌트가 있으면 교체)
+  groupItem.props.items = [newItem]
+  
+  draggedComponent.value = null
 }
 </script>
 

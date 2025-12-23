@@ -260,7 +260,7 @@
 
 <script lang="ts" setup>
 import type { MobileMenuProps, MobileMenuEmits } from '~/types/mobilemenu'
-import { useComponents } from '~/composables/useComponents'
+import { useElements } from '~/composables/useElements'
 import draggable from 'vuedraggable'
 
 const Draggable = draggable
@@ -271,7 +271,7 @@ type Emits = MobileMenuEmits
 const props = defineProps<Props>()
 defineEmits<Emits>()
 
-const { getComponentIcon, getComponentLabel, getComponentName, severityOptions } = useComponents()
+const { getComponentIcon, getComponentLabel, getComponentName, severityOptions } = useElements()
 </script>
 
 <style lang="scss" scoped>

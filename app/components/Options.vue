@@ -208,8 +208,8 @@
 
 <script lang="ts" setup>
 import type { OptionsProps, OptionsEmits } from '~/types/options'
-import { useComponents } from '~/composables/useComponents'
-import { useComponentOptions } from '~/composables/useComponentOptions'
+import { useElements } from '~/composables/useElements'
+import { useElementOptions } from '~/composables/useElementOptions'
 import draggable from 'vuedraggable'
 
 const Draggable = draggable
@@ -220,8 +220,8 @@ type Emits = OptionsEmits
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { getComponentIcon, getComponentLabel, getComponentName } = useComponents()
-const { getOptionsForType } = useComponentOptions()
+const { getComponentIcon, getComponentLabel, getComponentName } = useElements()
+const { getOptionsForType } = useElementOptions()
 
 const isEditingPageName = ref(false)
 const editingPageName = ref('')
