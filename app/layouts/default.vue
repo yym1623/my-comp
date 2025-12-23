@@ -1,6 +1,6 @@
 <template>
   <div class="h-screen flex flex-col overflow-hidden">
-    <AppHeader />
+    <Header />
     <slot />
   </div>
 </template>

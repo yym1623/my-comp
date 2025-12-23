@@ -10,7 +10,6 @@
       <!-- 이메일 -->
       <div class="flex flex-col gap-2">
         <IconField>
-          <InputIcon class="pi pi-user" />
           <InputText
             id="email"
             v-model="email"

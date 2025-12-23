@@ -16,6 +16,9 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   alias: {
+    // 프로젝트 루트 기준 alias (예: '@/stores/panel')
+    '@': fileURLToPath(new URL('./', import.meta.url)),
+    // Nuxt srcDir(app) 기준 alias
     '@app': fileURLToPath(new URL('./app', import.meta.url)),
   },
 
