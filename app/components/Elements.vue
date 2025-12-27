@@ -16,17 +16,17 @@
         <h3 class="text-xs font-semibold text-surface-500 dark:text-surface-400 mb-2 uppercase tracking-wide">
           Field
         </h3>
-        <div class="grid gap-2">
-          <div
+      <div class="grid gap-2">
+        <div
             v-for="comp in fieldComponents"
-            :key="comp.id"
-            class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
-            :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
-            draggable="true"
-            @dragstart="$emit('dragStart', comp)"
-            @click="handleAdd(comp)"
-          >
-            <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
+          :key="comp.id"
+          class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
+          :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
+          draggable="true"
+          @dragstart="$emit('dragStart', comp)"
+          @click="handleAdd(comp)"
+        >
+          <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
               <template v-if="comp.type === 'heading1'">
                 <H1Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </template>
@@ -41,13 +41,13 @@
                 :class="comp.icon"
                 class="text-lg text-primary-600 dark:text-primary-400"
               />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
-              <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
-            </div>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
+            <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
           </div>
         </div>
+      </div>
       </section>
       <!-- Form 그룹 -->
       <section v-if="formComponents.length">
@@ -123,7 +123,7 @@ const filteredComponents = computed(() => {
     return components
   }
   const query = searchQuery.value.toLowerCase()
-  return components.filter(comp =>
+  return components.filter(comp => 
     comp.name.toLowerCase().includes(query) ||
     comp.description.toLowerCase().includes(query)
   )

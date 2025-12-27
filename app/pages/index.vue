@@ -119,23 +119,54 @@
     />
 
     <!-- 오른쪽: 트리 + 속성 패널 -->
-    <Options
-      v-model:is-open="isRightPanelOpen"
-      :is-mobile="isMobile"
-      :is-preview-mode="isPreviewMode"
-      :current-page="currentPage"
-      :canvas-items="canvasItems"
-      :selected-index="selectedIndex"
-      :selected-item="selectedItem ?? null"
-      :is-responsive-change="isResponsiveChange"
-      @update:canvas-items="handleUpdateCanvasItems"
-      @select-item="selectItem"
-      @delete-item="deleteItem"
-      @save-page="saveCurrentPage"
-      @delete-page="onDeletePageClick"
-      @close-options="selectedIndex = null"
-      @update-page-name="handleUpdatePageName"
-    />
+    <aside class="relative">
+      <Options
+        v-model:is-open="isRightPanelOpen"
+        :is-mobile="isMobile"
+        :is-preview-mode="isPreviewMode"
+        :current-page="currentPage"
+        :canvas-items="canvasItems"
+        :selected-index="selectedIndex"
+        :selected-item="selectedItem ?? null"
+        :is-responsive-change="isResponsiveChange"
+        :saved-pages-data="savedPagesData"
+        :pages="pages"
+        @update:canvas-items="handleUpdateCanvasItems"
+        @select-item="selectItem"
+        @delete-item="deleteItem"
+        @save-page="saveCurrentPage"
+        @delete-page="onDeletePageClick"
+        @close-options="selectedIndex = null"
+        @update-page-name="handleUpdatePageName"
+      />
+      
+      <!-- 모바일 닫기 버튼 -->
+      <div v-if="isMobile && isRightPanelOpen" class="absolute top-1 right-3 z-10">
+        <Button
+          icon="pi pi-times"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9"
+          @click="isRightPanelOpen = false"
+        />
+      </div>
+      
+      <!-- 최하단 패널 닫기/열기 버튼 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute bottom-2 -left-[52px] flex flex-col gap-2 z-20">
+        <Button
+          :icon="isRightPanelOpen ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+          severity="secondary"
+          text
+          rounded
+          size="small"
+          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          v-tooltip.left="isRightPanelOpen ? '패널 닫기' : '패널 열기'"
+          @click="isRightPanelOpen = !isRightPanelOpen"
+        />
+      </div>
+    </aside>
 
     <!-- 페이지 생성 모달 -->
     <ModalsCreatePage
