@@ -51,7 +51,7 @@
         severity="secondary"
         outlined
         size="small"
-        class="w-full text-xs font-medium flex items-center justify-center gap-2"
+        class="w-full text-xs font-medium whitespace-nowrap"
         @click="$emit('create')"
       />
     </div>

@@ -9,6 +9,8 @@ export interface OptionsProps {
   selectedIndex: number | null
   selectedItem: CanvasItem | null
   isResponsiveChange?: boolean
+  savedPagesData?: Record<string, CanvasItem[]>
+  pages?: Page[]
 }
 
 export interface OptionsEmits {
