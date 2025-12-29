@@ -367,7 +367,7 @@ const treeNodes = computed(() => {
     
     return {
       key: page.id,
-      label: `${page.name} (${displayCount})`,
+      label: page.name,
       icon: '',
       data: { type: 'page', page },
       children

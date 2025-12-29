@@ -567,7 +567,11 @@ function handleAddTableRow(element: CanvasItem) {
 
 <style lang="scss" scoped>
 .canvas-item {
-  @apply p-2 border border-transparent transition-all cursor-pointer;
+  @apply p-4 border border-transparent transition-all cursor-pointer;
+
+  &:hover {
+    @apply border-primary-500;
+  }
 
   &.selected {
     @apply border-primary-500;

@@ -9,7 +9,19 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: {
         class: 'dark'
-      }
+      },
+      title: 'MyComp',
+      titleTemplate: '%s',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: '컴포넌트를 드래그 앤 드롭으로 쉽게 만들고 관리하세요' },
+        { name: 'format-detection', content: 'telephone=no' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.svg' }
+      ]
     }
   },
 

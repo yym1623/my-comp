@@ -219,6 +219,22 @@ import { useCanvas } from '~/composables/useCanvas'
 import { useResponsive } from '~/composables/useResponsive'
 import { usePages } from '~/composables/usePages'
 
+// 페이지별 메타데이터 설정
+useHead({
+  title: '컴포넌트 빌더',
+  meta: [
+    { name: 'description', content: '드래그 앤 드롭으로 컴포넌트를 쉽게 만들고 관리하세요. 실시간 미리보기와 직관적인 편집 도구를 제공합니다.' },
+    { property: 'og:title', content: 'MyComp - 컴포넌트 빌더' },
+    { property: 'og:description', content: '드래그 앤 드롭으로 컴포넌트를 쉽게 만들고 관리하세요' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:image', content: '/og-main.png' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'MyComp - 컴포넌트 빌더' },
+    { name: 'twitter:description', content: '드래그 앤 드롭으로 컴포넌트를 쉽게 만들고 관리하세요' },
+    { name: 'twitter:image', content: '/og-main.png' }
+  ]
+})
+
 // Pinia store
 const panelStore = usePanelStore()
 
@@ -405,7 +421,7 @@ function handleCreatePage(data: { name: string; description: string }) {
   pagesData.value[newPage.id] = []
   
   toast.add({
-    severity: 'success',
+    severity: 'secondary',
     summary: '페이지 생성',
     detail: `"${newPage.name}" 페이지가 생성되었습니다.`,
     life: 3000
@@ -454,7 +470,7 @@ function saveCurrentPage() {
   savedPagesData.value[currentPage.value.id] = cloneCanvasItems(items)
 
   toast.add({
-    severity: 'success',
+    severity: 'secondary',
     summary: '페이지 저장',
     detail: `"${currentPage.value.name}" 페이지 구성이 저장되었습니다.`,
     life: 2500
