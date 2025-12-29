@@ -64,19 +64,14 @@ definePageMeta({
 })
 
 // 페이지별 메타데이터 설정
-useHead({
-  title: '로그인',
-  meta: [
-    { name: 'description', content: 'MyComp에 로그인하여 컴포넌트 빌더를 시작하세요. 계정이 없으시다면 회원가입을 진행해주세요.' },
-    { property: 'og:title', content: 'MyComp - 로그인' },
-    { property: 'og:description', content: 'MyComp에 로그인하여 컴포넌트 빌더를 시작하세요' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:image', content: '/og-auth.png' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'MyComp - 로그인' },
-    { name: 'twitter:description', content: 'MyComp에 로그인하여 컴포넌트 빌더를 시작하세요' },
-    { name: 'twitter:image', content: '/og-auth.png' }
-  ]
+useSeoMeta({
+  description: '로그인하여 컴포넌트 빌더를 시작하세요. 계정이 없으시다면 회원가입을 진행해주세요.',
+  ogTitle: 'MyComp - 로그인',
+  ogDescription: '로그인하여 컴포넌트 빌더를 시작하세요',
+  ogType: 'website',
+  ogImage: '/og.svg',
+  ogImageWidth: 1200,
+  ogImageHeight: 630
 })
 
 const email = ref('')
