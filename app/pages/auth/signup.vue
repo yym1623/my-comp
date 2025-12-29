@@ -94,19 +94,14 @@ definePageMeta({
 })
 
 // 페이지별 메타데이터 설정
-useHead({
-  title: '회원가입',
-  meta: [
-    { name: 'description', content: 'MyComp에 회원가입하여 컴포넌트 빌더를 시작하세요. 무료로 시작할 수 있습니다.' },
-    { property: 'og:title', content: 'MyComp - 회원가입' },
-    { property: 'og:description', content: 'MyComp에 회원가입하여 컴포넌트 빌더를 시작하세요' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:image', content: '/og-auth.png' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'MyComp - 회원가입' },
-    { name: 'twitter:description', content: 'MyComp에 회원가입하여 컴포넌트 빌더를 시작하세요' },
-    { name: 'twitter:image', content: '/og-auth.png' }
-  ]
+useSeoMeta({
+  description: '회원가입하여 컴포넌트 빌더를 시작하세요. 무료로 시작할 수 있습니다.',
+  ogTitle: 'MyComp - 회원가입',
+  ogDescription: '회원가입하여 컴포넌트 빌더를 시작하세요',
+  ogType: 'website',
+  ogImage: '/og.svg',
+  ogImageWidth: 1200,
+  ogImageHeight: 630
 })
 
 const name = ref('')

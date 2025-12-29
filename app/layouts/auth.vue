@@ -37,7 +37,7 @@
                 <!-- 카드 컴포넌트 -->
                 <div class="bg-white/10 rounded-xl p-4 border border-white/10">
                   <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-400 to-purple-500"></div>
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-300 to-primary-500"></div>
                     <div class="flex-1">
                       <div class="h-3 bg-white/30 rounded w-24 mb-1.5"></div>
                       <div class="h-2 bg-white/20 rounded w-16"></div>
