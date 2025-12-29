@@ -89,11 +89,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'auth'
-})
-
-// 페이지별 메타데이터 설정
 useSeoMeta({
   description: '회원가입하여 컴포넌트 빌더를 시작하세요. 무료로 시작할 수 있습니다.',
   ogTitle: 'MyComp - 회원가입',
@@ -102,6 +97,10 @@ useSeoMeta({
   ogImage: '/og.svg',
   ogImageWidth: 1200,
   ogImageHeight: 630
+})
+
+definePageMeta({
+  layout: 'auth'
 })
 
 const name = ref('')
