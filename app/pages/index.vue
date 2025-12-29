@@ -219,7 +219,6 @@ import { useCanvas } from '~/composables/useCanvas'
 import { useResponsive } from '~/composables/useResponsive'
 import { usePages } from '~/composables/usePages'
 
-// 페이지별 메타데이터 설정
 useSeoMeta({
   description: '컴포넌트를 쉽게 만들고 관리하세요. 실시간 미리보기와 직관적인 편집 도구를 제공합니다.',
   ogTitle: 'MyComp',
