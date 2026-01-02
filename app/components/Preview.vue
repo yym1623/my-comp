@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 h-full flex items-center justify-center p-10 overflow-hidden relative">
+  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative">
     <!-- 프리뷰 모드 표시 배지 -->
     <div 
       v-if="isPreviewMode" 
@@ -9,7 +9,7 @@
       미리보기 모드
     </div>
     <div
-      class="w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
+      class="w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
       :class="{ 'ring-2 ring-primary-500': isPreviewMode }"
       @dragover.prevent="!isPreviewMode"
       @drop="!isPreviewMode && $emit('drop')"
@@ -21,7 +21,11 @@
             <i class="pi pi-objects-column text-2xl text-primary-500" />
           </div>
           <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-1 whitespace-nowrap">컴포넌트 추가</h3>
-          <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">{{ isMobile ? '메뉴' : '왼쪽' }}에서 컴포넌트를 드래그하거나 클릭하여 추가하세요</p>
+          <div class="flex flex-col items-center">
+            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">{{ isMobile ? '메뉴' : '왼쪽' }}에서 컴포넌트를 드래그하거나</p>
+            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap mt-1">클릭하여 추가하세요</p>
+
+          </div>
           <div class="flex items-center gap-2 mt-4 text-xs text-surface-400 shrink-0">
             <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">드래그</span>
             <span class="whitespace-nowrap">또는</span>

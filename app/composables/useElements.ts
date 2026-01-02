@@ -213,6 +213,7 @@ export const useElements = () => {
       description: '간단한 표 레이아웃',
       icon: 'pi pi-table',
       type: 'table',
+      ready: false, // 준비중
       defaultProps: {
         columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
         rows: [['데이터 1', '데이터 2', '데이터 3']] // 행 데이터 (배열의 배열)

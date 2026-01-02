@@ -100,7 +100,48 @@
             <div v-if="currentPage" class="p-3 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2 shrink-0">
               <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="$emit('closePanel')" />
               <i class="pi pi-file text-primary-500" />
-              <span class="text-sm font-semibold text-surface-700 dark:text-surface-200 flex-1">{{ currentPage?.name }}</span>
+              <InputText
+                v-if="isEditingPageName"
+                v-model="editingPageName"
+                class="flex-1 text-sm font-semibold border-primary-300 dark:border-primary-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                @blur="handleSavePageName"
+                @keyup.enter="handleSavePageName"
+                @keyup.esc="handleCancelEditPageName"
+                autofocus
+              />
+              <span v-else class="text-sm font-semibold text-surface-700 dark:text-surface-200 flex-1">{{ currentPage?.name }}</span>
+              <Button
+                :icon="isEditingPageName ? 'pi pi-check' : 'pi pi-pencil'"
+                :severity="isEditingPageName ? 'success' : 'secondary'"
+                text
+                rounded
+                size="small"
+                class="w-6 h-6 !p-0 shrink-0"
+                @mousedown.prevent
+                @click.stop="isEditingPageName ? handleSavePageName() : handleStartEditPageName()"
+              />
+              
+              <Button
+                icon="pi pi-save"
+                severity="secondary"
+                text
+                rounded
+                size="small"
+                class="w-6 h-6 !p-0 shrink-0"
+                :disabled="!currentPage || canvasItems.length === 0"
+                v-tooltip.top="'페이지 저장'"
+                @click="$emit('savePage')"
+              />
+              
+              <Button
+                icon="pi pi-trash"
+                severity="danger"
+                text
+                rounded
+                size="small"
+                class="w-6 h-6 !p-0 shrink-0"
+                @click="$emit('deletePage')"
+              />
             </div>
             <div v-else class="p-3 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2 shrink-0">
               <Button icon="pi pi-arrow-left" severity="secondary" text rounded size="small" @click="$emit('closePanel')" />
@@ -238,19 +279,6 @@
               </div>
             </div>
 
-            <!-- 페이지 저장 버튼 바 -->
-            <div v-if="currentPage" class="px-3 py-2.5 border-t border-surface-200 dark:border-surface-700 shrink-0 bg-surface-0 dark:bg-surface-800">
-              <Button
-                icon="pi pi-save"
-                label="페이지 저장"
-                severity="secondary"
-                outlined
-                size="small"
-                class="w-full text-xs font-medium flex items-center justify-center gap-2"
-                :disabled="!currentPage || canvasItems.length === 0"
-                @click="$emit('savePage')"
-              />
-            </div>
           </div>
         </Transition>
       </div>
@@ -269,9 +297,33 @@ type Props = MobileMenuProps
 type Emits = MobileMenuEmits
 
 const props = defineProps<Props>()
-defineEmits<Emits>()
+const emit = defineEmits<Emits>()
 
 const { getComponentIcon, getComponentLabel, getComponentName, severityOptions } = useElements()
+
+// 페이지 이름 편집 관련
+const isEditingPageName = ref(false)
+const editingPageName = ref('')
+
+const handleStartEditPageName = () => {
+  if (!props.currentPage) return
+  editingPageName.value = props.currentPage.name
+  isEditingPageName.value = true
+}
+
+const handleSavePageName = () => {
+  if (!props.currentPage) return
+  const trimmedName = editingPageName.value.trim()
+  if (trimmedName) {
+    emit('updatePageName', trimmedName)
+  }
+  isEditingPageName.value = false
+}
+
+const handleCancelEditPageName = () => {
+  isEditingPageName.value = false
+  editingPageName.value = ''
+}
 </script>
 
 <style lang="scss" scoped>

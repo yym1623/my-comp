@@ -1,13 +1,24 @@
 <template>
   <div class="h-full flex flex-col overflow-hidden">
-    <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700 shrink-0">
-      <div class="relative">
-        <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
-        <InputText
-          v-model="searchQuery"
-          placeholder="페이지 검색..."
-          class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-        />
+    <div class="px-3">
+      <div class="py-2.5 border-b border-surface-200 dark:border-surface-700 shrink-0">
+        <div class="relative">
+          <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
+          <InputText
+            v-model="searchQuery"
+            placeholder="페이지 검색..."
+            class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+          />
+        </div>
+      </div>
+      <div class="mt-2.5">
+        <button
+          class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold rounded-lg border transition-all bg-surface-0 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-200 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 active:scale-[0.98]"
+          @click="$emit('create')"
+        >
+          <i class="pi pi-plus text-sm"></i>
+          <span>페이지 추가</span>
+        </button>
       </div>
     </div>
     <div class="flex-1 overflow-y-auto p-3 min-h-0">
@@ -43,17 +54,6 @@
           </div>
         </template>
       </Draggable>
-    </div>
-    <div class="px-3 py-2.5 border-t border-surface-200 dark:border-surface-700 shrink-0 bg-surface-0 dark:bg-surface-800">
-      <Button
-        icon="pi pi-plus"
-        label="페이지 추가"
-        severity="secondary"
-        outlined
-        size="small"
-        class="w-full text-xs font-medium whitespace-nowrap"
-        @click="$emit('create')"
-      />
     </div>
   </div>
 </template>

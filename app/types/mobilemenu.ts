@@ -23,5 +23,7 @@ export interface MobileMenuEmits {
   (e: 'selectItem', index: number): void
   (e: 'deleteItem', index: number): void
   (e: 'savePage'): void
+  (e: 'deletePage'): void
+  (e: 'updatePageName', name: string): void
 }
 
