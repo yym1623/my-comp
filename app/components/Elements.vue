@@ -20,13 +20,25 @@
         <div
             v-for="comp in fieldComponents"
           :key="comp.id"
-          class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
-          :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
-          draggable="true"
-          @dragstart="$emit('dragStart', comp)"
-          @click="handleAdd(comp)"
+          class="flex items-center gap-3 p-3 rounded-xl transition-all border relative"
+          :class="[
+            comp.ready === false
+              ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed opacity-60'
+              : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
+            { 'opacity-50 pointer-events-none': isPreviewMode }
+          ]"
+          :draggable="comp.ready !== false && !isPreviewMode"
+          @dragstart="comp.ready !== false && !isPreviewMode && $emit('dragStart', comp)"
+          @click="comp.ready !== false && !isPreviewMode && handleAdd(comp)"
         >
-          <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
+          <!-- 준비중 오버레이 -->
+          <Ready v-if="comp.ready === false" />
+          <div 
+            class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+            :class="comp.ready === false
+              ? 'bg-surface-100 dark:bg-surface-700 opacity-50'
+              : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
+          >
               <template v-if="comp.type === 'heading1'">
                 <H1Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </template>
@@ -58,13 +70,25 @@
           <div
             v-for="comp in formComponents"
             :key="comp.id"
-            class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group"
-            :class="{ 'opacity-50 pointer-events-none': isPreviewMode }"
-            draggable="true"
-            @dragstart="$emit('dragStart', comp)"
-            @click="handleAdd(comp)"
+            class="flex items-center gap-3 p-3 rounded-xl transition-all border relative"
+            :class="[
+              comp.ready === false
+                ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed opacity-60'
+                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
+              { 'opacity-50 pointer-events-none': isPreviewMode }
+            ]"
+            :draggable="comp.ready !== false && !isPreviewMode"
+            @dragstart="comp.ready !== false && !isPreviewMode && $emit('dragStart', comp)"
+            @click="comp.ready !== false && !isPreviewMode && handleAdd(comp)"
           >
-            <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors">
+            <!-- 준비중 오버레이 -->
+            <Ready v-if="comp.ready === false" />
+            <div 
+            class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+            :class="comp.ready === false
+              ? 'bg-surface-100 dark:bg-surface-700 opacity-50'
+              : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
+          >
               <template v-if="comp.type === 'heading1'">
                 <H1Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </template>

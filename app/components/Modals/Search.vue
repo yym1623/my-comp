@@ -17,7 +17,6 @@
           v-model="searchQuery"
           placeholder="Search..."
           class="flex-1 border-0 focus:ring-0 text-lg bg-transparent placeholder:text-surface-400"
-          autofocus
           @keydown.down.prevent="navigateDown"
           @keydown.up.prevent="navigateUp"
           @keydown.enter.prevent="selectResult"
@@ -113,26 +112,6 @@
         <p class="text-xs text-surface-500 dark:text-surface-500 leading-relaxed">
           {{ hasNoResults ? '&nbsp;' : '페이지, 컴포넌트, 기능 등을 검색할 수 있습니다' }}
         </p>
-      </div>
-
-      <!-- 키보드 단축키 안내 -->
-      <div class="px-4 py-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between text-xs text-surface-500 dark:text-surface-400">
-        <div class="flex items-center gap-4">
-          <span class="flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 bg-surface-100 dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded text-xs">←</kbd>
-            <span>to select</span>
-          </span>
-          <span class="flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 bg-surface-100 dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded text-xs">↓</kbd>
-            <kbd class="px-1.5 py-0.5 bg-surface-100 dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded text-xs">↑</kbd>
-            <span>to navigate</span>
-          </span>
-          <span class="flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 bg-surface-100 dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded text-xs">esc</kbd>
-            <span>to close</span>
-          </span>
-        </div>
-   
       </div>
     </div>
   </Dialog>
@@ -331,7 +310,13 @@ function clearSearch() {
   selectedIndex.value = -1
   nextTick(() => {
     if (searchInputRef.value) {
-      (searchInputRef.value as any).focus?.()
+      const input = searchInputRef.value as any
+      if (input.$el?.querySelector) {
+        const inputElement = input.$el.querySelector('input') || input.$el
+        inputElement.focus({ preventScroll: true })
+      } else {
+        input.focus?.({ preventScroll: true })
+      }
     }
   })
 }
@@ -375,7 +360,13 @@ onMounted(() => {
         // 모달이 열릴 때 검색 입력창에 포커스
         nextTick(() => {
           if (searchInputRef.value) {
-            (searchInputRef.value as any).focus?.()
+            const input = searchInputRef.value as any
+            if (input.$el?.querySelector) {
+              const inputElement = input.$el.querySelector('input') || input.$el
+              inputElement.focus({ preventScroll: true })
+            } else {
+              input.focus?.({ preventScroll: true })
+            }
           }
         })
       }
@@ -394,7 +385,13 @@ watch(visible, (newVal) => {
   if (newVal) {
     nextTick(() => {
       if (searchInputRef.value) {
-        (searchInputRef.value as any).focus?.()
+        const input = searchInputRef.value as any
+        if (input.$el?.querySelector) {
+          const inputElement = input.$el.querySelector('input') || input.$el
+          inputElement.focus({ preventScroll: true })
+        } else {
+          input.focus?.({ preventScroll: true })
+        }
       }
     })
   } else {
@@ -420,6 +417,15 @@ watch(visible, (newVal) => {
   .p-dialog-content {
     padding: 0;
     overflow: hidden;
+  }
+  
+  // 모바일에서 입력 필드 포커스 시 스크롤 방지
+  @media (max-width: 640px) {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
   }
   
   .p-dialog-header-close {

@@ -83,6 +83,19 @@
             @mousedown.prevent
             @click.stop="isEditingPageName ? handleSavePageName() : handleStartEditPageName()"
           />
+          
+          <Button
+            icon="pi pi-save"
+            severity="secondary"
+            text
+            rounded
+            size="small"
+            class="w-6 h-6 !p-0 shrink-0"
+            :disabled="!currentPage || canvasItems.length === 0"
+            v-tooltip.top="'페이지 저장'"
+            @click="$emit('savePage')"
+          />
+          
           <Button
             icon="pi pi-trash"
             severity="danger"
@@ -178,19 +191,6 @@
           </Transition>
         </div>
         
-        <!-- 페이지 저장 버튼 바 -->
-        <div v-if="currentPage" class="px-3 py-2.5 border-t border-surface-200 dark:border-surface-700 shrink-0 bg-surface-0 dark:bg-surface-800">
-          <Button
-            icon="pi pi-save"
-            label="페이지 저장"
-            severity="secondary"
-            outlined
-            size="small"
-            class="w-full text-xs font-medium whitespace-nowrap"
-            :disabled="!currentPage || canvasItems.length === 0"
-            @click="$emit('savePage')"
-          />
-        </div>
       </template>
     </div>
 
