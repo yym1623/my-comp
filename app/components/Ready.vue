@@ -7,8 +7,6 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-// 준비중 오버레이 컴포넌트
-// 비활성화된 기능에 표시되는 오버레이
-</script>
+<script lang="ts" setup></script>
 
+<style lang="scss" scoped></style>

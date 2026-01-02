@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 2x2 그리드, gap 2px, 각 사각형 14x14 -->
+  <!-- 왼쪽 위: green-500 -->
+  <rect x="0" y="0" width="14" height="14" rx="2" fill="#22c55e"/>
+  <!-- 오른쪽 위: green-400 -->
+  <rect x="18" y="0" width="14" height="14" rx="2" fill="#4ade80"/>
+  <!-- 왼쪽 아래: green-300 -->
+  <rect x="0" y="18" width="14" height="14" rx="2" fill="#86efac"/>
+  <!-- 오른쪽 아래: green-600 -->
+  <rect x="18" y="18" width="14" height="14" rx="2" fill="#16a34a"/>
+</svg>
+

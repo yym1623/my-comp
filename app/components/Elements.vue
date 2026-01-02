@@ -20,10 +20,10 @@
         <div
             v-for="comp in fieldComponents"
           :key="comp.id"
-          class="flex items-center gap-3 p-3 rounded-xl transition-all border relative"
+          class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
           :class="[
             comp.ready === false
-              ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed opacity-60'
+              ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
               : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
             { 'opacity-50 pointer-events-none': isPreviewMode }
           ]"
@@ -40,23 +40,50 @@
               : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
           >
               <template v-if="comp.type === 'heading1'">
-                <H1Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H1Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <template v-else-if="comp.type === 'heading2'">
-                <H2Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H2Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <template v-else-if="comp.type === 'heading3'">
-                <H3Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H3Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <i
                 v-else
-                :class="comp.icon"
-                class="text-lg text-primary-600 dark:text-primary-400"
+                :class="[
+                  comp.icon,
+                  'text-lg',
+                  comp.ready === false
+                    ? 'text-surface-400 dark:text-surface-500'
+                    : 'text-primary-600 dark:text-primary-400'
+                ]"
               />
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
-            <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
+            <span 
+              class="text-sm font-semibold"
+              :class="comp.ready === false
+                ? 'text-surface-400 dark:text-surface-500'
+                : 'text-surface-700 dark:text-surface-200'"
+            >{{ comp.name }}</span>
+            <span 
+              class="text-xs truncate"
+              :class="comp.ready === false
+                ? 'text-surface-400 dark:text-surface-500'
+                : 'text-surface-400'"
+            >{{ comp.description }}</span>
           </div>
         </div>
       </div>
@@ -70,10 +97,10 @@
           <div
             v-for="comp in formComponents"
             :key="comp.id"
-            class="flex items-center gap-3 p-3 rounded-xl transition-all border relative"
+            class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
             :class="[
               comp.ready === false
-                ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed opacity-60'
+                ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
                 : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
               { 'opacity-50 pointer-events-none': isPreviewMode }
             ]"
@@ -90,23 +117,50 @@
               : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
           >
               <template v-if="comp.type === 'heading1'">
-                <H1Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H1Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <template v-else-if="comp.type === 'heading2'">
-                <H2Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H2Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <template v-else-if="comp.type === 'heading3'">
-                <H3Icon class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <H3Icon 
+                  :class="comp.ready === false
+                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                />
               </template>
               <i
                 v-else
-                :class="comp.icon"
-                class="text-lg text-primary-600 dark:text-primary-400"
+                :class="[
+                  comp.icon,
+                  'text-lg',
+                  comp.ready === false
+                    ? 'text-surface-400 dark:text-surface-500'
+                    : 'text-primary-600 dark:text-primary-400'
+                ]"
               />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-semibold text-surface-700 dark:text-surface-200">{{ comp.name }}</span>
-              <span class="text-xs text-surface-400 truncate">{{ comp.description }}</span>
+              <span 
+                class="text-sm font-semibold"
+                :class="comp.ready === false
+                  ? 'text-surface-400 dark:text-surface-500'
+                  : 'text-surface-700 dark:text-surface-200'"
+              >{{ comp.name }}</span>
+              <span 
+                class="text-xs truncate"
+                :class="comp.ready === false
+                  ? 'text-surface-400 dark:text-surface-500'
+                  : 'text-surface-400'"
+              >{{ comp.description }}</span>
             </div>
           </div>
         </div>
