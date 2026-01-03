@@ -64,7 +64,7 @@
               @click="menu.action === 'logout' ? isLogoutConfirmOpen = true : menu.action && handleMenuClick(menu.action)"
             >
               <!-- 준비중 오버레이 (비활성화된 메뉴만, 수평/수직 중앙) -->
-              <ComingSoon v-if="menu.action !== 'logout'" />
+              <Ready v-if="menu.action !== 'logout'" />
               
               <div 
                 class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"

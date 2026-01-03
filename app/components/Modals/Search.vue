@@ -130,65 +130,8 @@ const resultRefs = ref<Map<string, HTMLElement>>(new Map())
 const isMac = ref(false)
 
 // 검색 결과 데이터
-const allResults: SearchResult[] = [
-  // Documentation 섹션
-  { 
-    title: 'Secondary Pages', 
-    description: 'PrimeVue - Vue UI Component Library', 
-    icon: 'pi pi-file', 
-    category: 'Documentation' 
-  },
-  { 
-    title: 'Primary Pages', 
-    description: 'PrimeVue - Vue UI Component Library', 
-    icon: 'pi pi-file', 
-    category: 'Documentation' 
-  },
-  { 
-    title: 'Getting Started', 
-    description: 'Learn how to get started with PrimeVue', 
-    icon: 'pi pi-book', 
-    category: 'Documentation' 
-  },
-  // Components 섹션
-  { 
-    title: 'Button Component', 
-    description: 'A button component with various styles', 
-    icon: 'pi pi-stop', 
-    category: 'Components' 
-  },
-  { 
-    title: 'Input Component', 
-    description: 'Text input field component', 
-    icon: 'pi pi-pencil', 
-    category: 'Components' 
-  },
-  { 
-    title: 'Dialog Component', 
-    description: 'Modal dialog component', 
-    icon: 'pi pi-window-maximize', 
-    category: 'Components' 
-  },
-  // Pages 섹션
-  { 
-    title: 'MyForm Page', 
-    description: 'Form page with various inputs', 
-    icon: 'pi pi-file-edit', 
-    category: 'Pages' 
-  },
-  { 
-    title: 'Home Page', 
-    description: 'Main landing page', 
-    icon: 'pi pi-home', 
-    category: 'Pages' 
-  },
-  { 
-    title: 'About Page', 
-    description: 'About page with information', 
-    icon: 'pi pi-info-circle', 
-    category: 'Pages' 
-  },
-]
+// ex) [{ title: '페이지 1', description: '페이지 1 설명', icon: 'pi pi-file', category: '페이지' }]
+const allResults: SearchResult[] = []
 
 // 검색 결과 필터링 및 그룹화
 const groupedResults = computed<ResultGroup[]>(() => {

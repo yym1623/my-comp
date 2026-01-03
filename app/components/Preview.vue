@@ -6,11 +6,11 @@
       class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary-500 text-white text-xs font-medium rounded-full flex items-center gap-2 shadow-lg z-10"
     >
       <i class="pi pi-eye text-xs" />
-      미리보기 모드
+      미리보기 모드 
     </div>
     <div
       class="w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
-      :class="{ 'ring-2 ring-primary-500': isPreviewMode }"
+      :class="{ 'ring-2 ring-primary-500': isPreviewMode, 'preview-mode': isPreviewMode }"
       @dragover.prevent="!isPreviewMode"
       @drop="!isPreviewMode && $emit('drop')"
       @click="!isPreviewMode && $emit('deselect')"
@@ -44,7 +44,7 @@
           <template #item="{ element, index }">
             <div
               class="canvas-item group relative"
-              :class="{ selected: selectedIndex === index && !isPreviewMode, 'pointer-events-none': isPreviewMode }"
+              :class="{ selected: selectedIndex === index && !isPreviewMode }"
               @click.stop="!isPreviewMode && $emit('select', index)"
             >
               <!-- 수정/삭제 버튼 (호버/선택 시 표시, 보더 밖 오른쪽 상단) -->
@@ -75,49 +75,33 @@
               </h1>
               <!-- Heading 2 -->
               <h2
-                v-else-if="element.type === 'heading2'"
+                v-if="element.type === 'heading2'"
                 class="text-xl font-semibold text-surface-800 dark:text-surface-100 m-0"
               >
                 {{ element.props.text }}
               </h2>
               <!-- Heading 3 -->
               <h3
-                v-else-if="element.type === 'heading3'"
+                v-if="element.type === 'heading3'"
                 class="text-lg font-semibold text-surface-800 dark:text-surface-100 m-0"
               >
                 {{ element.props.text }}
               </h3>
               <!-- Spacer -->
               <div
-                v-else-if="element.type === 'spacer'"
+                v-if="element.type === 'spacer'"
                 :style="{ height: element.props.height || '1rem' }"
               />
               <!-- Divider -->
               <hr
-                v-else-if="element.type === 'divider'"
+                v-if="element.type === 'divider'"
                 class="border-t border-surface-200 dark:border-surface-700 my-2"
               />
-              <!-- 텍스트 입력 (한 줄) -->
-              <div
-                v-else-if="element.type === 'inputTextSmall'"
-                class="flex flex-col gap-1 form-field-wrapper"
-              >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
-                </label>
-              <InputText
-                  :key="`input-text-small-${element.uid}-${index}`"
-                  type="text"
-                  :model-value="''"
-                  :placeholder="element.props.placeholder || '입력하세요...'"
-                  class="w-full"
-                  style="min-height: 2.5rem;"
-                />
-              </div>
               <!-- 텍스트 입력 (여러 줄) -->
               <div
-                v-else-if="element.type === 'textarea'"
+                v-if="element.type === 'textarea'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -128,20 +112,37 @@
                   :rows="4"
                 class="w-full"
                   style="min-height: 6rem;"
-                  readonly
+                  :readonly="!isPreviewMode"
+                  :class="{ 'edit-mode': !isPreviewMode }"
               />
               </div>
               <!-- Image -->
               <div
-                v-else-if="element.type === 'image'"
-                class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-start text-surface-400"
+                v-if="element.type === 'image'"
+                class="rounded-lg overflow-hidden"
               >
-                <i class="pi pi-image text-2xl" />
+                <Image
+                  v-if="element.props.src"
+                  :src="element.props.src"
+                  :alt="element.props.alt || '이미지'"
+                  class="w-full"
+                  :preview="isPreviewMode"
+                />
+                <div
+                  v-else
+                  class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-center text-surface-400 "
+                >
+                  <div class="flex flex-col items-center gap-2">
+                    <i class="pi pi-image text-3xl" />
+                    <span class="text-xs">이미지 URL을 입력하세요</span>
+                  </div>
+                </div>
               </div>
               <!-- 텍스트 입력 -->
               <div
-                v-else-if="element.type === 'inputText'"
+                v-if="element.type === 'inputText'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -151,14 +152,16 @@
                   type="text"
                   :model-value="''"
                   :placeholder="element.props.placeholder || '입력하세요...'"
-                  class="w-full"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 비밀번호 입력 -->
               <div
-                v-else-if="element.type === 'inputPassword'"
+                v-if="element.type === 'inputPassword'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -168,14 +171,16 @@
                   type="password"
                   :model-value="''"
                   :placeholder="element.props.placeholder || '비밀번호를 입력하세요'"
-                  class="w-full"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 이메일 입력 -->
               <div
-                v-else-if="element.type === 'inputEmail'"
+                v-if="element.type === 'inputEmail'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -185,65 +190,74 @@
                   type="email"
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'example@email.com'"
-                  class="w-full"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 날짜 선택 -->
               <div
-                v-else-if="element.type === 'inputDate'"
+                v-if="element.type === 'inputDate'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <InputText
+                <DatePicker
                   :key="`input-date-${element.uid}-${index}`"
-                  type="text"
-                  :model-value="''"
-                  :placeholder="element.props.placeholder || 'yy.mm.dd'"
-                  class="w-full"
+                  :model-value="null"
+                  :placeholder="element.props.placeholder || '날짜를 선택하세요'"
+                  dateFormat="yy.mm.dd"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 시간 선택 -->
               <div
-                v-else-if="element.type === 'inputTime'"
+                v-if="element.type === 'inputTime'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <InputText
+                <DatePicker
                   :key="`input-time-${element.uid}-${index}`"
-                  type="text"
-                  :model-value="''"
-                  :placeholder="element.props.placeholder || 'hh:ss'"
-                  class="w-full"
+                  :model-value="null"
+                  :placeholder="element.props.placeholder || '시간을 선택하세요'"
+                  timeOnly
+                  hourFormat="24"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 선택 상자 -->
               <div
-                v-else-if="element.type === 'select'"
+                v-if="element.type === 'select'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <Dropdown
+                <Select
                   :key="`select-${element.uid}-${index}`"
                   :model-value="null"
                   :options="element.props.options || []"
                   :placeholder="element.props.placeholder || '선택하세요'"
-                  class="w-full"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- URL 입력 -->
               <div
-                v-else-if="element.type === 'inputUrl'"
+                v-if="element.type === 'inputUrl'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -253,14 +267,16 @@
                   type="url"
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'https://example.com'"
-                  class="w-full"
+                  :readonly="!isPreviewMode"
+                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
                   style="min-height: 2.5rem;"
                 />
               </div>
               <!-- 체크박스 -->
               <div
-                v-else-if="element.type === 'checkbox'"
+                v-if="element.type === 'checkbox'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -270,14 +286,17 @@
                     :key="`checkbox-${element.uid}-${index}`"
                     :model-value="element.props.checked || false"
                     :binary="true"
+                    :readonly="!isPreviewMode"
+                    :class="{ 'edit-mode': !isPreviewMode }"
                   />
                   <span class="text-sm text-surface-700 dark:text-surface-200">{{ element.props.label }}</span>
                 </div>
               </div>
               <!-- 라디오 버튼 -->
               <div
-                v-else-if="element.type === 'radio'"
+                v-if="element.type === 'radio'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -292,6 +311,8 @@
                       :model-value="element.props.selected || element.props.options?.[0]"
                       :value="option"
                       :name="`radio-${element.uid}`"
+                      :readonly="!isPreviewMode"
+                      :class="{ 'edit-mode': !isPreviewMode }"
                     />
                     <label class="text-sm text-surface-700 dark:text-surface-200 cursor-pointer">{{ option }}</label>
                   </div>
@@ -299,8 +320,9 @@
               </div>
               <!-- 토글 스위치 -->
               <div
-                v-else-if="element.type === 'toggleSwitch'"
+                v-if="element.type === 'toggleSwitch'"
                 class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -309,43 +331,50 @@
                   <ToggleSwitch
                     :key="`toggle-${element.uid}-${index}`"
                     :model-value="element.props.checked || false"
+                    :readonly="!isPreviewMode"
+                    :class="{ 'edit-mode': !isPreviewMode }"
                   />
                   <span class="text-sm text-surface-700 dark:text-surface-200">{{ element.props.checked ? '켜짐' : '꺼짐' }}</span>
                 </div>
               </div>
               <!-- 버튼 (Field 스타일 - primary 기본) -->
               <div
-                v-else-if="element.type === 'button'"
+                v-if="element.type === 'button'"
                 class="flex items-center"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <Button
                   :key="`button-${element.uid}-${index}`"
                   :label="element.props.text || '버튼'"
                   severity="primary"
                   :outlined="element.props.outlined || false"
-                  class="!w-auto"
+                  :readonly="!isPreviewMode"
+                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
                 />
               </div>
               <!-- 이전/다음 네비게이션 -->
               <div
-                v-else-if="element.type === 'prevNext'"
+                v-if="element.type === 'prevNext'"
                 class="flex items-center justify-between gap-4"
+                :class="{ 'edit-mode': !isPreviewMode }"
               >
                 <Button
                   :label="element.props.prevText"
                   severity="secondary"
                   outlined
-                  class="!w-auto"
+                  :readonly="!isPreviewMode"
+                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
                 />
                 <Button
                   :label="element.props.nextText"
                   severity="primary"
-                  class="!w-auto"
+                  :readonly="!isPreviewMode"
+                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
                 />
               </div>
               <!-- 그리드 섹션 -->
               <div
-                v-else-if="element.type === 'grid'"
+                v-if="element.type === 'grid'"
                 class="grid"
                 :style="{ gridTemplateColumns: `repeat(${element.props.columns || 2}, minmax(0, 1fr))`, gap: element.props.gap || '1rem' }"
               >
@@ -373,8 +402,8 @@
               </div>
               <!-- 그룹 (카드 형식, 레이블 없음) -->
               <div
-                v-else-if="element.type === 'group'"
-                class="border border-dashed border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900/30 overflow-hidden transition-all min-h-[60px]"
+                v-if="element.type === 'group'"
+                class="border border-dashed border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900/30 overflow-hidden transition-all"
                 :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGroup === element.uid }"
                 @dragover.prevent="!isPreviewMode && handleGroupDragOver($event, element)"
                 @dragleave="!isPreviewMode && handleGroupDragLeave(element)"
@@ -397,7 +426,7 @@
               </div>
               <!-- 테이블 -->
               <div
-                v-else-if="element.type === 'table'"
+                v-if="element.type === 'table'"
                 class="overflow-x-auto rounded-md border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900/20"
               >
                 <table class="min-w-full text-left text-xs">
@@ -482,9 +511,7 @@
 import type { PreviewProps, PreviewEmits } from '~/types/preview'
 import type { CanvasItem } from '~/types/component'
 import draggable from 'vuedraggable'
-import Calendar from 'primevue/calendar'
 import ComponentRenderer from './ComponentRenderer.vue'
-import { useElements } from '~/composables/useElements'
 
 const Draggable = draggable
 
@@ -582,6 +609,20 @@ function handleAddTableRow(element: CanvasItem) {
   }
 }
 
+// 미리보기 모드에서는 canvas-item 호버 시 보더 변경 차단 (최고 우선순위로 오버라이드)
+// 미리보기 모드에서는 canvas-item 호버 시 보더 변경 차단 (최고 우선순위로 오버라이드)
+.preview-mode .canvas-item:hover {
+  // Tailwind의 color-mix를 완전히 오버라이드
+  border-color: transparent !important;
+  --tw-border-opacity: 0 !important;
+  border: 1px solid transparent !important;
+  // 모든 가능한 보더 속성 오버라이드
+  border-top-color: transparent !important;
+  border-right-color: transparent !important;
+  border-bottom-color: transparent !important;
+  border-left-color: transparent !important;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -635,7 +676,7 @@ function handleAddTableRow(element: CanvasItem) {
   :deep(.p-textarea),
   :deep(.p-dropdown),
   :deep(.p-button),
-  :deep(.p-calendar) {
+  :deep(.p-datepicker) {
     min-height: 2.5rem;
     height: auto;
     box-sizing: border-box;
@@ -644,7 +685,6 @@ function handleAddTableRow(element: CanvasItem) {
   :deep(.p-inputtext) {
     width: 100%;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--p-input-border-color, #d1d5db);
     border-radius: 0.375rem;
     font-size: 0.875rem;
     line-height: 1.5;
@@ -653,39 +693,15 @@ function handleAddTableRow(element: CanvasItem) {
   :deep(.p-textarea) {
     width: 100%;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--p-input-border-color, #d1d5db);
     border-radius: 0.375rem;
     font-size: 0.875rem;
     line-height: 1.5;
     resize: vertical;
   }
 
-  :deep(.p-dropdown) {
-    width: 100%;
-    
-    .p-dropdown-label {
-      padding: 0.5rem 0.75rem;
-      min-height: 2.5rem;
-    }
-  }
 
-  :deep(.p-button) {
-    min-height: 2.5rem;
-    padding: 0.5rem 1rem;
-  }
 
-  :deep(.p-calendar) {
-    width: 100%;
 
-    .p-inputtext {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--p-input-border-color, #d1d5db);
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      line-height: 1.5;
-      min-height: 2.5rem;
-    }
-  }
+
 }
 </style>

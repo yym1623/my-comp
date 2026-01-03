@@ -26,6 +26,7 @@
           <TabPanel value="pages" class="h-full flex flex-col overflow-hidden">
             <Pages
               :current-page-id="currentPage?.id"
+              :is-preview-mode="isPreviewMode"
               @update:pages="handleUpdatePages"
               @select="handleSelectPage"
               @create="openCreatePageModal"
@@ -74,7 +75,7 @@
           size="small"
           class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
           v-tooltip.right="'컴포넌트 초기화'"
-          :disabled="!currentPage || canvasItems.length === 0"
+          :disabled="isPreviewMode || !currentPage || canvasItems.length === 0"
           @click="resetPageComponents"
         />
         <Button
@@ -486,7 +487,30 @@ function addComponent(comp: ComponentDef) {
   const newItem: CanvasItem = {
     uid: generateUid(),
     type: comp.type,
-    props: { ...comp.defaultProps }
+    props: { 
+      ...comp.defaultProps,
+      // 공통 기본값 추가
+      x: 0,
+      y: 0,
+      rotation: 0,
+      width: 0,
+      height: 0,
+      opacity: 100,
+      cornerRadius: 0,
+      fillColor: '#000000',
+      fillOpacity: 100,
+      alignment: 'left',
+      resizing: 'fixed',
+      // Typography 기본값 (텍스트 관련 요소만)
+      ...(comp.type === 'heading1' || comp.type === 'heading2' || comp.type === 'heading3' || comp.type === 'textarea' || comp.type === 'button' ? {
+        fontFamily: 'Montserrat',
+        fontWeight: '400',
+        fontSize: comp.type === 'heading1' ? 32 : comp.type === 'heading2' ? 24 : comp.type === 'heading3' ? 18 : 14,
+        lineHeight: 'Auto',
+        letterSpacing: 0,
+        textAlign: 'left'
+      } : {})
+    }
   }
   
   // 그리드 타입인 경우 items 배열 초기화 (columns 수만큼 빈 배열 생성)

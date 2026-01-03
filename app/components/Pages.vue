@@ -7,13 +7,15 @@
           <InputText
             v-model="searchQuery"
             placeholder="페이지 검색..."
+            :disabled="props.isPreviewMode"
             class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
           />
         </div>
       </div>
       <div class="mt-2.5">
         <button
-          class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold rounded-lg border transition-all bg-surface-0 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-200 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 active:scale-[0.98]"
+          :disabled="props.isPreviewMode"
+          class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold rounded-lg border transition-all bg-surface-0 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-200 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
           @click="$emit('create')"
         >
           <i class="pi pi-plus text-sm"></i>
@@ -25,6 +27,7 @@
       <Draggable
         :model-value="filteredPages"
         item-key="id"
+        :disabled="props.isPreviewMode"
         class="grid gap-2"
         @update:model-value="handleUpdatePages($event)"
       >

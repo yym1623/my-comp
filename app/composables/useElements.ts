@@ -62,12 +62,12 @@ export const useElements = () => {
     },
     {
       id: 'inputText',
-      name: '텍스트 입력 (필드)',
-      description: '아이디/일반 텍스트 입력 필드',
+      name: '아이디 입력',
+      description: '아이디 입력 필드',
       icon: 'pi pi-user',
       type: 'inputText',
       defaultProps: {
-        label: '텍스트 레이블',
+        label: '아이디 레이블',
         placeholder: '입력하세요...'
       }
     },
@@ -120,6 +120,7 @@ export const useElements = () => {
       name: '선택 상자',
       description: '옵션을 선택하는 드롭다운',
       icon: 'pi pi-list',
+      ready: false,
       type: 'select',
       defaultProps: {
         label: '선택',
@@ -143,6 +144,7 @@ export const useElements = () => {
       name: '체크박스',
       description: '체크박스 선택 필드',
       icon: 'pi pi-check-square',
+      ready: false,
       type: 'checkbox',
       defaultProps: {
         label: '체크박스 레이블',
@@ -166,6 +168,7 @@ export const useElements = () => {
       name: '토글 스위치',
       description: '켜기/끄기 토글 스위치',
       icon: 'pi pi-sliders-h',
+      ready: false,
       type: 'toggleSwitch',
       defaultProps: {
         label: '토글 레이블',
@@ -201,6 +204,7 @@ export const useElements = () => {
       name: '그룹',
       description: '컴포넌트 그룹화',
       icon: 'pi pi-folder',
+      ready: false,
       type: 'group',
       defaultProps: {
         title: '그룹 제목',
@@ -212,8 +216,9 @@ export const useElements = () => {
       name: '테이블',
       description: '간단한 표 레이아웃',
       icon: 'pi pi-table',
+      ready: false,
+
       type: 'table',
-      ready: false, // 준비중
       defaultProps: {
         columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
         rows: [['데이터 1', '데이터 2', '데이터 3']] // 행 데이터 (배열의 배열)
@@ -224,6 +229,7 @@ export const useElements = () => {
       name: '그리드 섹션',
       description: '여러 요소를 배치',
       icon: 'pi pi-th-large',
+      ready: false,
       type: 'grid',
       defaultProps: {
         columns: 2,
@@ -232,20 +238,9 @@ export const useElements = () => {
       }
     },
     {
-      id: 'inputTextSmall',
-      name: '텍스트 입력 (한 줄)',
-      description: '한 줄 텍스트 입력 필드',
-      icon: 'pi pi-align-left',
-      type: 'inputTextSmall',
-      defaultProps: {
-        label: '텍스트 레이블',
-        placeholder: '입력하세요...'
-      }
-    },
-    {
       id: 'textarea',
-      name: '텍스트 입력 (여러 줄)',
-      description: '여러 줄 텍스트 입력 필드',
+      name: '텍스트 입력',
+      description: '텍스트 입력 필드',
       icon: 'pi pi-align-justify',
       type: 'textarea',
       defaultProps: {
@@ -261,11 +256,10 @@ export const useElements = () => {
     heading3: '제목 H3',
     spacer: '여백',
     divider: '구분선',
-    inputTextSmall: '텍스트 입력 (한 줄)',
-    textarea: '텍스트 입력 (여러 줄)',
+    textarea: '텍스트 입력',
     image: '이미지',
     button: '버튼',
-    inputText: '텍스트 입력 (필드)',
+    inputText: '아이디 입력',
     inputPassword: '비밀번호 입력',
     inputEmail: '이메일 입력',
     inputDate: '날짜 선택',
@@ -287,7 +281,6 @@ export const useElements = () => {
     heading3: 'heroicons:h3',
     spacer: 'pi pi-arrows-v',
     divider: 'pi pi-minus',
-    inputTextSmall: 'pi pi-align-left',
     textarea: 'pi pi-align-justify',
     image: 'pi pi-image',
     button: 'pi pi-stop',
@@ -322,7 +315,7 @@ export const useElements = () => {
     if (['heading1', 'heading2', 'heading3'].includes(item.type)) {
       return item.props.text || name
     }
-    if (['button', 'inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'inputTextSmall', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch'].includes(item.type)) {
+    if (['button', 'inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch'].includes(item.type)) {
       return item.props.label || name
     }
     return name

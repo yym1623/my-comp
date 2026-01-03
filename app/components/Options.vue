@@ -20,7 +20,7 @@
         :class="showTreeView 
           ? 'border-primary-500 dark:border-primary-400' 
           : 'border-surface-200 dark:border-surface-700'"
-        :disabled="!pages || pages.length === 0 || !hasSavedData"
+        :disabled="!pages || pages.length === 0 || !hasSavedData || (selectedIndex !== null && selectedItem !== null)"
         v-tooltip.left="'트리 뷰'"
         @click="showTreeView = !showTreeView"
       />
@@ -80,7 +80,9 @@
             rounded
             size="small"
             class="w-6 h-6 !p-0 shrink-0"
+            :disabled="isPreviewMode"
             @mousedown.prevent
+           
             @click.stop="isEditingPageName ? handleSavePageName() : handleStartEditPageName()"
           />
           
@@ -91,8 +93,8 @@
             rounded
             size="small"
             class="w-6 h-6 !p-0 shrink-0"
-            :disabled="!currentPage || canvasItems.length === 0"
-            v-tooltip.top="'페이지 저장'"
+            :disabled="isPreviewMode || !currentPage || canvasItems.length === 0"
+        
             @click="$emit('savePage')"
           />
           
@@ -103,6 +105,8 @@
             rounded
             size="small"
             class="w-6 h-6 !p-0 shrink-0"
+            :disabled="isPreviewMode"
+            
             @click="$emit('deletePage')"
           />
         </div>
@@ -141,8 +145,7 @@
                   />
                   <div
                     class="relative flex items-center gap-2 pl-8 pr-3 rounded-lg transition-all text-surface-700 dark:text-surface-300 group cursor-pointer" :class="isPreviewMode ? 'opacity-50 pointer-events-none' : ''"
-                    
-                    @click="$emit('selectItem', index)"
+                  
                   >
                     <!-- 트리 가로선 -->
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-px bg-surface-200 dark:bg-surface-700" />
@@ -195,60 +198,19 @@
     </div>
 
     <!-- 옵션 패널 (선택된 아이템이 있을 때만 표시) -->
-    <Transition name="slide">
-      <div
-        v-if="currentPage && selectedIndex !== null && selectedItem"
-        class="absolute inset-0 bg-surface-0 dark:bg-surface-800 flex flex-col z-10"
-      >
-        <!-- 속성 패널 헤더 -->
-        <div class="p-4 border-b border-surface-200 dark:border-surface-700 flex items-center gap-2">
-          <Button
-            icon="pi pi-arrow-left"
-            severity="secondary"
-            text
-            rounded
-            size="small"
-            @click="$emit('closeOptions')"
-          />
-          <span class="text-sm font-semibold text-surface-700 dark:text-surface-200 whitespace-nowrap" v-if="selectedItem">
-            {{ getComponentName(selectedItem.type) }} 편집
-          </span>
-        </div>
-        <!-- 속성 편집 영역 -->
-        <div class="flex-1 overflow-y-auto p-4 min-h-0 relative">
-          <template v-if="selectedIndex !== null && selectedItem">
-            <div
-              v-for="field in getOptionsForType(selectedItem.type)"
-              :key="field.key"
-              class="mb-4"
-            >
-              <label class="block text-xs font-semibold text-surface-500 mb-2 uppercase tracking-wide">
-                {{ field.label }}
-              </label>
-              <component
-                :is="field.component"
-                v-model="selectedItem.props[field.key]"
-                v-bind="field.componentProps"
-                class="w-full"
-              />
-              </div>
-          </template>
-          <div v-else class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
-            <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3 shrink-0">
-              <i class="pi pi-info-circle text-xl text-surface-400" />
-            </div>
-            <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1 whitespace-nowrap">편집할 요소를 선택하세요</h4>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <ElementOptions
+      @update="$emit('update:canvasItems', [...canvasItems])"
+      :current-page="currentPage"
+      :selected-index="selectedIndex"
+      :selected-item="selectedItem"
+      @close-options="$emit('closeOptions')"
+    />
   </aside>
 </template>
 
 <script lang="ts" setup>
 import type { OptionsProps, OptionsEmits } from '~/types/options'
 import { useElements } from '~/composables/useElements'
-import { useElementOptions } from '~/composables/useElementOptions'
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
 import draggable from 'vuedraggable'
 
@@ -260,8 +222,7 @@ type Emits = OptionsEmits
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { getComponentIcon, getComponentLabel, getComponentName } = useElements()
-const { getOptionsForType } = useElementOptions()
+const { getComponentIcon, getComponentLabel } = useElements()
 
 const isEditingPageName = ref(false)
 const editingPageName = ref('')
@@ -434,18 +395,6 @@ const handleCancelEditPageName = () => {
   opacity: 0;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.25s ease;
-}
-
-.slide-enter-from {
-  transform: translateX(100%);
-}
-
-.slide-leave-to {
-  transform: translateX(100%);
-}
 
 // PrimeVue Tree 기본 스타일 오버라이드
 :deep(.p-tree) {

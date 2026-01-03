@@ -117,6 +117,7 @@
                 rounded
                 size="small"
                 class="w-6 h-6 !p-0 shrink-0"
+                :disabled="isPreviewMode"
                 @mousedown.prevent
                 @click.stop="isEditingPageName ? handleSavePageName() : handleStartEditPageName()"
               />
@@ -128,8 +129,8 @@
                 rounded
                 size="small"
                 class="w-6 h-6 !p-0 shrink-0"
-                :disabled="!currentPage || canvasItems.length === 0"
-                v-tooltip.top="'페이지 저장'"
+                :disabled="isPreviewMode || !currentPage || canvasItems.length === 0"
+               
                 @click="$emit('savePage')"
               />
               
@@ -140,6 +141,8 @@
                 rounded
                 size="small"
                 class="w-6 h-6 !p-0 shrink-0"
+                :disabled="isPreviewMode"
+                
                 @click="$emit('deletePage')"
               />
             </div>

@@ -5,6 +5,7 @@ export interface ComponentDef {
   icon: string
   type: string
   defaultProps: Record<string, any>
+  ready?: boolean
 }
 
 export interface CanvasItem {
