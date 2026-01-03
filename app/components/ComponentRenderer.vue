@@ -8,55 +8,53 @@
   </h1>
   <!-- Heading 2 -->
   <h2
-    v-else-if="item.type === 'heading2'"
+    v-if="item.type === 'heading2'"
     class="text-xl font-semibold text-surface-800 dark:text-surface-100 m-0"
   >
     {{ item.props.text }}
   </h2>
   <!-- Heading 3 -->
   <h3
-    v-else-if="item.type === 'heading3'"
+    v-if="item.type === 'heading3'"
     class="text-lg font-semibold text-surface-800 dark:text-surface-100 m-0"
   >
     {{ item.props.text }}
   </h3>
   <!-- Spacer -->
   <div
-    v-else-if="item.type === 'spacer'"
+    v-if="item.type === 'spacer'"
     :style="{ height: item.props.height || '1rem' }"
   />
   <!-- Divider -->
   <hr
-    v-else-if="item.type === 'divider'"
+    v-if="item.type === 'divider'"
     class="border-t border-surface-200 dark:border-surface-700 my-2"
   />
   <!-- Image -->
   <div
-    v-else-if="item.type === 'image'"
-    class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-start text-surface-400"
+    v-if="item.type === 'image'"
+    class="rounded-lg overflow-hidden"
   >
-    <i class="pi pi-image text-2xl" />
-  </div>
-  <!-- 텍스트 입력 (한 줄) -->
-  <div
-    v-else-if="item.type === 'inputTextSmall'"
-    class="flex flex-col gap-1 form-field-wrapper"
-  >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
-    </label>
-    <InputText
-      :key="`input-text-small-${item.uid}`"
-      type="text"
-      :model-value="''"
-      :placeholder="item.props.placeholder || '입력하세요...'"
+    <Image
+      v-if="item.props.src"
+      :src="item.props.src"
+      :alt="item.props.alt || '이미지'"
       class="w-full"
-      style="min-height: 2.5rem;"
+      preview
     />
+    <div
+      v-else
+      class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-center text-surface-400 min-h-[200px]"
+    >
+      <div class="flex flex-col items-center gap-2">
+        <i class="pi pi-image text-3xl" />
+        <span class="text-xs">이미지 URL을 입력하세요</span>
+      </div>
+    </div>
   </div>
   <!-- 텍스트 입력 (여러 줄) -->
   <div
-    v-else-if="item.type === 'textarea'"
+    v-if="item.type === 'textarea'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -73,7 +71,7 @@
   </div>
   <!-- 텍스트 입력 -->
   <div
-    v-else-if="item.type === 'inputText'"
+    v-if="item.type === 'inputText'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -90,7 +88,7 @@
   </div>
   <!-- 비밀번호 입력 -->
   <div
-    v-else-if="item.type === 'inputPassword'"
+    v-if="item.type === 'inputPassword'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -107,7 +105,7 @@
   </div>
   <!-- 이메일 입력 -->
   <div
-    v-else-if="item.type === 'inputEmail'"
+    v-if="item.type === 'inputEmail'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -124,41 +122,42 @@
   </div>
   <!-- 날짜 선택 -->
   <div
-    v-else-if="item.type === 'inputDate'"
+    v-if="item.type === 'inputDate'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.label }}
     </label>
-    <InputText
+    <DatePicker
       :key="`input-date-${item.uid}`"
-      type="text"
-      :model-value="''"
-      :placeholder="item.props.placeholder || 'yy.mm.dd'"
+      :model-value="null"
+      :placeholder="item.props.placeholder || '날짜를 선택하세요'"
+      dateFormat="yy.mm.dd"
       class="w-full"
       style="min-height: 2.5rem;"
     />
   </div>
   <!-- 시간 선택 -->
   <div
-    v-else-if="item.type === 'inputTime'"
+    v-if="item.type === 'inputTime'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.label }}
     </label>
-    <InputText
+    <DatePicker
       :key="`input-time-${item.uid}`"
-      type="text"
-      :model-value="''"
-      :placeholder="item.props.placeholder || 'hh:ss'"
+      :model-value="null"
+      :placeholder="item.props.placeholder || '시간을 선택하세요'"
+      timeOnly
+      hourFormat="24"
       class="w-full"
       style="min-height: 2.5rem;"
     />
   </div>
   <!-- 선택 상자 -->
   <div
-    v-else-if="item.type === 'select'"
+    v-if="item.type === 'select'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -175,7 +174,7 @@
   </div>
   <!-- URL 입력 -->
   <div
-    v-else-if="item.type === 'inputUrl'"
+    v-if="item.type === 'inputUrl'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -192,7 +191,7 @@
   </div>
   <!-- 체크박스 -->
   <div
-    v-else-if="item.type === 'checkbox'"
+    v-if="item.type === 'checkbox'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -209,7 +208,7 @@
   </div>
   <!-- 라디오 버튼 -->
   <div
-    v-else-if="item.type === 'radio'"
+    v-if="item.type === 'radio'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -232,7 +231,7 @@
   </div>
   <!-- 토글 스위치 -->
   <div
-    v-else-if="item.type === 'toggleSwitch'"
+    v-if="item.type === 'toggleSwitch'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
     <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
@@ -248,7 +247,7 @@
   </div>
   <!-- 버튼 -->
   <div
-    v-else-if="item.type === 'button'"
+    v-if="item.type === 'button'"
     class="flex items-center"
   >
     <Button
@@ -261,7 +260,7 @@
   </div>
   <!-- 이전/다음 네비게이션 -->
   <div
-    v-else-if="item.type === 'prevNext'"
+    v-if="item.type === 'prevNext'"
     class="flex items-center justify-between gap-4"
   >
     <Button
@@ -280,7 +279,8 @@
 
 <script lang="ts" setup>
 import type { CanvasItem } from '~/types/component'
-import Calendar from 'primevue/calendar'
+import DatePicker from 'primevue/datepicker'
+import Image from 'primevue/image'
 import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
 import RadioButton from 'primevue/radiobutton'

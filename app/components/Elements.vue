@@ -207,7 +207,7 @@ const filteredComponents = computed(() => {
   )
 })
 
-const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'inputTextSmall', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
+const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
 
 const fieldComponents = computed(() =>
   filteredComponents.value.filter(comp => !formTypes.includes(comp.type))
