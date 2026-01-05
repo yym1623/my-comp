@@ -514,13 +514,16 @@ function addComponent(comp: ComponentDef) {
           comp.type === 'heading2' ? { width: 300, height: 36 } :
           comp.type === 'heading3' ? { width: 300, height: 28 } :
           comp.type === 'button' ? { width: 100, height: 40 } :
-          comp.type === 'inputText' || comp.type === 'inputPassword' || comp.type === 'inputEmail' || comp.type === 'inputUrl' ? { width: 200, height: 40 } :
-          comp.type === 'inputDate' || comp.type === 'inputTime' ? { width: 200, height: 40 } :
-          comp.type === 'select' ? { width: 200, height: 40 } :
-          comp.type === 'textarea' ? { width: 300, height: 120 } :
-          comp.type === 'image' ? { width: 200, height: 150 } :
-          comp.type === 'checkbox' || comp.type === 'radio' || comp.type === 'toggleSwitch' ? { width: 200, height: 40 } :
-          comp.type === 'prevNext' ? { width: 300, height: 40 } :
+          comp.type === 'inputText' || comp.type === 'inputPassword' || comp.type === 'inputEmail' || comp.type === 'inputUrl' ? { width: 100, widthUnit: '%', height: 40 } :
+          comp.type === 'inputDate' || comp.type === 'inputTime' ? { width: 100, widthUnit: '%', height: 40 } :
+          comp.type === 'select' ? { width: 100, widthUnit: '%', height: 40 } :
+          comp.type === 'textarea' ? { width: 100, widthUnit: '%', height: 120 } :
+          comp.type === 'image' ? { width: 100, widthUnit: '%', height: 100, heightUnit: 'px' } :
+          comp.type === 'checkbox' || comp.type === 'toggleSwitch' ? { width: 100, widthUnit: '%', height: 40 } :
+          comp.type === 'radio' ? { width: 100, widthUnit: '%', height: 20 } :
+          comp.type === 'prevNext' ? { width: 100, height: 40 } :
+          comp.type === 'spacer' ? { width: 100, widthUnit: '%', height: 16, heightUnit: 'px' } :
+          comp.type === 'divider' ? { width: 100, widthUnit: '%', height: 1, heightUnit: 'px' } :
           {})
       },
       appearance: {

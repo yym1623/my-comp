@@ -133,7 +133,7 @@
                       <InputNumber
                         :model-value="getFieldValue('layout.width')"
                         :min="0"
-                        :disabled="getFieldDisabled('layout.width')"
+                        :disabled="getFieldDisabled('layout.width') || props.selectedItem?.type === 'spacer'"
                         class="figma-input w-[40%]"
                         @update:model-value="updateFieldValue('layout.width', $event)"
                       />
@@ -142,9 +142,9 @@
                           :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
                           optionLabel="label"
                           optionValue="value"
-                          :disabled="getFieldDisabled('layout.width')"
+                          :disabled="getFieldDisabled('layout.width') || props.selectedItem?.type === 'spacer'"
                           class="figma-input w-[60%]"
-                          @update:model-value="updateFieldValue('layout.widthUnit', $event)"
+                          @update:model-value="handleWidthUnitChange($event)"
                         />
                     </InputGroup>
                   </div>
@@ -165,7 +165,7 @@
                         optionValue="value"
                         :disabled="getFieldDisabled('layout.height')"
                         class="figma-input w-[60%]"
-                        @update:model-value="updateFieldValue('layout.heightUnit', $event)"
+                        @update:model-value="handleHeightUnitChange($event)"
                       />
                     </InputGroup>
                   </div>
@@ -354,7 +354,7 @@ const { getComponentName, getComponentIcon } = useElements()
 const { getOptionsForType, getSectionReady } = useElementOptions()
 
 // 섹션별 ready 상태
-const sectionReady = computed(() => getSectionReady())
+const sectionReady = computed(() => getSectionReady(props.selectedItem?.type))
 
 // 옵션 가져오기
 const options = computed(() => getOptionsForType(props.selectedItem?.type || ''))
@@ -492,6 +492,36 @@ const updateFieldValue = (key: string, value: any) => {
   
   // 변경사항 알림
   emit('update')
+}
+
+// widthUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
+const handleWidthUnitChange = (newUnit: string) => {
+  if (!props.selectedItem) return
+  
+  const currentWidth = getFieldValue('layout.width')
+  const currentUnit = getFieldValue('layout.widthUnit') || 'px'
+  
+  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
+  if (newUnit === '%' && currentUnit !== '%' && currentWidth && currentWidth > 100) {
+    updateFieldValue('layout.width', 100)
+  }
+  
+  updateFieldValue('layout.widthUnit', newUnit)
+}
+
+// heightUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
+const handleHeightUnitChange = (newUnit: string) => {
+  if (!props.selectedItem) return
+  
+  const currentHeight = getFieldValue('layout.height')
+  const currentUnit = getFieldValue('layout.heightUnit') || 'px'
+  
+  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
+  if (newUnit === '%' && currentUnit !== '%' && currentHeight && currentHeight > 100) {
+    updateFieldValue('layout.height', 100)
+  }
+  
+  updateFieldValue('layout.heightUnit', newUnit)
 }
 
 

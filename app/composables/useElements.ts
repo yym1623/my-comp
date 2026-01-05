@@ -1,7 +1,8 @@
 import type { ComponentDef, CanvasItem } from '~/types/component'
 
 export const useElements = () => {
-  const components: ComponentDef[] = [
+  // Field 컴포넌트들
+  const fieldComponents: ComponentDef[] = [
     {
       id: 'heading1',
       name: '제목 H1',
@@ -78,7 +79,11 @@ export const useElements = () => {
         alt: '이미지 설명',
         styles: {}
       }
-    },
+    }
+  ]
+
+  // Form 컴포넌트들
+  const formComponents: ComponentDef[] = [
     {
       id: 'inputText',
       name: '아이디 입력',
@@ -139,6 +144,45 @@ export const useElements = () => {
         styles: {}
       }
     },
+    
+    {
+      id: 'inputUrl',
+      name: 'URL 입력',
+      description: '웹 주소 입력 필드',
+      icon: 'pi pi-link',
+      type: 'inputUrl',
+      defaultProps: {
+        label: 'URL',
+        placeholder: 'https://example.com',
+        styles: {}
+      }
+    },
+    
+    {
+      id: 'radio',
+      name: '라디오 버튼',
+      description: '라디오 버튼 선택 필드',
+      icon: 'pi pi-circle',
+      type: 'radio',
+      defaultProps: {
+        label: '라디오 레이블',
+        options: ['옵션 1', '옵션 2', '옵션 3'],
+        selected: '옵션 1',
+        styles: {}
+      }
+    },
+    {
+      id: 'textarea',
+      name: '텍스트 입력',
+      description: '텍스트 입력 필드',
+      icon: 'pi pi-align-justify',
+      type: 'textarea',
+      defaultProps: {
+        label: '텍스트 레이블',
+        content: '설명 내용을 입력하세요.',
+        styles: {}
+      }
+    },
     {
       id: 'select',
       name: '선택 상자',
@@ -150,18 +194,6 @@ export const useElements = () => {
         label: '선택',
         placeholder: '선택하세요',
         options: ['옵션 1', '옵션 2', '옵션 3'],
-        styles: {}
-      }
-    },
-    {
-      id: 'inputUrl',
-      name: 'URL 입력',
-      description: '웹 주소 입력 필드',
-      icon: 'pi pi-link',
-      type: 'inputUrl',
-      defaultProps: {
-        label: 'URL',
-        placeholder: 'https://example.com',
         styles: {}
       }
     },
@@ -179,19 +211,6 @@ export const useElements = () => {
       }
     },
     {
-      id: 'radio',
-      name: '라디오 버튼',
-      description: '라디오 버튼 선택 필드',
-      icon: 'pi pi-circle',
-      type: 'radio',
-      defaultProps: {
-        label: '라디오 레이블',
-        options: ['옵션 1', '옵션 2', '옵션 3'],
-        selected: '옵션 1',
-        styles: {}
-      }
-    },
-    {
       id: 'toggleSwitch',
       name: '토글 스위치',
       description: '켜기/끄기 토글 스위치',
@@ -203,7 +222,11 @@ export const useElements = () => {
         checked: false,
         styles: {}
       }
-    },
+    }
+  ]
+
+  // Field 컴포넌트들에 button, prevNext, group, table, grid 추가
+  const additionalFieldComponents: ComponentDef[] = [
     {
       id: 'button',
       name: '버튼',
@@ -269,19 +292,19 @@ export const useElements = () => {
         items: [[], []], // 각 그리드 셀에 들어갈 컴포넌트들 (배열의 배열) - 기본 2개 셀
         styles: {}
       }
-    },
-    {
-      id: 'textarea',
-      name: '텍스트 입력',
-      description: '텍스트 입력 필드',
-      icon: 'pi pi-align-justify',
-      type: 'textarea',
-      defaultProps: {
-        label: '텍스트 레이블',
-        content: '설명 내용을 입력하세요.',
-        styles: {}
-      }
     }
+  ]
+
+  // Field 컴포넌트 전체 (기본 Field + 추가 Field)
+  const allFieldComponents: ComponentDef[] = [
+    ...fieldComponents,
+    ...additionalFieldComponents
+  ]
+
+  // Field와 Form을 합친 전체 컴포넌트 배열
+  const components: ComponentDef[] = [
+    ...allFieldComponents,
+    ...formComponents
   ]
 
   const componentNames: Record<string, string> = {
@@ -361,6 +384,8 @@ export const useElements = () => {
 
   return {
     components,
+    fieldComponents: allFieldComponents,
+    formComponents,
     componentNames,
     componentIcons,
     severityOptions,

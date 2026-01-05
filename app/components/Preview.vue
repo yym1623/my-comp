@@ -93,12 +93,13 @@
               <!-- Spacer -->
               <div
                 v-if="element.type === 'spacer'"
-                :style="{ height: element.props.height || '1rem' }"
+                :style="getElementStyle(element)"
               />
               <!-- Divider -->
-              <hr
+              <Divider
                 v-if="element.type === 'divider'"
-                class="border-t border-surface-200 dark:border-surface-700 my-2"
+                class="divider-default"
+                :style="getElementStyle(element)"
               />
               <!-- Image -->
               <div
@@ -315,11 +316,12 @@
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
+                <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element) }">
                   <div
                     v-for="(option, optIndex) in (element.props.options || [])"
                     :key="`radio-${element.uid}-${index}-${optIndex}`"
                     class="flex items-center gap-2"
+                    :style="getFormInputStyle(element)"
                   >
                     <RadioButton
                       :model-value="element.props.selected || element.props.options?.[0]"
@@ -355,9 +357,9 @@
               <!-- 버튼 (Field 스타일 - primary 기본) -->
               <div
                 v-if="element.type === 'button'"
-                class="flex items-center"
+                class="flex items-center button-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
-                :style="getElementStyle(element)"
+                :style="getButtonWrapperStyle(element)"
               >
                 <Button
                   :key="`button-${element.uid}-${index}`"
@@ -365,8 +367,8 @@
                   severity="primary"
                   :outlined="element.props.outlined || false"
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['button-element', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getButtonStyle(element) }"
                 />
               </div>
               <!-- 이전/다음 네비게이션 -->
@@ -374,22 +376,22 @@
                 v-if="element.type === 'prevNext'"
                 class="flex items-center justify-between gap-4"
                 :class="{ 'edit-mode': !isPreviewMode }"
-                :style="getElementStyle(element)"
+                :style="getPrevNextWrapperStyle(element)"
               >
                 <Button
                   :label="element.props.prevText"
                   severity="secondary"
                   outlined
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getPrevNextButtonStyle(element) }"
                 />
                 <Button
                   :label="element.props.nextText"
                   severity="primary"
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getPrevNextButtonStyle(element) }"
                 />
               </div>
               <!-- 그리드 섹션 -->
@@ -534,6 +536,7 @@ import type { PreviewProps, PreviewEmits } from '~/types/preview'
 import type { CanvasItem } from '~/types/component'
 import draggable from 'vuedraggable'
 import ComponentRenderer from './ComponentRenderer.vue'
+import Divider from 'primevue/divider'
 
 const Draggable = draggable
 
@@ -577,7 +580,7 @@ const getElementStyle = (element: CanvasItem) => {
   if (styles.layout && !formTypes.includes(element.type)) {
     // width가 정의되어 있고 0보다 크면 적용
     if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || 'px'
+      const widthUnit = styles.layout.widthUnit || '%'
       style.width = `${styles.layout.width}${widthUnit}`
     }
     // height가 정의되어 있고 0보다 크면 적용
@@ -644,13 +647,131 @@ const getFormInputStyle = (element: CanvasItem) => {
   if (styles.layout) {
     // width가 정의되어 있고 0보다 크면 적용
     if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || 'px'
+      const widthUnit = styles.layout.widthUnit || '%'
       style.width = `${styles.layout.width}${widthUnit}`
     }
     // height가 정의되어 있고 0보다 크면 적용
     if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
       const heightUnit = styles.layout.heightUnit || 'px'
       style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 이전/다음 버튼의 각 버튼에 적용할 Layout 스타일 계산 함수
+const getPrevNextButtonStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Layout (각 버튼에 적용)
+  if (styles.layout) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || '%'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 이전/다음 버튼의 wrapper에 적용할 스타일 (Position만)
+const getPrevNextWrapperStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Position만 적용 (Layout은 각 버튼에 적용)
+  if (styles.position) {
+    // x, y가 정의되어 있고 0이 아닐 때만 적용
+    const hasX = styles.position.x !== undefined && styles.position.x !== null && styles.position.x !== 0
+    const hasY = styles.position.y !== undefined && styles.position.y !== null && styles.position.y !== 0
+    
+    if (hasX) {
+      style.position = 'relative'
+      style.left = `${styles.position.x}px`
+    }
+    if (hasY) {
+      if (!style.position) {
+        style.position = 'relative'
+      }
+      style.top = `${styles.position.y}px`
+    }
+    // rotation이 0이 아니면 적용
+    if (styles.position.rotation !== undefined && styles.position.rotation !== null && styles.position.rotation !== 0) {
+      style.transform = `rotate(${styles.position.rotation}deg)`
+    }
+  }
+  
+  // Appearance (wrapper에 적용)
+  if (styles.appearance) {
+    if (styles.appearance.opacity !== undefined && styles.appearance.opacity !== null) {
+      style.opacity = `${styles.appearance.opacity / 100}`
+    }
+  }
+  
+  return style
+}
+
+// 일반 버튼에 적용할 Layout 스타일 계산 함수
+const getButtonStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Layout (버튼에 적용)
+  if (styles.layout) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || '%'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 일반 버튼의 wrapper에 적용할 스타일 (Position만)
+const getButtonWrapperStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Position만 적용 (Layout은 버튼에 적용)
+  if (styles.position) {
+    // x, y가 정의되어 있고 0이 아닐 때만 적용
+    const hasX = styles.position.x !== undefined && styles.position.x !== null && styles.position.x !== 0
+    const hasY = styles.position.y !== undefined && styles.position.y !== null && styles.position.y !== 0
+    
+    if (hasX) {
+      style.position = 'relative'
+      style.left = `${styles.position.x}px`
+    }
+    if (hasY) {
+      if (!style.position) {
+        style.position = 'relative'
+      }
+      style.top = `${styles.position.y}px`
+    }
+    // rotation이 0이 아니면 적용
+    if (styles.position.rotation !== undefined && styles.position.rotation !== null && styles.position.rotation !== 0) {
+      style.transform = `rotate(${styles.position.rotation}deg)`
+    }
+  }
+  
+  // Appearance (wrapper에 적용)
+  if (styles.appearance) {
+    if (styles.appearance.opacity !== undefined && styles.appearance.opacity !== null) {
+      style.opacity = `${styles.appearance.opacity / 100}`
     }
   }
   
@@ -837,5 +958,85 @@ function handleAddTableRow(element: CanvasItem) {
 
 
 
+}
+
+// Divider 배경 스타일 (다크모드/라이트모드 대응)
+:deep(.divider-default) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+}
+
+:deep(.divider-default hr) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  height: 100% !important;
+}
+
+:deep(.divider-default.p-divider) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+}
+
+:deep(.divider-default.p-divider-horizontal) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  border-top: none !important;
+}
+
+:deep(.divider-default.p-divider-vertical) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  border-left: none !important;
+}
+
+// 다크 모드
+:deep(.dark .divider-default) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default hr) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default.p-divider) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default.p-divider-horizontal) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default.p-divider-vertical) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+// 버튼 width/height 적용 (인라인 스타일 우선순위 높임)
+.button-wrapper {
+  :deep(.button-element.p-button),
+  :deep(.button-element.p-button.p-component),
+  :deep(.button-element.p-button.p-button-primary),
+  :deep(.button-element.p-button.p-button-secondary),
+  :deep(.button-element.p-button.p-button-outlined),
+  :deep(.button-element.p-button.p-button-text),
+  :deep(.button-element.p-button.p-button-sm) {
+    // PrimeVue의 기본 min-width 제거하여 인라인 스타일이 적용되도록
+    min-width: 0 !important;
+    max-width: none !important;
+    flex-shrink: 1 !important;
+  }
+}
+
+// 이전/다음 버튼 width/height 적용 (인라인 스타일 우선순위 높임)
+:deep(.prevnext-button.p-button),
+:deep(.prevnext-button.p-button.p-component),
+:deep(.prevnext-button.p-button.p-button-primary),
+:deep(.prevnext-button.p-button.p-button-secondary),
+:deep(.prevnext-button.p-button.p-button-outlined),
+:deep(.prevnext-button.p-button.p-button-text),
+:deep(.prevnext-button.p-button.p-button-sm) {
+  // PrimeVue의 기본 min-width 제거하여 인라인 스타일이 적용되도록
+  min-width: 0 !important;
+  max-width: none !important;
+  flex-shrink: 1 !important;
 }
 </style>

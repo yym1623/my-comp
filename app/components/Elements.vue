@@ -185,7 +185,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 // composable에서 컴포넌트 데이터 직접 가져오기
-const { components } = useElements()
+const { fieldComponents: allFieldComponents, formComponents: allFormComponents } = useElements()
 
 const handleAdd = (comp: ComponentDef) => {
   emit('add', comp)
@@ -196,25 +196,26 @@ const handleAdd = (comp: ComponentDef) => {
 
 const searchQuery = ref('')
 
-const filteredComponents = computed(() => {
+const fieldComponents = computed(() => {
   if (!searchQuery.value.trim()) {
-    return components
+    return allFieldComponents
   }
   const query = searchQuery.value.toLowerCase()
-  return components.filter(comp => 
+  return allFieldComponents.filter(comp => 
     comp.name.toLowerCase().includes(query) ||
     comp.description.toLowerCase().includes(query)
   )
 })
 
-const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
-
-const fieldComponents = computed(() =>
-  filteredComponents.value.filter(comp => !formTypes.includes(comp.type))
-)
-
-const formComponents = computed(() =>
-  filteredComponents.value.filter(comp => formTypes.includes(comp.type))
-)
+const formComponents = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return allFormComponents
+  }
+  const query = searchQuery.value.toLowerCase()
+  return allFormComponents.filter(comp => 
+    comp.name.toLowerCase().includes(query) ||
+    comp.description.toLowerCase().includes(query)
+  )
+})
 </script>
 
