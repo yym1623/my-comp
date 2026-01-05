@@ -145,7 +145,7 @@
                   />
                   <div
                     class="relative flex items-center gap-2 pl-8 pr-3 rounded-lg transition-all text-surface-700 dark:text-surface-300 group cursor-pointer" :class="isPreviewMode ? 'opacity-50 pointer-events-none' : ''"
-                  
+                    
                   >
                     <!-- 트리 가로선 -->
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-px bg-surface-200 dark:bg-surface-700" />

@@ -113,6 +113,7 @@
       @update:canvas-items="handleUpdateCanvasItems"
       @select="selectItem"
       @delete="deleteItem"
+      @copy="copyItem"
       @drop="onDrop"
       @deselect="selectedIndex = null"
       @grid-drop="handleGridDrop"
@@ -238,6 +239,7 @@ const { generateUid } = useElements()
 const { cloneCanvasItems } = useCanvas()
 const { isMobile, checkScreenSize } = useResponsive()
 const { pages } = usePages()
+const { getDefaultProps } = useElementOptions()
 
 // 왼쪽 탭 상태
 const leftTab = ref('elements')
@@ -484,33 +486,62 @@ function addComponent(comp: ComponentDef) {
     return
   }
 
+  // 컴포저블에서 기본값 가져오기
+  const defaultStylesFromComposable = getDefaultProps().styles
+  
+  // 컴포넌트별 기본값과 컴포저블 기본값 병합
+  const mergedProps: Record<string, any> = {
+    // 컴포넌트별 기본 props (styles 제외)
+    ...Object.fromEntries(
+      Object.entries(comp.defaultProps).filter(([key]) => key !== 'styles')
+    ),
+    // styles 객체 병합
+    styles: {
+      // 컴포저블 기본값 먼저 설정
+      ...defaultStylesFromComposable,
+      // 컴포넌트별 styles 병합 (컴포넌트 기본값이 우선)
+      ...(comp.defaultProps.styles || {}),
+      // 중첩 객체 병합
+      position: {
+        ...defaultStylesFromComposable.position,
+        ...(comp.defaultProps.styles?.position || {})
+      },
+      layout: {
+        ...defaultStylesFromComposable.layout,
+        ...(comp.defaultProps.styles?.layout || {}),
+        // 컴포넌트별 기본 width, height 설정 (컴포넌트 기본값이 우선)
+        ...(comp.type === 'heading1' ? { width: 300, height: 48 } :
+          comp.type === 'heading2' ? { width: 300, height: 36 } :
+          comp.type === 'heading3' ? { width: 300, height: 28 } :
+          comp.type === 'button' ? { width: 100, height: 40 } :
+          comp.type === 'inputText' || comp.type === 'inputPassword' || comp.type === 'inputEmail' || comp.type === 'inputUrl' ? { width: 200, height: 40 } :
+          comp.type === 'inputDate' || comp.type === 'inputTime' ? { width: 200, height: 40 } :
+          comp.type === 'select' ? { width: 200, height: 40 } :
+          comp.type === 'textarea' ? { width: 300, height: 120 } :
+          comp.type === 'image' ? { width: 200, height: 150 } :
+          comp.type === 'checkbox' || comp.type === 'radio' || comp.type === 'toggleSwitch' ? { width: 200, height: 40 } :
+          comp.type === 'prevNext' ? { width: 300, height: 40 } :
+          {})
+      },
+      appearance: {
+        ...defaultStylesFromComposable.appearance,
+        ...(comp.defaultProps.styles?.appearance || {})
+      },
+      typography: {
+        ...defaultStylesFromComposable.typography,
+        ...(comp.defaultProps.styles?.typography || {}),
+        // Typography 기본값 (텍스트 관련 요소만, 컴포넌트별 fontSize 우선)
+        ...(comp.type === 'heading1' || comp.type === 'heading2' || comp.type === 'heading3' || comp.type === 'textarea' || comp.type === 'button' ? {
+          fontSize: comp.type === 'heading1' ? 32 : comp.type === 'heading2' ? 24 : comp.type === 'heading3' ? 18 : 14
+        } : {})
+      }
+    }
+  }
+  
   const newItem: CanvasItem = {
     uid: generateUid(),
     type: comp.type,
-    props: { 
-      ...comp.defaultProps,
-      // 공통 기본값 추가
-      x: 0,
-      y: 0,
-      rotation: 0,
-      width: 0,
-      height: 0,
-      opacity: 100,
-      cornerRadius: 0,
-      fillColor: '#000000',
-      fillOpacity: 100,
-      alignment: 'left',
-      resizing: 'fixed',
-      // Typography 기본값 (텍스트 관련 요소만)
-      ...(comp.type === 'heading1' || comp.type === 'heading2' || comp.type === 'heading3' || comp.type === 'textarea' || comp.type === 'button' ? {
-        fontFamily: 'Montserrat',
-        fontWeight: '400',
-        fontSize: comp.type === 'heading1' ? 32 : comp.type === 'heading2' ? 24 : comp.type === 'heading3' ? 18 : 14,
-        lineHeight: 'Auto',
-        letterSpacing: 0,
-        textAlign: 'left'
-      } : {})
-    }
+    props: mergedProps
   }
   
   // 그리드 타입인 경우 items 배열 초기화 (columns 수만큼 빈 배열 생성)
@@ -562,6 +593,32 @@ function deleteItem(index: number) {
   } else if (selectedIndex.value !== null && selectedIndex.value > index) {
     selectedIndex.value--
   }
+}
+
+function copyItem(index: number) {
+  if (!currentPage.value) return
+  
+  const pageId = currentPage.value.id
+  const pageItems = pagesData.value[pageId]
+  if (!pageItems || !pageItems[index]) return
+  
+  // 현재 요소를 깊은 복사
+  const originalItem = pageItems[index]
+  const copiedItems = cloneCanvasItems([originalItem])
+  
+  if (!copiedItems || copiedItems.length === 0) return
+  
+  const copiedItem = copiedItems[0]
+  if (!copiedItem) return
+  
+  // 새로운 UID 생성
+  copiedItem.uid = generateUid()
+  
+  // 바로 아래에 삽입 (index + 1 위치)
+  pageItems.splice(index + 1, 0, copiedItem)
+  
+  // 원래 항목에 포커스 유지
+  selectedIndex.value = index
 }
 
 function handleGridDrop(data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }) {

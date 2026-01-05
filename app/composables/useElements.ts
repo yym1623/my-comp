@@ -9,7 +9,12 @@ export const useElements = () => {
       icon: 'heroicons:h1',
       type: 'heading1',
       defaultProps: {
-        text: '큰 제목 텍스트'
+        text: '큰 제목 텍스트',
+        styles: {
+          typography: {
+            fontSize: 32
+          }
+        }
       }
     },
     {
@@ -19,7 +24,12 @@ export const useElements = () => {
       icon: 'heroicons:h2',
       type: 'heading2',
       defaultProps: {
-        text: '중간 제목 텍스트'
+        text: '중간 제목 텍스트',
+        styles: {
+          typography: {
+            fontSize: 24
+          }
+        }
       }
     },
     {
@@ -29,7 +39,12 @@ export const useElements = () => {
       icon: 'heroicons:h3',
       type: 'heading3',
       defaultProps: {
-        text: '작은 제목 텍스트'
+        text: '작은 제목 텍스트',
+        styles: {
+          typography: {
+            fontSize: 18
+          }
+        }
       }
     },
     {
@@ -39,7 +54,8 @@ export const useElements = () => {
       icon: 'pi pi-arrows-v',
       type: 'spacer',
       defaultProps: {
-        height: '1rem'
+        height: '1rem',
+        styles: {}
       }
     },
     {
@@ -48,7 +64,9 @@ export const useElements = () => {
       description: '섹션을 나누는 얇은 선',
       icon: 'pi pi-minus',
       type: 'divider',
-      defaultProps: {}
+      defaultProps: {
+        styles: {}
+      }
     },
     {
       id: 'image',
@@ -57,7 +75,8 @@ export const useElements = () => {
       icon: 'pi pi-image',
       type: 'image',
       defaultProps: {
-        alt: '이미지 설명'
+        alt: '이미지 설명',
+        styles: {}
       }
     },
     {
@@ -68,7 +87,8 @@ export const useElements = () => {
       type: 'inputText',
       defaultProps: {
         label: '아이디 레이블',
-        placeholder: '입력하세요...'
+        placeholder: '입력하세요...',
+        styles: {}
       }
     },
     {
@@ -79,7 +99,8 @@ export const useElements = () => {
       type: 'inputPassword',
       defaultProps: {
         label: '비밀번호',
-        placeholder: '비밀번호를 입력하세요'
+        placeholder: '비밀번호를 입력하세요',
+        styles: {}
       }
     },
     {
@@ -90,7 +111,8 @@ export const useElements = () => {
       type: 'inputEmail',
       defaultProps: {
         label: '이메일',
-        placeholder: 'example@email.com'
+        placeholder: 'example@email.com',
+        styles: {}
       }
     },
     {
@@ -101,7 +123,8 @@ export const useElements = () => {
       type: 'inputDate',
       defaultProps: {
         label: '날짜',
-        placeholder: 'yy.mm.dd'
+        placeholder: 'yy.mm.dd',
+        styles: {}
       }
     },
     {
@@ -112,7 +135,8 @@ export const useElements = () => {
       type: 'inputTime',
       defaultProps: {
         label: '시간',
-        placeholder: 'hh:ss'
+        placeholder: 'hh:ss',
+        styles: {}
       }
     },
     {
@@ -125,7 +149,8 @@ export const useElements = () => {
       defaultProps: {
         label: '선택',
         placeholder: '선택하세요',
-        options: ['옵션 1', '옵션 2', '옵션 3']
+        options: ['옵션 1', '옵션 2', '옵션 3'],
+        styles: {}
       }
     },
     {
@@ -136,7 +161,8 @@ export const useElements = () => {
       type: 'inputUrl',
       defaultProps: {
         label: 'URL',
-        placeholder: 'https://example.com'
+        placeholder: 'https://example.com',
+        styles: {}
       }
     },
     {
@@ -148,7 +174,8 @@ export const useElements = () => {
       type: 'checkbox',
       defaultProps: {
         label: '체크박스 레이블',
-        checked: false
+        checked: false,
+        styles: {}
       }
     },
     {
@@ -160,7 +187,8 @@ export const useElements = () => {
       defaultProps: {
         label: '라디오 레이블',
         options: ['옵션 1', '옵션 2', '옵션 3'],
-        selected: '옵션 1'
+        selected: '옵션 1',
+        styles: {}
       }
     },
     {
@@ -172,7 +200,8 @@ export const useElements = () => {
       type: 'toggleSwitch',
       defaultProps: {
         label: '토글 레이블',
-        checked: false
+        checked: false,
+        styles: {}
       }
     },
     {
@@ -185,7 +214,8 @@ export const useElements = () => {
         label: '버튼 레이블',
         text: '버튼',
         severity: 'primary',
-        outlined: false
+        outlined: false,
+        styles: {}
       }
     },
     {
@@ -196,7 +226,8 @@ export const useElements = () => {
       type: 'prevNext',
       defaultProps: {
         prevText: '이전 페이지',
-        nextText: '다음 페이지'
+        nextText: '다음 페이지',
+        styles: {}
       }
     },
     {
@@ -208,7 +239,8 @@ export const useElements = () => {
       type: 'group',
       defaultProps: {
         title: '그룹 제목',
-        items: [] // 그룹 안에 들어갈 컴포넌트들
+        items: [], // 그룹 안에 들어갈 컴포넌트들
+        styles: {}
       }
     },
     {
@@ -217,11 +249,11 @@ export const useElements = () => {
       description: '간단한 표 레이아웃',
       icon: 'pi pi-table',
       ready: false,
-
       type: 'table',
       defaultProps: {
         columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
-        rows: [['데이터 1', '데이터 2', '데이터 3']] // 행 데이터 (배열의 배열)
+        rows: [['데이터 1', '데이터 2', '데이터 3']], // 행 데이터 (배열의 배열)
+        styles: {}
       }
     },
     {
@@ -234,7 +266,8 @@ export const useElements = () => {
       defaultProps: {
         columns: 2,
         gap: '1rem',
-        items: [[], []] // 각 그리드 셀에 들어갈 컴포넌트들 (배열의 배열) - 기본 2개 셀
+        items: [[], []], // 각 그리드 셀에 들어갈 컴포넌트들 (배열의 배열) - 기본 2개 셀
+        styles: {}
       }
     },
     {
@@ -245,7 +278,8 @@ export const useElements = () => {
       type: 'textarea',
       defaultProps: {
         label: '텍스트 레이블',
-        content: '설명 내용을 입력하세요.'
+        content: '설명 내용을 입력하세요.',
+        styles: {}
       }
     }
   ]
