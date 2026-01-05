@@ -4,11 +4,27 @@ type ComponentOptionField = {
   component: 'InputNumber' | 'Select'
   componentProps?: Record<string, unknown>
   section?: string
+  defaultValue?: unknown
+  disabled?: boolean
 }
 
-type ComponentOptionsMap = Record<string, ComponentOptionField[]>
+type SectionReady = {
+  Position?: boolean
+  Layout?: boolean
+  Appearance?: boolean
+  Typography?: boolean
+}
 
 export const useElementOptions = () => {
+  const getSectionReady = (): SectionReady => {
+    return {
+      Position: true,
+      Layout: true,
+      Appearance: true,
+      Typography: true
+    }
+  }
+
   const getCommonOptions = (): ComponentOptionField[] => {
     return [
       {
@@ -16,56 +32,123 @@ export const useElementOptions = () => {
         label: 'X',
         component: 'InputNumber',
         componentProps: { min: 0 },
-        section: 'Position'
+        section: 'Position',
+        defaultValue: 0
       },
       {
         key: 'position.y',
         label: 'Y',
         component: 'InputNumber',
         componentProps: { min: 0 },
-        section: 'Position'
+        section: 'Position',
+        defaultValue: 0
       },
       {
         key: 'position.rotation',
         label: 'Rotation',
         component: 'InputNumber',
         componentProps: { min: -360, max: 360 },
-        section: 'Position'
+        section: 'Position',
+        defaultValue: 0
       },
       {
         key: 'layout.width',
         label: 'W',
         component: 'InputNumber',
         componentProps: { min: 0 },
-        section: 'Layout'
+        section: 'Layout',
+        defaultValue: 0
+      },
+      {
+        key: 'layout.widthUnit',
+        label: 'Width Unit',
+        component: 'Select',
+        componentProps: {
+          options: [
+            { label: 'px', value: 'px' },
+            { label: '%', value: '%' }
+          ]
+        },
+        section: 'Layout',
+        defaultValue: 'px'
       },
       {
         key: 'layout.height',
         label: 'H',
         component: 'InputNumber',
         componentProps: { min: 0 },
-        section: 'Layout'
+        section: 'Layout',
+        defaultValue: 0
+      },
+      {
+        key: 'layout.heightUnit',
+        label: 'Height Unit',
+        component: 'Select',
+        componentProps: {
+          options: [
+            { label: 'px', value: 'px' },
+            { label: '%', value: '%' }
+          ]
+        },
+        section: 'Layout',
+        defaultValue: 'px'
       },
       {
         key: 'appearance.opacity',
         label: 'Opacity',
         component: 'InputNumber',
         componentProps: { min: 0, max: 100 },
-        section: 'Appearance'
+        section: 'Appearance',
+        defaultValue: 100
       },
       {
         key: 'appearance.cornerRadius',
         label: 'Corner radius',
         component: 'InputNumber',
         componentProps: { min: 0 },
-        section: 'Appearance'
+        section: 'Appearance',
+        defaultValue: 0
+      },
+      {
+        key: 'appearance.borderStyle',
+        label: 'Border Style',
+        component: 'Select',
+        componentProps: {
+          options: [
+            { label: 'None', value: 'none' },
+            { label: 'Solid', value: 'solid' },
+            { label: 'Dashed', value: 'dashed' },
+            { label: 'Dotted', value: 'dotted' },
+            { label: 'Double', value: 'double' }
+          ]
+        },
+        section: 'Appearance',
+        defaultValue: 'none'
+      },
+      {
+        key: 'appearance.borderPosition',
+        label: 'Border Position',
+        component: 'Select',
+        componentProps: {
+          options: [
+            { label: 'None', value: 'none' },
+            { label: 'Top', value: 'top' },
+            { label: 'Left', value: 'left' },
+            { label: 'Bottom', value: 'bottom' },
+            { label: 'Right', value: 'right' }
+          ]
+        },
+        section: 'Appearance',
+        defaultValue: 'none'
       },
       {
         key: 'typography.fontSize',
         label: 'Font Size',
         component: 'InputNumber',
         componentProps: { min: 8, max: 72 },
-        section: 'Typography'
+        section: 'Typography',
+        defaultValue: 14,
+        disabled: true
       },
       {
         key: 'typography.fontFamily',
@@ -104,7 +187,8 @@ export const useElementOptions = () => {
             { label: 'Fira Sans', value: 'Fira Sans' }
           ]
         },
-        section: 'Typography'
+        section: 'Typography',
+        defaultValue: 'Arial'
       },
       {
         key: 'typography.fontWeight',
@@ -119,7 +203,8 @@ export const useElementOptions = () => {
             { label: 'Extra Bold', value: '800' }
           ]
         },
-        section: 'Typography'
+        section: 'Typography',
+        defaultValue: '400'
       },
       {
         key: 'typography.textAlign',
@@ -132,18 +217,40 @@ export const useElementOptions = () => {
             { label: 'Right', value: 'right' }
           ]
         },
-        section: 'Typography'
+        section: 'Typography',
+        defaultValue: 'left'
       }
     ]
   }
 
-  const commonOptions = getCommonOptions()
+  const getOptionsForType = (type: string) => getCommonOptions()
 
-  const getOptionsForType = (type: string) => commonOptions
+  // 컴포넌트 생성 시 사용할 기본 props 반환 (styles 객체 구조)
+  const getDefaultProps = () => {
+    const commonOptions = getCommonOptions()
+    const styles: Record<string, any> = {}
+    
+    commonOptions.forEach(option => {
+      if (option.key.includes('.')) {
+        const parts = option.key.split('.')
+        if (parts.length === 2) {
+          const [objKey, propKey] = parts
+          if (objKey && propKey) {
+            if (!styles[objKey]) {
+              styles[objKey] = {}
+            }
+            styles[objKey][propKey] = option.defaultValue
+          }
+        }
+      }
+    })
+    
+    return { styles }
+  }
 
   return {
-    getOptionsForType
+    getOptionsForType,
+    getSectionReady,
+    getDefaultProps
   }
 }
-
-

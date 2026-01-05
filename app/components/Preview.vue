@@ -47,43 +47,46 @@
               :class="{ selected: selectedIndex === index && !isPreviewMode }"
               @click.stop="!isPreviewMode && $emit('select', index)"
             >
-              <!-- 수정/삭제 버튼 (호버/선택 시 표시, 보더 밖 오른쪽 상단) -->
-              <div 
-                v-if="!isPreviewMode" 
-                class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
-                :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-              >
-                <button
-                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                  @click.stop="$emit('select', index)"
+                <!-- 복사/삭제 버튼 -->
+                <div 
+                  v-if="!isPreviewMode" 
+                  class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
+                  :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
                 >
-                  <i class="pi pi-pencil text-xs text-primary-500 dark:text-primary-400" />
-                </button>
-                <button
-                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                  @click.stop="$emit('delete', index)"
-                >
-                  <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
-                </button>
-              </div>
+                  <button
+                    class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                    @click.stop="$emit('copy', index)"
+                  >
+                    <i class="pi pi-copy text-xs text-primary-500 dark:text-primary-400" />
+                  </button>
+                  <button
+                    class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                    @click.stop="$emit('delete', index)"
+                  >
+                    <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
+                  </button>
+                </div>
               <!-- Heading 1 -->
               <h1
                 v-if="element.type === 'heading1'"
-                class="text-2xl font-bold text-surface-800 dark:text-surface-100 m-0"
+                class="font-bold text-surface-800 dark:text-surface-100 m-0"
+                :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
                 {{ element.props.text }}
               </h1>
               <!-- Heading 2 -->
               <h2
                 v-if="element.type === 'heading2'"
-                class="text-xl font-semibold text-surface-800 dark:text-surface-100 m-0"
+                class="font-semibold text-surface-800 dark:text-surface-100 m-0"
+                :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
                 {{ element.props.text }}
               </h2>
               <!-- Heading 3 -->
               <h3
                 v-if="element.type === 'heading3'"
-                class="text-lg font-semibold text-surface-800 dark:text-surface-100 m-0"
+                class="font-semibold text-surface-800 dark:text-surface-100 m-0"
+                :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
                 {{ element.props.text }}
               </h3>
@@ -97,29 +100,11 @@
                 v-if="element.type === 'divider'"
                 class="border-t border-surface-200 dark:border-surface-700 my-2"
               />
-              <!-- 텍스트 입력 (여러 줄) -->
-              <div
-                v-if="element.type === 'textarea'"
-                class="flex flex-col gap-1 form-field-wrapper"
-                :class="{ 'edit-mode': !isPreviewMode }"
-              >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
-                </label>
-                <Textarea
-                  :key="`textarea-${element.uid}-${index}`"
-                  :model-value="element.props.content || ''"
-                  :rows="4"
-                class="w-full"
-                  style="min-height: 6rem;"
-                  :readonly="!isPreviewMode"
-                  :class="{ 'edit-mode': !isPreviewMode }"
-              />
-              </div>
               <!-- Image -->
               <div
                 v-if="element.type === 'image'"
                 class="rounded-lg overflow-hidden"
+                :style="getElementStyle(element)"
               >
                 <Image
                   v-if="element.props.src"
@@ -138,11 +123,32 @@
                   </div>
                 </div>
               </div>
-              <!-- 텍스트 입력 -->
+              <!-- 텍스트 입력 (여러 줄) -->
+              <div
+                v-if="element.type === 'textarea'"
+                class="flex flex-col gap-1 form-field-wrapper"
+                :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
+              >
+                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.label }}
+                </label>
+                <Textarea
+                  :key="`textarea-${element.uid}-${index}`"
+                  :model-value="element.props.content || ''"
+                  :rows="4"
+                  :style="{ minHeight: '6rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
+                  :readonly="!isPreviewMode"
+                  :class="{ 'edit-mode': !isPreviewMode }"
+                />
+              </div>
+              
+              <!-- 나머지 컴포넌트들 -->
               <div
                 v-if="element.type === 'inputText'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -153,8 +159,8 @@
                   :model-value="''"
                   :placeholder="element.props.placeholder || '입력하세요...'"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 비밀번호 입력 -->
@@ -162,6 +168,7 @@
                 v-if="element.type === 'inputPassword'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -172,8 +179,8 @@
                   :model-value="''"
                   :placeholder="element.props.placeholder || '비밀번호를 입력하세요'"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 이메일 입력 -->
@@ -181,6 +188,7 @@
                 v-if="element.type === 'inputEmail'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -191,8 +199,8 @@
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'example@email.com'"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 날짜 선택 -->
@@ -200,6 +208,7 @@
                 v-if="element.type === 'inputDate'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -210,8 +219,8 @@
                   :placeholder="element.props.placeholder || '날짜를 선택하세요'"
                   dateFormat="yy.mm.dd"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 시간 선택 -->
@@ -219,6 +228,7 @@
                 v-if="element.type === 'inputTime'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -230,8 +240,8 @@
                   timeOnly
                   hourFormat="24"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 선택 상자 -->
@@ -239,6 +249,7 @@
                 v-if="element.type === 'select'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -249,8 +260,8 @@
                   :options="element.props.options || []"
                   :placeholder="element.props.placeholder || '선택하세요'"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- URL 입력 -->
@@ -258,6 +269,7 @@
                 v-if="element.type === 'inputUrl'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
@@ -268,8 +280,8 @@
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'https://example.com'"
                   :readonly="!isPreviewMode"
-                  :class="['w-full', { 'edit-mode': !isPreviewMode }]"
-                  style="min-height: 2.5rem;"
+                  :class="[{ 'edit-mode': !isPreviewMode }]"
+                  :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                 />
               </div>
               <!-- 체크박스 -->
@@ -277,11 +289,12 @@
                 v-if="element.type === 'checkbox'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <div class="flex items-center gap-2" style="min-height: 2.5rem;">
+                <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <Checkbox
                     :key="`checkbox-${element.uid}-${index}`"
                     :model-value="element.props.checked || false"
@@ -297,11 +310,12 @@
                 v-if="element.type === 'radio'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <div class="flex flex-col gap-2" style="min-height: 2.5rem;">
+                <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <div
                     v-for="(option, optIndex) in (element.props.options || [])"
                     :key="`radio-${element.uid}-${index}-${optIndex}`"
@@ -323,11 +337,12 @@
                 v-if="element.type === 'toggleSwitch'"
                 class="flex flex-col gap-1 form-field-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <div class="flex items-center gap-2" style="min-height: 2.5rem;">
+                <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <ToggleSwitch
                     :key="`toggle-${element.uid}-${index}`"
                     :model-value="element.props.checked || false"
@@ -342,6 +357,7 @@
                 v-if="element.type === 'button'"
                 class="flex items-center"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <Button
                   :key="`button-${element.uid}-${index}`"
@@ -350,6 +366,7 @@
                   :outlined="element.props.outlined || false"
                   :readonly="!isPreviewMode"
                   :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
+                  :style="getTypographyStyle(element)"
                 />
               </div>
               <!-- 이전/다음 네비게이션 -->
@@ -357,6 +374,7 @@
                 v-if="element.type === 'prevNext'"
                 class="flex items-center justify-between gap-4"
                 :class="{ 'edit-mode': !isPreviewMode }"
+                :style="getElementStyle(element)"
               >
                 <Button
                   :label="element.props.prevText"
@@ -364,19 +382,21 @@
                   outlined
                   :readonly="!isPreviewMode"
                   :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
+                  :style="getTypographyStyle(element)"
                 />
                 <Button
                   :label="element.props.nextText"
                   severity="primary"
                   :readonly="!isPreviewMode"
                   :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
+                  :style="getTypographyStyle(element)"
                 />
               </div>
               <!-- 그리드 섹션 -->
               <div
                 v-if="element.type === 'grid'"
                 class="grid"
-                :style="{ gridTemplateColumns: `repeat(${element.props.columns || 2}, minmax(0, 1fr))`, gap: element.props.gap || '1rem' }"
+                :style="{ gridTemplateColumns: `repeat(${element.props.columns || 2}, minmax(0, 1fr))`, gap: element.props.gap || '1rem', ...getElementStyle(element) }"
               >
                 <div
                   v-for="(cellItems, cellIndex) in (element.props.items && element.props.items.length > 0 ? element.props.items : Array(element.props.columns || 2).fill([]))"
@@ -405,6 +425,7 @@
                 v-if="element.type === 'group'"
                 class="border border-dashed border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900/30 overflow-hidden transition-all"
                 :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGroup === element.uid }"
+                :style="getElementStyle(element)"
                 @dragover.prevent="!isPreviewMode && handleGroupDragOver($event, element)"
                 @dragleave="!isPreviewMode && handleGroupDragLeave(element)"
                 @drop="!isPreviewMode && handleGroupDrop($event, element)"
@@ -428,6 +449,7 @@
               <div
                 v-if="element.type === 'table'"
                 class="overflow-x-auto rounded-md border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900/20"
+                :style="getElementStyle(element)"
               >
                 <table class="min-w-full text-left text-xs">
                   <thead class="bg-surface-50 dark:bg-surface-800/60">
@@ -522,6 +544,118 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { getComponentLabel } = useElements()
+
+// 요소의 스타일 계산 함수 (form 컴포넌트 제외)
+const getElementStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Position
+  if (styles.position) {
+    // x, y가 정의되어 있고 0이 아닐 때만 적용
+    const hasX = styles.position.x !== undefined && styles.position.x !== null && styles.position.x !== 0
+    const hasY = styles.position.y !== undefined && styles.position.y !== null && styles.position.y !== 0
+    
+    if (hasX) {
+      style.position = 'relative'
+      style.left = `${styles.position.x}px`
+    }
+    if (hasY) {
+      if (!style.position) {
+        style.position = 'relative'
+      }
+      style.top = `${styles.position.y}px`
+    }
+    // rotation이 0이 아니면 적용
+    if (styles.position.rotation !== undefined && styles.position.rotation !== null && styles.position.rotation !== 0) {
+      style.transform = `rotate(${styles.position.rotation}deg)`
+    }
+  }
+  
+  // Layout (form 컴포넌트는 제외)
+  const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
+  if (styles.layout && !formTypes.includes(element.type)) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || 'px'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  // Appearance
+  if (styles.appearance) {
+    if (styles.appearance.opacity !== undefined && styles.appearance.opacity !== null) {
+      style.opacity = `${styles.appearance.opacity / 100}`
+    }
+    if (styles.appearance.cornerRadius !== undefined && styles.appearance.cornerRadius !== null) {
+      style.borderRadius = `${styles.appearance.cornerRadius}px`
+    }
+    if (styles.appearance.borderStyle && styles.appearance.borderStyle !== 'none') {
+      const borderPosition = styles.appearance.borderPosition || 'none'
+      const borderWidth = '1px'
+      
+      if (borderPosition === 'none') {
+        // 전체 보더 적용
+        style.border = `${borderWidth} ${styles.appearance.borderStyle}`
+      } else {
+        // 특정 위치 보더 적용
+        const borderKey = `border${borderPosition.charAt(0).toUpperCase() + borderPosition.slice(1)}`
+        style[borderKey] = `${borderWidth} ${styles.appearance.borderStyle}`
+      }
+    }
+  }
+  
+  return style
+}
+
+// 요소의 Typography 스타일 계산 함수
+const getTypographyStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const typography = styles.typography || {}
+  const style: Record<string, string> = {}
+  
+  if (typography.fontSize !== undefined) {
+    style.fontSize = `${typography.fontSize}px`
+  }
+  if (typography.fontFamily) {
+    style.fontFamily = typography.fontFamily
+  }
+  if (typography.fontWeight) {
+    style.fontWeight = typography.fontWeight
+  }
+  if (typography.textAlign) {
+    style.textAlign = typography.textAlign
+  }
+  
+  return style
+}
+
+// Form 컴포넌트의 input 요소에만 적용할 Layout 스타일 계산 함수
+const getFormInputStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Layout (form 컴포넌트의 input 요소에만 적용)
+  if (styles.layout) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || 'px'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
 
 // 드래그 오버 상태 관리
 const isDraggingOverGrid = ref<string | null>(null)

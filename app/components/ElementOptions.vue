@@ -41,78 +41,22 @@
         <template v-if="selectedIndex !== null && selectedItem">
           <div class="px-3 py-2.5 w-full min-w-0 space-y-4">
             <!-- Position 섹션 -->
-            <div>
+            <div class="relative">
+              <Ready v-if="sectionReady.Position === false" />
               <div class="flex items-center gap-2 pb-1.5">
                 <span class="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                   Position
                 </span>
               </div>
-              <div class="space-y-2">
-                <!-- Alignment -->
-                <div class="space-y-0.5">
-                  <label class="figma-label">Alignment</label>
-                  <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
-                    <ButtonGroup class="w-full min-w-0">
-                      <Button
-                        icon="pi pi-align-left"
-                        :severity="(getFieldValue('position.alignmentHorizontal') || 'left') === 'left' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentHorizontal', 'left')"
-                      />
-                      <Button
-                        icon="pi pi-align-center"
-                        :severity="(getFieldValue('position.alignmentHorizontal') || 'left') === 'center' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentHorizontal', 'center')"
-                      />
-                      <Button
-                        icon="pi pi-align-right"
-                        :severity="(getFieldValue('position.alignmentHorizontal') || 'left') === 'right' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentHorizontal', 'right')"
-                      />
-                    </ButtonGroup>
-                    <ButtonGroup class="w-full min-w-0">
-                      <Button
-                        icon="pi pi-arrow-up"
-                        :severity="(getFieldValue('position.alignmentVertical') || 'top') === 'top' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentVertical', 'top')"
-                      />
-                      <Button
-                        icon="pi pi-minus"
-                        :severity="(getFieldValue('position.alignmentVertical') || 'top') === 'middle' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentVertical', 'middle')"
-                      />
-                      <Button
-                        icon="pi pi-arrow-down"
-                        :severity="(getFieldValue('position.alignmentVertical') || 'top') === 'bottom' ? 'primary' : 'secondary'"
-                        text
-                        size="small"
-                        class="flex-1"
-                        @click="updateFieldValue('position.alignmentVertical', 'bottom')"
-                      />
-                    </ButtonGroup>
-                  </div>
-                </div>
-                <!-- X/Y -->
+                <div class="space-y-2">
+                  <!-- X/Y -->
                 <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">X</label>
                     <InputNumber
-                      :model-value="getFieldValue('position.x') ?? 0"
+                      :model-value="getFieldValue('position.x')"
                       :min="0"
+                      :disabled="getFieldDisabled('position.x')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('position.x', $event)"
                     />
@@ -120,8 +64,9 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Y</label>
                     <InputNumber
-                      :model-value="getFieldValue('position.y') ?? 0"
+                      :model-value="getFieldValue('position.y')"
                       :min="0"
+                      :disabled="getFieldDisabled('position.y')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('position.y', $event)"
                     />
@@ -132,9 +77,10 @@
                   <label class="figma-label">Rotation</label>
                   <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
                     <InputNumber
-                      :model-value="getFieldValue('position.rotation') ?? 0"
+                      :model-value="getFieldValue('position.rotation')"
                       :min="-360"
                       :max="360"
+                      :disabled="getFieldDisabled('position.rotation')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('position.rotation', $event)"
                     />
@@ -171,7 +117,8 @@
             <Divider />
             
             <!-- Layout 섹션 -->
-            <div>
+            <div class="relative">
+              <Ready v-if="sectionReady.Layout === false" />
               <div class="flex items-center gap-2 pb-1.5">
                 <span class="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                   Layout
@@ -182,21 +129,45 @@
                 <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">W</label>
-                    <InputNumber
-                      :model-value="getFieldValue('layout.width') ?? 0"
-                      :min="0"
-                      class="figma-input w-full"
-                      @update:model-value="updateFieldValue('layout.width', $event)"
-                    />
+                    <InputGroup class="w-full input-group-width-height">
+                      <InputNumber
+                        :model-value="getFieldValue('layout.width')"
+                        :min="0"
+                        :disabled="getFieldDisabled('layout.width')"
+                        class="figma-input w-[40%]"
+                        @update:model-value="updateFieldValue('layout.width', $event)"
+                      />
+                        <Select
+                          :model-value="getFieldValue('layout.widthUnit') || 'px'"
+                          :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
+                          optionLabel="label"
+                          optionValue="value"
+                          :disabled="getFieldDisabled('layout.width')"
+                          class="figma-input w-[60%]"
+                          @update:model-value="updateFieldValue('layout.widthUnit', $event)"
+                        />
+                    </InputGroup>
                   </div>
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">H</label>
-                    <InputNumber
-                      :model-value="getFieldValue('layout.height') ?? 0"
-                      :min="0"
-                      class="figma-input w-full"
-                      @update:model-value="updateFieldValue('layout.height', $event)"
-                    />
+                    <InputGroup class="w-full input-group-width-height">
+                      <InputNumber
+                        :model-value="getFieldValue('layout.height')"
+                        :min="0"
+                        :disabled="getFieldDisabled('layout.height')"
+                        class="figma-input w-[40%]"
+                        @update:model-value="updateFieldValue('layout.height', $event)"
+                      />
+                      <Select
+                        :model-value="getFieldValue('layout.heightUnit') || 'px'"
+                        :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
+                        optionLabel="label"
+                        optionValue="value"
+                        :disabled="getFieldDisabled('layout.height')"
+                        class="figma-input w-[60%]"
+                        @update:model-value="updateFieldValue('layout.heightUnit', $event)"
+                      />
+                    </InputGroup>
                   </div>
                 </div>
               </div>
@@ -204,7 +175,8 @@
             <Divider />
             
             <!-- Appearance 섹션 -->
-            <div>
+            <div class="relative">
+              <Ready v-if="sectionReady.Appearance === false" />
               <div class="flex items-center gap-2 pb-1.5">
                 <span class="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                   Appearance
@@ -216,20 +188,49 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Opacity</label>
                     <InputNumber
-                      :model-value="getFieldValue('appearance.opacity') ?? 100"
+                      :model-value="getFieldValue('appearance.opacity')"
                       :min="0"
                       :max="100"
+                      :disabled="getFieldDisabled('appearance.opacity')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('appearance.opacity', $event)"
                     />
                   </div>
                   <div class="space-y-0.5 min-w-0">
-                    <label class="figma-label">Corner radius</label>
+                    <label class="figma-label">Border radius</label>
                     <InputNumber
-                      :model-value="getFieldValue('appearance.cornerRadius') ?? 0"
+                      :model-value="getFieldValue('appearance.cornerRadius')"
                       :min="0"
+                      :disabled="getFieldDisabled('appearance.cornerRadius') || isBorderDisabled"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('appearance.cornerRadius', $event)"
+                    />
+                  </div>
+                </div>
+                <!-- Border Style / Border Position -->
+                <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
+                  <div class="space-y-0.5 min-w-0">
+                    <label class="figma-label">Border Style</label>
+                    <Select
+                      :model-value="getFieldValue('appearance.borderStyle')"
+                      :options="borderStyleOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      :disabled="getFieldDisabled('appearance.borderStyle')"
+                      class="figma-input w-full"
+                      @update:model-value="updateFieldValue('appearance.borderStyle', $event)"
+                    />
+                  </div>
+                  <div class="space-y-0.5 min-w-0">
+                    <label class="figma-label">Border Position</label>
+                    <Select
+                      :model-value="getFieldValue('appearance.borderPosition')"
+                      :options="borderPositionOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      :disabled="getFieldDisabled('appearance.borderPosition') || isBorderDisabled"
+                      class="figma-input w-full"
+                      @update:model-value="updateFieldValue('appearance.borderPosition', $event)"
                     />
                   </div>
                 </div>
@@ -238,7 +239,8 @@
             <Divider />
             
             <!-- Typography 섹션 -->
-            <div>
+            <div class="relative">
+              <Ready v-if="sectionReady.Typography === false" />
               <div class="flex items-center gap-2 pb-1.5">
                 <span class="text-xs font-semibold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                   Typography
@@ -250,15 +252,16 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Size</label>
                     <InputNumber
-                      :model-value="getFieldValue('typography.fontSize') ?? 14"
+                      :model-value="getFieldValue('typography.fontSize')"
                       :min="8"
                       :max="72"
+                      :disabled="getFieldDisabled('typography.fontSize')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('typography.fontSize', $event)"
                     />
                   </div>
                   <div class="space-y-0.5 min-w-0">
-                    <label class="figma-label">Text Align</label>
+                    <label class="figma-label">Font Align</label>
                     <ButtonGroup class="w-full min-w-0">
                       <Button
                         icon="pi pi-align-left"
@@ -292,10 +295,11 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Family</label>
                     <Select
-                      :model-value="getFieldValue('typography.fontFamily') || fontFamilyOptions[0]?.value"
+                      :model-value="getFieldValue('typography.fontFamily')"
                       :options="fontFamilyOptions"
                       optionLabel="label"
                       optionValue="value"
+                      :disabled="getFieldDisabled('typography.fontFamily')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('typography.fontFamily', $event)"
                     />
@@ -303,10 +307,11 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Weight</label>
                     <Select
-                      :model-value="getFieldValue('typography.fontWeight') || fontWeightOptions[0]?.value"
+                      :model-value="getFieldValue('typography.fontWeight')"
                       :options="fontWeightOptions"
                       optionLabel="label"
                       optionValue="value"
+                      :disabled="getFieldDisabled('typography.fontWeight')"
                       class="figma-input w-full"
                       @update:model-value="updateFieldValue('typography.fontWeight', $event)"
                     />
@@ -330,6 +335,7 @@
 <script lang="ts" setup>
 import type { Page, CanvasItem } from '~/types/component'
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
+import Ready from './Ready.vue'
 
 interface Props {
   currentPage: Page | null
@@ -345,12 +351,17 @@ const emit = defineEmits<{
 }>()
 
 const { getComponentName, getComponentIcon } = useElements()
-const { getOptionsForType } = useElementOptions()
+const { getOptionsForType, getSectionReady } = useElementOptions()
+
+// 섹션별 ready 상태
+const sectionReady = computed(() => getSectionReady())
+
+// 옵션 가져오기
+const options = computed(() => getOptionsForType(props.selectedItem?.type || ''))
 
 // Font Family 옵션
 const fontFamilyOptions = computed(() => {
-  const options = getOptionsForType(props.selectedItem?.type || '')
-  const fontFamilyField = options.find(opt => opt.key === 'typography.fontFamily')
+  const fontFamilyField = options.value.find(opt => opt.key === 'typography.fontFamily')
   return Array.isArray(fontFamilyField?.componentProps?.options) 
     ? fontFamilyField.componentProps.options 
     : []
@@ -358,18 +369,41 @@ const fontFamilyOptions = computed(() => {
 
 // Font Weight 옵션
 const fontWeightOptions = computed(() => {
-  const options = getOptionsForType(props.selectedItem?.type || '')
-  const fontWeightField = options.find(opt => opt.key === 'typography.fontWeight')
+  const fontWeightField = options.value.find(opt => opt.key === 'typography.fontWeight')
   return Array.isArray(fontWeightField?.componentProps?.options) 
     ? fontWeightField.componentProps.options 
     : []
 })
 
-// 필드 값 가져오기 (객체 경로 지원: 'position.x', 'layout.width' 등)
+// Border Style 옵션
+const borderStyleOptions = computed(() => {
+  const borderStyleField = options.value.find(opt => opt.key === 'appearance.borderStyle')
+  return Array.isArray(borderStyleField?.componentProps?.options) 
+    ? borderStyleField.componentProps.options 
+    : []
+})
+
+// Border Style이 'none'인지 확인
+const isBorderDisabled = computed(() => {
+  const borderStyleField = options.value.find(opt => opt.key === 'appearance.borderStyle')
+  const defaultValue = borderStyleField?.defaultValue || 'none'
+  const borderStyle = getFieldValue('appearance.borderStyle') || defaultValue
+  return borderStyle === 'none'
+})
+
+// Border Position 옵션
+const borderPositionOptions = computed(() => {
+  const borderPositionField = options.value.find(opt => opt.key === 'appearance.borderPosition')
+  return Array.isArray(borderPositionField?.componentProps?.options) 
+    ? borderPositionField.componentProps.options 
+    : []
+})
+
+// 필드 값 가져오기 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
 const getFieldValue = (key: string) => {
   if (!props.selectedItem) return undefined
   
-  // 객체 경로 처리 (예: 'position.x' -> props.position.x)
+  // styles 객체 경로 처리 (예: 'position.x' -> props.styles.position.x)
   if (key.includes('.')) {
     const parts = key.split('.')
     if (parts.length !== 2) return undefined
@@ -377,21 +411,53 @@ const getFieldValue = (key: string) => {
     const [objKey, propKey] = parts
     if (!objKey || !propKey) return undefined
     
-    if (!props.selectedItem.props[objKey]) {
-      return undefined
+    // styles 객체에서 가져오기
+    if (props.selectedItem.props.styles && props.selectedItem.props.styles[objKey]) {
+      const value = props.selectedItem.props.styles[objKey][propKey]
+      // 값이 없으면 컴포저블의 기본값 반환
+      if (value === undefined || value === null) {
+        const field = options.value.find(opt => opt.key === key)
+        return field?.defaultValue
+      }
+      return value
     }
-    return props.selectedItem.props[objKey][propKey]
+    
+    // 기존 구조 지원 (하위 호환성)
+    if (props.selectedItem.props[objKey]) {
+      const value = props.selectedItem.props[objKey][propKey]
+      if (value === undefined || value === null) {
+        const field = options.value.find(opt => opt.key === key)
+        return field?.defaultValue
+      }
+      return value
+    }
+    
+    // 값이 없으면 컴포저블의 기본값 반환
+    const field = options.value.find(opt => opt.key === key)
+    return field?.defaultValue
   }
   
-  return props.selectedItem.props[key]
+  // 일반 필드 (styles 객체가 아닌 경우)
+  const value = props.selectedItem.props[key]
+  if (value === undefined || value === null) {
+    const field = options.value.find(opt => opt.key === key)
+    return field?.defaultValue
+  }
+  return value
+}
+
+// 필드 disabled 상태 가져오기
+const getFieldDisabled = (key: string) => {
+  const field = options.value.find(opt => opt.key === key)
+  return field?.disabled || false
 }
 
 
-// 필드 값 업데이트 (객체 경로 지원: 'position.x', 'layout.width' 등)
+// 필드 값 업데이트 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
 const updateFieldValue = (key: string, value: any) => {
   if (!props.selectedItem) return
   
-  // 객체 경로 처리 (예: 'position.x' -> props.position.x)
+  // styles 객체 경로 처리 (예: 'position.x' -> props.styles.position.x)
   if (key.includes('.')) {
     const parts = key.split('.')
     if (parts.length !== 2) return
@@ -399,19 +465,24 @@ const updateFieldValue = (key: string, value: any) => {
     const [objKey, propKey] = parts
     if (!objKey || !propKey) return
     
-    // 객체가 없으면 생성
-    if (!props.selectedItem.props[objKey]) {
-      props.selectedItem.props[objKey] = {}
+    // styles 객체 초기화
+    if (!props.selectedItem.props.styles) {
+      props.selectedItem.props.styles = {}
+    }
+    
+    // 중첩 객체 초기화
+    if (!props.selectedItem.props.styles[objKey]) {
+      props.selectedItem.props.styles[objKey] = {}
     }
     
     // 값 설정
     if (typeof value === 'number') {
-      props.selectedItem.props[objKey][propKey] = value
+      props.selectedItem.props.styles[objKey][propKey] = value
     } else {
-      props.selectedItem.props[objKey][propKey] = value ?? ''
+      props.selectedItem.props.styles[objKey][propKey] = value ?? ''
     }
   } else {
-    // 일반 필드 처리
+    // 일반 필드 처리 (styles 객체가 아닌 경우)
     if (typeof value === 'number') {
       props.selectedItem.props[key] = value
     } else {
@@ -580,6 +651,145 @@ const updateFieldValue = (key: string, value: any) => {
 }
 
 
+// InputGroup 스타일 (W/H 전용)
+.input-group-width-height {
+  :deep(.p-inputgroup),
+  &.p-inputgroup {
+    width: 100% !important;
+    display: flex !important;
+    border: 1px solid var(--p-surface-600, #4b5563) !important;
+    border-color: var(--p-surface-600, #4b5563) !important;
+    border-radius: 4px !important;
+    
+    .p-inputnumber,
+    .p-inputnumber-input-wrapper {
+      flex: 0 0 40% !important;
+      width: 40% !important;
+      min-width: 0 !important;
+    }
+    
+    .p-inputgroup-addon {
+      flex: 0 0 60% !important;
+      width: 60% !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
+      display: flex !important;
+      align-items: stretch !important;
+    }
+    
+    // InputNumber: 모든 border 제거 (InputGroup 안쪽만)
+    .p-inputnumber-input {
+      border-top-right-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      border: none !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+      border-left: none !important;
+    }
+    
+    // InputNumber wrapper에도 적용
+    .p-inputnumber {
+      .p-inputnumber-input {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border: none !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+      }
+    }
+    
+    // Select: width만 설정
+    .p-select,
+    .p-select.p-component,
+    .p-select.p-inputwrapper,
+    .p-select.p-inputwrapper-filled,
+    .p-select.p-inputwrapper-focus {
+      width: 100% !important;
+    }
+  }
+  
+  // InputGroup 내부의 InputNumber에만 스타일 적용 (모든 border 제거)
+  .figma-input {
+    :deep(.p-inputnumber-input) {
+      border-top-right-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      border: none !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+      border-left: none !important;
+    }
+  }
+  
+  // 다크 모드
+  :deep(.dark .p-inputgroup) {
+    // InputNumber의 모든 border 제거 (다크 모드)
+    .p-inputnumber-input {
+      border: none !important;
+      border-top: none !important;
+      border-right: none !important;
+      border-bottom: none !important;
+      border-left: none !important;
+    }
+    
+    .p-inputnumber {
+      .p-inputnumber-input {
+        border: none !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+      }
+    }
+    
+    .p-select,
+    .p-select.p-component,
+    .p-select.p-inputwrapper,
+    .p-select.p-inputwrapper-filled,
+    .p-select.p-inputwrapper-focus {
+      background-color: var(--p-surface-700, #374151) !important;
+      background: var(--p-surface-700, #374151) !important;
+      color: var(--p-surface-400, #9ca3af) !important;
+    }
+    
+    .p-select-label,
+    .p-select .p-select-label,
+    .p-inputwrapper .p-select-label {
+      background-color: var(--p-surface-700, #374151) !important;
+      background: var(--p-surface-700, #374151) !important;
+      color: var(--p-surface-400, #9ca3af) !important;
+    }
+  }
+  
+  // InputGroup 내부 Select의 다크 모드 border 색상
+  .dark & {
+    .figma-input {
+      :deep(.p-inputnumber-input) {
+        border: none !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+      }
+      
+      :deep(.p-select),
+      :deep(.p-select.p-component),
+      :deep(.p-select.p-inputwrapper),
+      :deep(.p-select.p-inputwrapper-filled),
+      :deep(.p-select.p-inputwrapper-focus) {
+        border-left: 1px solid var(--p-surface-600, #4b5563) !important;
+        border-top: 1px solid var(--p-surface-600, #4b5563) !important;
+        border-right: 1px solid var(--p-surface-600, #4b5563) !important;
+        border-bottom: 1px solid var(--p-surface-600, #4b5563) !important;
+      }
+    }
+  }
+}
+
 .figma-input {
   :deep(.p-inputtext),
   :deep(.p-inputnumber-input) {
@@ -609,9 +819,10 @@ const updateFieldValue = (key: string, value: any) => {
     padding: 0 !important;
     font-size: 11px !important;
     line-height: 1.2 !important;
-    background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-    background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+    background-color: var(--p-surface-50, #f9fafb) !important;
+    background: var(--p-surface-50, #f9fafb) !important;
     border: 1px solid var(--p-surface-200, #e5e7eb) !important;
+    border-color: var(--p-surface-200, #e5e7eb) !important;
     border-radius: 4px !important;
     color: var(--p-text-color, #1f2937) !important;
     width: 100% !important;
@@ -627,8 +838,9 @@ const updateFieldValue = (key: string, value: any) => {
     height: 26px !important;
     min-height: 26px !important;
     max-height: 26px !important;
-    background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-    background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+    background-color: var(--p-surface-50, #f9fafb) !important;
+    background: var(--p-surface-50, #f9fafb) !important;
+    color: var(--p-text-color, #1f2937) !important;
   }
 
   :deep(.p-inputtext:focus),
@@ -655,8 +867,9 @@ const updateFieldValue = (key: string, value: any) => {
     min-height: 26px !important;
     max-height: 26px !important;
     line-height: 1.2 !important;
-    background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-    background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+    background-color: var(--p-surface-50, #f9fafb) !important;
+    background: var(--p-surface-50, #f9fafb) !important;
+    color: var(--p-text-color, #1f2937) !important;
   }
 
   :deep(.p-select-trigger) {
@@ -680,10 +893,11 @@ const updateFieldValue = (key: string, value: any) => {
       height: 26px !important;
       min-height: 26px !important;
       max-height: 26px !important;
-      background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-      background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      background-color: var(--p-surface-700, #374151) !important;
+      background: var(--p-surface-700, #374151) !important;
+      border: 1px solid var(--p-surface-600, #4b5563) !important;
       border-color: var(--p-surface-600, #4b5563) !important;
-      color: var(--p-text-color, #f3f4f6) !important;
+      color: var(--p-surface-400, #9ca3af) !important;
     }
 
     :deep(.p-select .p-select-label),
@@ -692,8 +906,9 @@ const updateFieldValue = (key: string, value: any) => {
       height: 26px !important;
       min-height: 26px !important;
       max-height: 26px !important;
-      background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-      background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      background-color: var(--p-surface-700, #374151) !important;
+      background: var(--p-surface-700, #374151) !important;
+      color: var(--p-surface-400, #9ca3af) !important;
     }
 
     :deep(.p-inputtext:focus),
