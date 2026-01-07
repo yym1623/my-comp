@@ -5,6 +5,7 @@ export interface PreviewProps {
   selectedIndex: number | null
   isPreviewMode: boolean
   isMobile: boolean
+  previewPath?: string
 }
 
 export interface PreviewEmits {

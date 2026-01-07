@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative">
+  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative preview-root">
     <!-- 프리뷰 모드 표시 배지 -->
     <div 
       v-if="isPreviewMode" 
@@ -9,14 +9,29 @@
       미리보기 모드 
     </div>
     <div
-      class="w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
+      class="preview-card w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-hidden flex flex-col shadow-lg relative"
       :class="{ 'ring-2 ring-primary-500': isPreviewMode, 'preview-mode': isPreviewMode }"
       @dragover.prevent="!isPreviewMode"
       @drop="!isPreviewMode && $emit('drop')"
       @click="!isPreviewMode && $emit('deselect')"
     >
-      <Transition name="fade">
-        <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+      <!-- QR 플립 버튼 (프리뷰 카드 오른쪽 끝에 ㄷ자 모양으로 붙는 형태) -->
+      <button
+        v-if="qrUrl && isPreviewMode"
+        class="absolute top-5 -right-[1px] w-10 h-8 rounded-l-md rounded-r-none bg-surface-0 dark:bg-surface-900 border border-l-surface-200 border-y-surface-200 border-r-transparent dark:border-l-surface-600 dark:border-y-surface-600 dark:border-r-transparent shadow-md flex items-center justify-center text-surface-600 dark:text-surface-200 hover:text-primary-500 hover:border-l-primary-500 hover:border-y-primary-500 dark:hover:border-l-primary-400 dark:hover:border-y-primary-400 transition-all z-20"
+       
+        @click.stop="toggleQrPanel"
+      >
+        <i :class="[showQrPanel ? 'pi pi-arrow-left' : 'pi pi-qrcode', 'text-sm']" />
+      </button>
+
+      <!-- 플립 컨테이너 (앞/뒤 양면) -->
+      <div class="preview-flip-container" :class="{ 'is-flipped': showQrPanel }">
+        <!-- 앞면: 기존 캔버스 -->
+        <div class="preview-face preview-front">
+          <!-- 기본 캔버스 영역 -->
+          <Transition name="fade" mode="out-in">
+            <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
           <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4 shrink-0">
             <i class="pi pi-objects-column text-2xl text-primary-500" />
           </div>
@@ -31,17 +46,17 @@
             <span class="whitespace-nowrap">또는</span>
             <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">클릭</span>
           </div>
-        </div>
-      </Transition>
-      <Transition name="fade">
-        <Draggable
-          v-if="canvasItems.length > 0"
-          :model-value="canvasItems"
-          item-key="uid"
-          :disabled="isPreviewMode"
-          @update:model-value="$emit('update:canvasItems', $event)"
-        >
-          <template #item="{ element, index }">
+            </div>
+          </Transition>
+          <Transition name="fade" mode="out-in">
+            <Draggable
+              v-if="canvasItems.length > 0"
+              :model-value="canvasItems"
+              item-key="uid"
+              :disabled="isPreviewMode"
+              @update:model-value="$emit('update:canvasItems', $event)"
+            >
+              <template #item="{ element, index }">
             <div
               class="canvas-item group relative"
               :class="{ selected: selectedIndex === index && !isPreviewMode }"
@@ -93,12 +108,13 @@
               <!-- Spacer -->
               <div
                 v-if="element.type === 'spacer'"
-                :style="{ height: element.props.height || '1rem' }"
+                :style="getElementStyle(element)"
               />
               <!-- Divider -->
-              <hr
+              <Divider
                 v-if="element.type === 'divider'"
-                class="border-t border-surface-200 dark:border-surface-700 my-2"
+                class="divider-default"
+                :style="getElementStyle(element)"
               />
               <!-- Image -->
               <div
@@ -137,6 +153,7 @@
                   :key="`textarea-${element.uid}-${index}`"
                   :model-value="element.props.content || ''"
                   :rows="4"
+                  placeholder="설명 내용을 입력하세요."
                   :style="{ minHeight: '6rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                   :readonly="!isPreviewMode"
                   :class="{ 'edit-mode': !isPreviewMode }"
@@ -315,11 +332,12 @@
                 <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
                   {{ element.props.label }}
                 </label>
-                <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
+                <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element) }">
                   <div
                     v-for="(option, optIndex) in (element.props.options || [])"
                     :key="`radio-${element.uid}-${index}-${optIndex}`"
                     class="flex items-center gap-2"
+                    :style="getFormInputStyle(element)"
                   >
                     <RadioButton
                       :model-value="element.props.selected || element.props.options?.[0]"
@@ -355,9 +373,9 @@
               <!-- 버튼 (Field 스타일 - primary 기본) -->
               <div
                 v-if="element.type === 'button'"
-                class="flex items-center"
+                class="flex items-center button-wrapper"
                 :class="{ 'edit-mode': !isPreviewMode }"
-                :style="getElementStyle(element)"
+                :style="getButtonWrapperStyle(element)"
               >
                 <Button
                   :key="`button-${element.uid}-${index}`"
@@ -365,8 +383,8 @@
                   severity="primary"
                   :outlined="element.props.outlined || false"
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['button-element', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getButtonStyle(element) }"
                 />
               </div>
               <!-- 이전/다음 네비게이션 -->
@@ -374,22 +392,22 @@
                 v-if="element.type === 'prevNext'"
                 class="flex items-center justify-between gap-4"
                 :class="{ 'edit-mode': !isPreviewMode }"
-                :style="getElementStyle(element)"
+                :style="getPrevNextWrapperStyle(element)"
               >
                 <Button
                   :label="element.props.prevText"
                   severity="secondary"
                   outlined
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getPrevNextButtonStyle(element) }"
                 />
                 <Button
                   :label="element.props.nextText"
                   severity="primary"
                   :readonly="!isPreviewMode"
-                  :class="['!w-auto', { 'edit-mode': !isPreviewMode }]"
-                  :style="getTypographyStyle(element)"
+                  :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+                  :style="{ ...getTypographyStyle(element), ...getPrevNextButtonStyle(element) }"
                 />
               </div>
               <!-- 그리드 섹션 -->
@@ -521,19 +539,61 @@
                   </button>
                 </div>
               </div>
+                </div>
+              </template>
+            </Draggable>
+          </Transition>
+        </div>
+
+        <!-- 뒷면: QR 패널 -->
+        <div class="preview-face preview-back">
+          <div class="w-full h-full flex flex-col items-center justify-center px-6">
+            <!-- QR 코드 -->
+            <div class="w-full flex justify-center mb-6">
+              <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="160" :level="'M'" />
             </div>
-          </template>
-        </Draggable>
-      </Transition>
+
+
+            <!-- URL 정보 -->
+            <div class="w-full flex flex-col gap-3 mt-2">
+              <div class="flex flex-col gap-1 items-center">
+                <span class="text-xs font-medium text-surface-500 dark:text-surface-400">전체 URL</span>
+                <span class="text-xs text-surface-700 dark:text-surface-200 text-center break-all">
+                  {{ qrUrl }}
+                </span>
+              </div>
+              <div class="flex flex-col gap-1 items-center">
+                <span class="text-xs font-medium text-surface-500 dark:text-surface-400">경로</span>
+                <span class="text-xs text-surface-700 dark:text-surface-200 text-center break-all">
+                  {{ previewPath }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 안내 텍스트 -->
+            <p class="mt-6 text-[11px] text-surface-400 dark:text-surface-500 text-center">
+              QR 코드를 스캔하면 현재 페이지의 미리보기 화면으로 이동합니다.
+            </p>
+
+    
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </main>
 </template>
 
 <script lang="ts" setup>
+import { computed, ref } from 'vue'
+import { useRequestURL } from '#app'
+import QrcodeVue from 'qrcode.vue'
 import type { PreviewProps, PreviewEmits } from '~/types/preview'
 import type { CanvasItem } from '~/types/component'
 import draggable from 'vuedraggable'
 import ComponentRenderer from './ComponentRenderer.vue'
+import Divider from 'primevue/divider'
 
 const Draggable = draggable
 
@@ -544,6 +604,21 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { getComponentLabel } = useElements()
+
+// QR 플립 패널 상태
+const showQrPanel = ref(false)
+
+// 현재 페이지의 프리뷰 URL (전체 URL)
+const requestURL = useRequestURL()
+const qrUrl = computed(() => {
+  if (!props.previewPath) return ''
+  return `${requestURL.origin}${props.previewPath}`
+})
+
+const toggleQrPanel = () => {
+  if (!qrUrl.value) return
+  showQrPanel.value = !showQrPanel.value
+}
 
 // 요소의 스타일 계산 함수 (form 컴포넌트 제외)
 const getElementStyle = (element: CanvasItem) => {
@@ -577,7 +652,7 @@ const getElementStyle = (element: CanvasItem) => {
   if (styles.layout && !formTypes.includes(element.type)) {
     // width가 정의되어 있고 0보다 크면 적용
     if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || 'px'
+      const widthUnit = styles.layout.widthUnit || '%'
       style.width = `${styles.layout.width}${widthUnit}`
     }
     // height가 정의되어 있고 0보다 크면 적용
@@ -644,13 +719,131 @@ const getFormInputStyle = (element: CanvasItem) => {
   if (styles.layout) {
     // width가 정의되어 있고 0보다 크면 적용
     if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || 'px'
+      const widthUnit = styles.layout.widthUnit || '%'
       style.width = `${styles.layout.width}${widthUnit}`
     }
     // height가 정의되어 있고 0보다 크면 적용
     if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
       const heightUnit = styles.layout.heightUnit || 'px'
       style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 이전/다음 버튼의 각 버튼에 적용할 Layout 스타일 계산 함수
+const getPrevNextButtonStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Layout (각 버튼에 적용)
+  if (styles.layout) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || '%'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 이전/다음 버튼의 wrapper에 적용할 스타일 (Position만)
+const getPrevNextWrapperStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Position만 적용 (Layout은 각 버튼에 적용)
+  if (styles.position) {
+    // x, y가 정의되어 있고 0이 아닐 때만 적용
+    const hasX = styles.position.x !== undefined && styles.position.x !== null && styles.position.x !== 0
+    const hasY = styles.position.y !== undefined && styles.position.y !== null && styles.position.y !== 0
+    
+    if (hasX) {
+      style.position = 'relative'
+      style.left = `${styles.position.x}px`
+    }
+    if (hasY) {
+      if (!style.position) {
+        style.position = 'relative'
+      }
+      style.top = `${styles.position.y}px`
+    }
+    // rotation이 0이 아니면 적용
+    if (styles.position.rotation !== undefined && styles.position.rotation !== null && styles.position.rotation !== 0) {
+      style.transform = `rotate(${styles.position.rotation}deg)`
+    }
+  }
+  
+  // Appearance (wrapper에 적용)
+  if (styles.appearance) {
+    if (styles.appearance.opacity !== undefined && styles.appearance.opacity !== null) {
+      style.opacity = `${styles.appearance.opacity / 100}`
+    }
+  }
+  
+  return style
+}
+
+// 일반 버튼에 적용할 Layout 스타일 계산 함수
+const getButtonStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Layout (버튼에 적용)
+  if (styles.layout) {
+    // width가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
+      const widthUnit = styles.layout.widthUnit || '%'
+      style.width = `${styles.layout.width}${widthUnit}`
+    }
+    // height가 정의되어 있고 0보다 크면 적용
+    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
+      const heightUnit = styles.layout.heightUnit || 'px'
+      style.height = `${styles.layout.height}${heightUnit}`
+    }
+  }
+  
+  return style
+}
+
+// 일반 버튼의 wrapper에 적용할 스타일 (Position만)
+const getButtonWrapperStyle = (element: CanvasItem) => {
+  const styles = element.props.styles || {}
+  const style: Record<string, string> = {}
+  
+  // Position만 적용 (Layout은 버튼에 적용)
+  if (styles.position) {
+    // x, y가 정의되어 있고 0이 아닐 때만 적용
+    const hasX = styles.position.x !== undefined && styles.position.x !== null && styles.position.x !== 0
+    const hasY = styles.position.y !== undefined && styles.position.y !== null && styles.position.y !== 0
+    
+    if (hasX) {
+      style.position = 'relative'
+      style.left = `${styles.position.x}px`
+    }
+    if (hasY) {
+      if (!style.position) {
+        style.position = 'relative'
+      }
+      style.top = `${styles.position.y}px`
+    }
+    // rotation이 0이 아니면 적용
+    if (styles.position.rotation !== undefined && styles.position.rotation !== null && styles.position.rotation !== 0) {
+      style.transform = `rotate(${styles.position.rotation}deg)`
+    }
+  }
+  
+  // Appearance (wrapper에 적용)
+  if (styles.appearance) {
+    if (styles.appearance.opacity !== undefined && styles.appearance.opacity !== null) {
+      style.opacity = `${styles.appearance.opacity / 100}`
     }
   }
   
@@ -731,6 +924,43 @@ function handleAddTableRow(element: CanvasItem) {
 </script>
 
 <style lang="scss" scoped>
+.preview-card {
+  perspective: 1200px;
+}
+
+.preview-flip-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.preview-flip-container.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.preview-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.preview-front {
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-back {
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
 .canvas-item {
   @apply p-4 border border-transparent transition-all cursor-pointer;
 
@@ -837,5 +1067,87 @@ function handleAddTableRow(element: CanvasItem) {
 
 
 
+}
+
+// Divider 배경 스타일 (다크모드/라이트모드 대응)
+:deep(.divider-default) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+}
+
+:deep(.divider-default hr) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  height: 100% !important;
+}
+
+:deep(.divider-default.p-divider) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+}
+
+:deep(.divider-default.p-divider-horizontal) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  border-top: none !important;
+  margin: 0 !important;
+}
+
+:deep(.divider-default.p-divider-vertical) {
+  background-color: var(--p-surface-200, #e5e7eb) !important;
+  border: none !important;
+  border-left: none !important;
+}
+
+// 다크 모드
+:deep(.dark .divider-default) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default hr) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default.p-divider) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+:deep(.dark .divider-default.p-divider-horizontal) {
+  background-color: var(--p-surface-700, #374151) !important;
+  margin: 0 !important;
+}
+
+:deep(.dark .divider-default.p-divider-vertical) {
+  background-color: var(--p-surface-700, #374151) !important;
+}
+
+// 버튼 width/height 적용 (인라인 스타일 우선순위 높임)
+.button-wrapper {
+  :deep(.button-element.p-button),
+  :deep(.button-element.p-button.p-component),
+  :deep(.button-element.p-button.p-button-primary),
+  :deep(.button-element.p-button.p-button-secondary),
+  :deep(.button-element.p-button.p-button-outlined),
+  :deep(.button-element.p-button.p-button-text),
+  :deep(.button-element.p-button.p-button-sm) {
+    // PrimeVue의 기본 min-width 제거하여 인라인 스타일이 적용되도록
+    min-width: 0 !important;
+    max-width: none !important;
+    flex-shrink: 1 !important;
+  }
+}
+
+// 이전/다음 버튼 width/height 적용 (인라인 스타일 우선순위 높임)
+:deep(.prevnext-button.p-button),
+:deep(.prevnext-button.p-button.p-component),
+:deep(.prevnext-button.p-button.p-button-primary),
+:deep(.prevnext-button.p-button.p-button-secondary),
+:deep(.prevnext-button.p-button.p-button-outlined),
+:deep(.prevnext-button.p-button.p-button-text),
+:deep(.prevnext-button.p-button.p-button-sm) {
+  // PrimeVue의 기본 min-width 제거하여 인라인 스타일이 적용되도록
+  min-width: 0 !important;
+  max-width: none !important;
+  flex-shrink: 1 !important;
 }
 </style>

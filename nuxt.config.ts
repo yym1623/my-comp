@@ -4,6 +4,12 @@ import Aura from '@primevue/themes/aura'
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  
+  // Hydration 오류 방지
+  ssr: true,
+  experimental: {
+    payloadExtraction: false
+  },
 
   app: {
     head: {
@@ -39,10 +45,23 @@ export default defineNuxtConfig({
     }
   },
 
+  runtimeConfig: {
+    // 서버 사이드에서만 접근 가능 (환경 변수)
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    
+    // 클라이언트 사이드에서도 접근 가능 (public)
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    }
+  },
+
   modules: [
     '@pinia/nuxt',
     '@nuxt/eslint',
-    '@nuxt/hints',
+    // '@nuxt/hints', // hydration 오류로 인해 비활성화
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/test-utils',

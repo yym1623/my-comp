@@ -16,13 +16,30 @@ type SectionReady = {
 }
 
 export const useElementOptions = () => {
-  const getSectionReady = (): SectionReady => {
-    return {
+  const getSectionReady = (type?: string): SectionReady => {
+    const baseReady = {
       Position: true,
       Layout: true,
       Appearance: true,
       Typography: true
     }
+    
+    // spacer, divider, button, prevNext일 경우 Appearance 섹션 준비중
+    if (type === 'spacer' || type === 'divider' || type === 'button' || type === 'prevNext') {
+      const result: SectionReady = {
+        ...baseReady,
+        Appearance: false
+      }
+      
+      // divider, spacer, button, prevNext일 경우 Typography 섹션도 준비중
+      if (type === 'divider' || type === 'spacer' || type === 'button' || type === 'prevNext') {
+        result.Typography = false
+      }
+      
+      return result
+    }
+    
+    return baseReady
   }
 
   const getCommonOptions = (): ComponentOptionField[] => {
@@ -57,7 +74,7 @@ export const useElementOptions = () => {
         component: 'InputNumber',
         componentProps: { min: 0 },
         section: 'Layout',
-        defaultValue: 0
+        defaultValue: 100
       },
       {
         key: 'layout.widthUnit',
@@ -70,7 +87,7 @@ export const useElementOptions = () => {
           ]
         },
         section: 'Layout',
-        defaultValue: 'px'
+        defaultValue: '%'
       },
       {
         key: 'layout.height',
@@ -78,7 +95,7 @@ export const useElementOptions = () => {
         component: 'InputNumber',
         componentProps: { min: 0 },
         section: 'Layout',
-        defaultValue: 0
+        defaultValue: 40
       },
       {
         key: 'layout.heightUnit',
