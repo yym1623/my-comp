@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative">
+  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative preview-root">
     <!-- 프리뷰 모드 표시 배지 -->
     <div 
       v-if="isPreviewMode" 
@@ -9,14 +9,29 @@
       미리보기 모드 
     </div>
     <div
-      class="w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-y-auto flex flex-col gap-2 p-6 shadow-lg relative"
+      class="preview-card w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-hidden flex flex-col shadow-lg relative"
       :class="{ 'ring-2 ring-primary-500': isPreviewMode, 'preview-mode': isPreviewMode }"
       @dragover.prevent="!isPreviewMode"
       @drop="!isPreviewMode && $emit('drop')"
       @click="!isPreviewMode && $emit('deselect')"
     >
-      <Transition name="fade">
-        <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+      <!-- QR 플립 버튼 (프리뷰 카드 오른쪽 끝에 ㄷ자 모양으로 붙는 형태) -->
+      <button
+        v-if="qrUrl && isPreviewMode"
+        class="absolute top-5 -right-[1px] w-10 h-8 rounded-l-md rounded-r-none bg-surface-0 dark:bg-surface-900 border border-l-surface-200 border-y-surface-200 border-r-transparent dark:border-l-surface-600 dark:border-y-surface-600 dark:border-r-transparent shadow-md flex items-center justify-center text-surface-600 dark:text-surface-200 hover:text-primary-500 hover:border-l-primary-500 hover:border-y-primary-500 dark:hover:border-l-primary-400 dark:hover:border-y-primary-400 transition-all z-20"
+       
+        @click.stop="toggleQrPanel"
+      >
+        <i :class="[showQrPanel ? 'pi pi-arrow-left' : 'pi pi-qrcode', 'text-sm']" />
+      </button>
+
+      <!-- 플립 컨테이너 (앞/뒤 양면) -->
+      <div class="preview-flip-container" :class="{ 'is-flipped': showQrPanel }">
+        <!-- 앞면: 기존 캔버스 -->
+        <div class="preview-face preview-front">
+          <!-- 기본 캔버스 영역 -->
+          <Transition name="fade" mode="out-in">
+            <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
           <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4 shrink-0">
             <i class="pi pi-objects-column text-2xl text-primary-500" />
           </div>
@@ -31,17 +46,17 @@
             <span class="whitespace-nowrap">또는</span>
             <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">클릭</span>
           </div>
-        </div>
-      </Transition>
-      <Transition name="fade">
-        <Draggable
-          v-if="canvasItems.length > 0"
-          :model-value="canvasItems"
-          item-key="uid"
-          :disabled="isPreviewMode"
-          @update:model-value="$emit('update:canvasItems', $event)"
-        >
-          <template #item="{ element, index }">
+            </div>
+          </Transition>
+          <Transition name="fade" mode="out-in">
+            <Draggable
+              v-if="canvasItems.length > 0"
+              :model-value="canvasItems"
+              item-key="uid"
+              :disabled="isPreviewMode"
+              @update:model-value="$emit('update:canvasItems', $event)"
+            >
+              <template #item="{ element, index }">
             <div
               class="canvas-item group relative"
               :class="{ selected: selectedIndex === index && !isPreviewMode }"
@@ -138,6 +153,7 @@
                   :key="`textarea-${element.uid}-${index}`"
                   :model-value="element.props.content || ''"
                   :rows="4"
+                  placeholder="설명 내용을 입력하세요."
                   :style="{ minHeight: '6rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                   :readonly="!isPreviewMode"
                   :class="{ 'edit-mode': !isPreviewMode }"
@@ -523,15 +539,56 @@
                   </button>
                 </div>
               </div>
+                </div>
+              </template>
+            </Draggable>
+          </Transition>
+        </div>
+
+        <!-- 뒷면: QR 패널 -->
+        <div class="preview-face preview-back">
+          <div class="w-full h-full flex flex-col items-center justify-center px-6">
+            <!-- QR 코드 -->
+            <div class="w-full flex justify-center mb-6">
+              <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="160" :level="'M'" />
             </div>
-          </template>
-        </Draggable>
-      </Transition>
+
+
+            <!-- URL 정보 -->
+            <div class="w-full flex flex-col gap-3 mt-2">
+              <div class="flex flex-col gap-1 items-center">
+                <span class="text-xs font-medium text-surface-500 dark:text-surface-400">전체 URL</span>
+                <span class="text-xs text-surface-700 dark:text-surface-200 text-center break-all">
+                  {{ qrUrl }}
+                </span>
+              </div>
+              <div class="flex flex-col gap-1 items-center">
+                <span class="text-xs font-medium text-surface-500 dark:text-surface-400">경로</span>
+                <span class="text-xs text-surface-700 dark:text-surface-200 text-center break-all">
+                  {{ previewPath }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 안내 텍스트 -->
+            <p class="mt-6 text-[11px] text-surface-400 dark:text-surface-500 text-center">
+              QR 코드를 스캔하면 현재 페이지의 미리보기 화면으로 이동합니다.
+            </p>
+
+    
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </main>
 </template>
 
 <script lang="ts" setup>
+import { computed, ref } from 'vue'
+import { useRequestURL } from '#app'
+import QrcodeVue from 'qrcode.vue'
 import type { PreviewProps, PreviewEmits } from '~/types/preview'
 import type { CanvasItem } from '~/types/component'
 import draggable from 'vuedraggable'
@@ -547,6 +604,21 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { getComponentLabel } = useElements()
+
+// QR 플립 패널 상태
+const showQrPanel = ref(false)
+
+// 현재 페이지의 프리뷰 URL (전체 URL)
+const requestURL = useRequestURL()
+const qrUrl = computed(() => {
+  if (!props.previewPath) return ''
+  return `${requestURL.origin}${props.previewPath}`
+})
+
+const toggleQrPanel = () => {
+  if (!qrUrl.value) return
+  showQrPanel.value = !showQrPanel.value
+}
 
 // 요소의 스타일 계산 함수 (form 컴포넌트 제외)
 const getElementStyle = (element: CanvasItem) => {
@@ -852,6 +924,43 @@ function handleAddTableRow(element: CanvasItem) {
 </script>
 
 <style lang="scss" scoped>
+.preview-card {
+  perspective: 1200px;
+}
+
+.preview-flip-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.preview-flip-container.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.preview-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.preview-front {
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-back {
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
 .canvas-item {
   @apply p-4 border border-transparent transition-all cursor-pointer;
 
@@ -981,6 +1090,7 @@ function handleAddTableRow(element: CanvasItem) {
   background-color: var(--p-surface-200, #e5e7eb) !important;
   border: none !important;
   border-top: none !important;
+  margin: 0 !important;
 }
 
 :deep(.divider-default.p-divider-vertical) {
@@ -1004,6 +1114,7 @@ function handleAddTableRow(element: CanvasItem) {
 
 :deep(.dark .divider-default.p-divider-horizontal) {
   background-color: var(--p-surface-700, #374151) !important;
+  margin: 0 !important;
 }
 
 :deep(.dark .divider-default.p-divider-vertical) {

@@ -179,7 +179,7 @@ export const useElements = () => {
       type: 'textarea',
       defaultProps: {
         label: '텍스트 레이블',
-        content: '설명 내용을 입력하세요.',
+        content: '',
         styles: {}
       }
     },

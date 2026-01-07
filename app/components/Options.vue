@@ -11,6 +11,19 @@
     <!-- 최상단 버튼 바 (데스크탑만) -->
     <div v-if="!isMobile" class="absolute top-2 -left-[52px] flex flex-col gap-2 z-20">
       <Button
+        icon="pi pi-list"
+        :severity="!showTreeView ? 'primary' : 'secondary'"
+        text
+        rounded
+        size="small"
+        class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border shadow-sm"
+        :class="!showTreeView 
+          ? 'border-primary-500 dark:border-primary-400' 
+          : 'border-surface-200 dark:border-surface-700'"
+        v-tooltip.left="'옵션 편집 모드'"
+        @click="showTreeView = false"
+      />
+      <Button
         icon="pi pi-sitemap"
         :severity="showTreeView ? 'primary' : 'secondary'"
         text
@@ -20,25 +33,35 @@
         :class="showTreeView 
           ? 'border-primary-500 dark:border-primary-400' 
           : 'border-surface-200 dark:border-surface-700'"
-        :disabled="!pages || pages.length === 0 || !hasSavedData || (selectedIndex !== null && selectedItem !== null)"
+        :disabled="!currentPage || !canvasItems || canvasItems.length === 0"
         v-tooltip.left="'트리 뷰'"
-        @click="showTreeView = !showTreeView"
+        @click="showTreeView = true"
       />
     </div>
 
     <!-- 메인 패널: 페이지 + 트리 + 옵션 -->
     <div class="flex flex-col h-full overflow-hidden relative">
       <!-- 트리 뷰일 때: 전체 트리 표시 -->
-      <div v-if="showTreeView && pages && pages.length > 0" class="flex-1 overflow-y-auto p-4">
-        <Tree 
-          :value="treeNodes" 
+      <div v-if="showTreeView && pages && pages.length > 0" class="flex-1 overflow-y-auto p-4 relative">
+        <Transition name="fade">
+          <div v-if="!currentPage" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
+            <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-3 shrink-0">
+              <i class="pi pi-sitemap text-xl text-surface-400" />
+            </div>
+            <h4 class="text-sm font-medium text-surface-600 dark:text-surface-300 mb-1 whitespace-nowrap">페이지 추가</h4>
+            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">페이지를 선택하면 여기에 표시됩니다</p>
+          </div>
+        </Transition>
+        <Tree
+          v-if="currentPage"
+          :value="treeNodes"
           class="w-full text-sm"
           selection-mode="single"
           :meta-key-selection="false"
           @node-select="handleTreeNodeSelect"
         >
           <template #default="slotProps">
-            <div class="flex items-center gap-2 py-1">
+            <div class="flex items_center gap-2 py-1">
               <!-- 페이지 노드가 아닌 경우에만 아이콘 표시 -->
               <div v-if="slotProps.node.data?.type !== 'page'" class="w-5 h-5 rounded bg-surface-200 dark:bg-surface-600 flex items-center justify-center shrink-0">
                 <template v-if="slotProps.node.data?.item?.type === 'heading1'">
@@ -50,7 +73,7 @@
                 <template v-else-if="slotProps.node.data?.item?.type === 'heading3'">
                   <H3Icon class="w-3 h-3 text-surface-600 dark:text-surface-300" />
                 </template>
-                <i v-else :class="slotProps.node.icon" class="text-xs text-surface-600 dark:text-surface-300" />
+                <i v-else-if="slotProps.node.data?.type" :class="getComponentIcon(slotProps.node.data.type)" class="text-xs text-surface-600 dark:text-surface-300" />
               </div>
               <span class="text-sm text-surface-700 dark:text-surface-200">{{ slotProps.node.label }}</span>
             </div>
@@ -209,6 +232,7 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted } from 'vue'
 import type { OptionsProps, OptionsEmits } from '~/types/options'
 import { useElements } from '~/composables/useElements'
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
@@ -226,7 +250,7 @@ const { getComponentIcon, getComponentLabel } = useElements()
 
 const isEditingPageName = ref(false)
 const editingPageName = ref('')
-const showTreeView = ref(false)
+const showTreeView = ref(false) // 기본값: 옵션 편집 모드
 
 // 트리 뷰 활성화 조건: 저장된 데이터가 있거나 현재 페이지에 컴포넌트가 있으면
 const hasSavedData = computed(() => {
@@ -244,23 +268,28 @@ const hasSavedData = computed(() => {
   return hasAnySavedData || hasCurrentPageData
 })
 
-// 저장된 게 없고 현재 컴포넌트도 없을 때만 트리 뷰 초기화
-watch(() => props.currentPage?.id, (newPageId, oldPageId) => {
-  // 페이지가 변경되었을 때
-  if (newPageId !== oldPageId) {
-    // 저장된 데이터가 없고 현재 컴포넌트도 없으면 초기화
-    if (!hasSavedData.value && (!props.canvasItems || props.canvasItems.length === 0)) {
+// 항상 기본은 옵션 편집 모드가 되도록 여러 상황에서 showTreeView를 초기화
+onMounted(() => {
+  showTreeView.value = false
+})
+
+// 패널이 열릴 때마다 옵션 편집 모드를 기본으로
+watch(
+  () => props.isOpen,
+  (isOpen) => {
+    if (isOpen) {
       showTreeView.value = false
     }
   }
-})
+)
 
-watch(() => props.canvasItems.length, (newLength, oldLength) => {
-  // 컴포넌트가 없어졌을 때, 저장된 데이터도 없으면 초기화
-  if (newLength === 0 && oldLength > 0 && !hasSavedData.value) {
+// 페이지 변경 시에도 옵션 편집 모드 유지 (트리뷰로 자동 전환하지 않음)
+watch(
+  () => props.currentPage?.id,
+  () => {
     showTreeView.value = false
   }
-})
+)
 
 // 모든 페이지의 저장된 컴포넌트 + 현재 편집 중인 컴포넌트를 Tree 형식으로 변환
 const treeNodes = computed(() => {
@@ -284,8 +313,8 @@ const treeNodes = computed(() => {
       const node: any = {
         key: item.uid,
         label: getComponentLabel(item),
-        icon: getComponentIcon(item.type),
-        data: { item, index, pageId: page.id }
+        icon: '', // PrimeVue 기본 아이콘 방지 (커스텀 템플릿에서 직접 렌더링)
+        data: { item, index, pageId: page.id, type: item.type } // 타입 정보를 data에 저장
       }
       
       // group이나 grid의 경우 children 추가
@@ -295,8 +324,8 @@ const treeNodes = computed(() => {
           node.children = item.props.items.map((child: any, childIndex: number) => ({
             key: child.uid,
             label: getComponentLabel(child),
-            icon: getComponentIcon(child.type),
-            data: { item: child, index: childIndex, parentIndex: index, pageId: page.id }
+            icon: '', // PrimeVue 기본 아이콘 방지
+            data: { item: child, index: childIndex, parentIndex: index, pageId: page.id, type: child.type }
           }))
         } else if (item.type === 'grid') {
           // grid: items는 배열의 배열 (각 셀)
@@ -307,8 +336,8 @@ const treeNodes = computed(() => {
               return {
                 key: `${item.uid}-cell-${cellIndex}`,
                 label: `셀 ${cellIndex + 1}: ${getComponentLabel(cellItem)}`,
-                icon: getComponentIcon(cellItem.type),
-                data: { item: cellItem, cellIndex, parentIndex: index, pageId: page.id }
+                icon: '', // PrimeVue 기본 아이콘 방지
+                data: { item: cellItem, cellIndex, parentIndex: index, pageId: page.id, type: cellItem.type }
               }
             })
             .filter(Boolean)
@@ -416,12 +445,10 @@ const handleCancelEditPageName = () => {
     padding: 0.25rem 0 !important;
   }
   
-  // 페이지 노드의 아이콘 숨기기
-  .p-treenode[data-node-key] {
-    .p-treenode-content {
-      .p-treenode-icon {
-        display: none !important;
-      }
+  // Tree 기본 아이콘 숨기기 (커스텀 아이콘만 표시)
+  .p-treenode-content {
+    .p-treenode-icon {
+      display: none !important;
     }
   }
 }

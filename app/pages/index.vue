@@ -78,16 +78,6 @@
           :disabled="isPreviewMode || !currentPage || canvasItems.length === 0"
           @click="resetPageComponents"
         />
-        <Button
-          :icon="isLeftPanelOpen ? 'pi pi-angle-left' : 'pi pi-angle-right'"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
-          v-tooltip.right="isLeftPanelOpen ? '패널 닫기' : '패널 열기'"
-          @click="isLeftPanelOpen = !isLeftPanelOpen"
-        />
       </div>
 
       <!-- 모바일 닫기 버튼 -->
@@ -110,6 +100,7 @@
       :selected-index="selectedIndex"
       :is-preview-mode="isPreviewMode"
       :is-mobile="isMobile"
+      :preview-path="currentPage ? `/preview/${currentPage.id}` : ''"
       @update:canvas-items="handleUpdateCanvasItems"
       @select="selectItem"
       @delete="deleteItem"
@@ -152,20 +143,6 @@
           size="small"
           class="!w-9 !h-9"
           @click="isRightPanelOpen = false"
-        />
-      </div>
-      
-      <!-- 최하단 패널 닫기/열기 버튼 (데스크탑만) -->
-      <div v-if="!isMobile" class="absolute bottom-2 -left-[52px] flex flex-col gap-2 z-20">
-        <Button
-          :icon="isRightPanelOpen ? 'pi pi-angle-right' : 'pi pi-angle-left'"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
-          v-tooltip.left="isRightPanelOpen ? '패널 닫기' : '패널 열기'"
-          @click="isRightPanelOpen = !isRightPanelOpen"
         />
       </div>
     </aside>
@@ -258,11 +235,17 @@ const isInitialized = ref(false) // 초기화 완료 여부
 const setEditMode = () => {
   if (!isPreviewMode.value) return
   isPreviewMode.value = false
+  // 편집 모드일 때 패널 열기
+  isLeftPanelOpen.value = true
+  isRightPanelOpen.value = true
 }
 
 const setPreviewMode = () => {
   if (isPreviewMode.value) return
   isPreviewMode.value = true
+  // 미리보기 모드일 때 패널 닫기
+  isLeftPanelOpen.value = false
+  isRightPanelOpen.value = false
 }
 
 // 페이지 컴포넌트 초기화
@@ -510,10 +493,10 @@ function addComponent(comp: ComponentDef) {
         ...defaultStylesFromComposable.layout,
         ...(comp.defaultProps.styles?.layout || {}),
         // 컴포넌트별 기본 width, height 설정 (컴포넌트 기본값이 우선)
-        ...(comp.type === 'heading1' ? { width: 300, height: 48 } :
-          comp.type === 'heading2' ? { width: 300, height: 36 } :
-          comp.type === 'heading3' ? { width: 300, height: 28 } :
-          comp.type === 'button' ? { width: 100, height: 40 } :
+        ...(comp.type === 'heading1' ? { width: 100, widthUnit: '%', height: 48 } :
+          comp.type === 'heading2' ? { width: 100, widthUnit: '%', height: 36 } :
+          comp.type === 'heading3' ? { width: 100, widthUnit: '%', height: 28 } :
+          comp.type === 'button' ? { width: 100, widthUnit: 'px', height: 40 } :
           comp.type === 'inputText' || comp.type === 'inputPassword' || comp.type === 'inputEmail' || comp.type === 'inputUrl' ? { width: 100, widthUnit: '%', height: 40 } :
           comp.type === 'inputDate' || comp.type === 'inputTime' ? { width: 100, widthUnit: '%', height: 40 } :
           comp.type === 'select' ? { width: 100, widthUnit: '%', height: 40 } :
@@ -521,7 +504,7 @@ function addComponent(comp: ComponentDef) {
           comp.type === 'image' ? { width: 100, widthUnit: '%', height: 100, heightUnit: 'px' } :
           comp.type === 'checkbox' || comp.type === 'toggleSwitch' ? { width: 100, widthUnit: '%', height: 40 } :
           comp.type === 'radio' ? { width: 100, widthUnit: '%', height: 20 } :
-          comp.type === 'prevNext' ? { width: 100, height: 40 } :
+          comp.type === 'prevNext' ? { width: 100, widthUnit: 'px', height: 40 } :
           comp.type === 'spacer' ? { width: 100, widthUnit: '%', height: 16, heightUnit: 'px' } :
           comp.type === 'divider' ? { width: 100, widthUnit: '%', height: 1, heightUnit: 'px' } :
           {})
