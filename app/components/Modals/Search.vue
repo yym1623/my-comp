@@ -5,88 +5,102 @@
     :draggable="false"
     :closable="false"
     :dismissableMask="true"
-    :style="{ width: '600px', maxWidth: 'calc(100vw - 2rem)' }"
-    class="search-dialog"
+    :style="isMobile ? 'width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; margin: 0;' : 'width: 600px; max-width: calc(100vw - 2rem)'"
+    :class="isMobile ? 'search-dialog-mobile' : 'search-dialog'"
     @hide="onHide"
   >
     <template #header>
-      <div class="flex items-center gap-3 w-full relative px-4 py-3 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-0 dark:bg-surface-800">
-        <i class="pi pi-search text-surface-400 text-lg" />
-        <InputText
-          ref="searchInputRef"
-          v-model="searchQuery"
-          placeholder="Search..."
-          class="flex-1 border-0 focus:ring-0 text-lg bg-transparent placeholder:text-surface-400"
-          @keydown.down.prevent="navigateDown"
-          @keydown.up.prevent="navigateUp"
-          @keydown.enter.prevent="selectResult"
-          @keydown.esc="close"
-          @input="selectedIndex = -1"
-        />
+      <div class="flex items-center gap-3 w-full">
+        <div class="flex items-center gap-3 flex-1 relative px-4 py-3 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-0 dark:bg-surface-800">
+          <i class="pi pi-search text-surface-400 text-lg" />
+          <InputText
+            ref="searchInputRef"
+            v-model="searchQuery"
+            placeholder="Currently being prepared..."
+            class="flex-1 border-0 focus:ring-0 text-lg bg-transparent placeholder:text-surface-400"
+            @keydown.down.prevent="navigateDown"
+            @keydown.up.prevent="navigateUp"
+            disabled
+            @keydown.enter.prevent="selectResult"
+            @keydown.esc="close"
+            @input="selectedIndex = -1"
+          />
+        </div>
         <Button
-          v-if="searchQuery"
+          v-if="isMobile"
           icon="pi pi-times"
           severity="secondary"
           text
           rounded
-          size="small"
-          class="!w-6 !h-6 !p-0"
-          @click="clearSearch"
+          size="large"
+          class="!w-12 !h-12 !p-0 flex-shrink-0"
+          @click="close"
         />
       </div>
     </template>
 
-    <div class="flex flex-col min-h-[400px] max-h-[500px]">
+    <div class="flex flex-col overflow-hidden" :style="isMobile ? 'height: calc(100vh - 80px); max-height: calc(100vh - 80px);' : 'height: 400px; max-height: 400px;'">
+      <div v-if="searchQuery.trim() && isLoading" class="flex-1 overflow-y-auto">
+        <Skeleton type="searchPages" />
+      </div>
       <!-- 검색 결과 영역 -->
-      <div v-if="searchQuery.trim() && !hasNoResults" class="flex-1 overflow-y-auto">
+      <div v-else-if="searchQuery.trim() && !hasNoResults" class="flex-1 overflow-y-auto">
         <!-- 검색 결과 그룹 -->
         <template v-for="(group, groupIndex) in groupedResults" :key="groupIndex">
           <div v-if="group.results.length > 0" class="mb-4">
-            <div class="px-4 py-2 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wide">
+            <div class="px-3 py-2 text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wide">
               {{ group.title }}
             </div>
-            <div class="px-2">
+            <div>
               <div
                 v-for="(result, index) in group.results"
                 :key="`${groupIndex}-${index}`"
                 :ref="el => setResultRef(el, groupIndex, index)"
-                class="px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 mb-1 flex items-start gap-3 group"
+                class="px-3 py-3 rounded-xl cursor-pointer transition-all duration-150 mb-2 flex items-center gap-3 group"
                 :class="isSelected(groupIndex, index) 
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white shadow-sm' 
-                  : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-900 dark:text-surface-100 hover:shadow-sm'"
+                  ? 'bg-primary-50 dark:bg-primary-900/20 shadow-sm' 
+                  : 'hover:bg-surface-100 dark:hover:bg-surface-800 hover:shadow-sm'"
                 @click="handleResultClick(result)"
                 @mouseenter="selectedIndex = getResultIndex(groupIndex, index)"
+                @mouseleave="selectedIndex = -1"
               >
-                <i 
-                  :class="[
-                    result.icon,
-                    'mt-0.5 shrink-0',
-                    isSelected(groupIndex, index) 
-                      ? 'text-white' 
-                      : 'text-primary-500 dark:text-primary-400'
-                  ]"
-                />
-                <div class="flex-1 min-w-0">
+                <div 
+                  class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                  :class="isSelected(groupIndex, index) 
+                    ? 'bg-primary-200 dark:bg-primary-900/50' 
+                    : 'bg-surface-200 dark:bg-surface-600'"
+                >
+                  <i 
+                    :class="[
+                      result.icon,
+                      'text-lg',
+                      isSelected(groupIndex, index) 
+                        ? 'text-primary-600 dark:text-primary-400' 
+                        : 'text-surface-500'
+                    ]"
+                  />
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
                   <div 
-                    class="font-semibold text-sm mb-0.5"
+                    class="text-sm font-semibold mb-0.5"
                     :class="isSelected(groupIndex, index) 
-                      ? 'text-white' 
-                      : 'text-surface-900 dark:text-surface-100'"
+                      ? 'text-primary-600 dark:text-primary-400' 
+                      : 'text-surface-700 dark:text-surface-200'"
                   >
                     <span v-html="highlightText(result.title, searchQuery)"></span>
                   </div>
                   <div 
-                    class="text-xs leading-relaxed line-clamp-2"
+                    class="text-xs"
                     :class="isSelected(groupIndex, index) 
-                      ? 'text-white/80' 
-                      : 'text-surface-600 dark:text-surface-400'"
+                      ? 'text-primary-500 dark:text-primary-500' 
+                      : 'text-surface-400'"
                   >
                     {{ result.description }}
                   </div>
                 </div>
                 <i 
                   v-if="isSelected(groupIndex, index)"
-                  class="pi pi-arrow-left rotate-90 text-white mt-0.5 shrink-0"
+                  class="pi pi-arrow-right text-primary-600 dark:text-primary-400 shrink-0"
                 />
               </div>
             </div>
@@ -95,7 +109,7 @@
       </div>
 
       <!-- 검색어 없을 때 / 검색 결과 없을 때 -->
-      <div v-if="!searchQuery.trim() || hasNoResults" class="flex flex-col items-center justify-center text-center flex-1">
+      <div v-else-if="!searchQuery.trim() || hasNoResults" class="flex flex-col items-center justify-center text-center flex-1 min-h-0">
         <div 
           class="w-16 h-16 rounded-full flex items-center justify-center mb-4"
           :class="hasNoResults 
@@ -119,26 +133,39 @@
 
 <script lang="ts" setup>
 import type { SearchResult, ResultGroup } from '~/types/search'
+import type { Page } from '~/types/component'
+import { highlightText } from '~/utils/string'
+import { isMac } from '~/utils/device'
 
 const visible = defineModel<boolean>('visible', { default: false })
+const { isMobile } = useResponsive()
 const searchInputRef = ref<HTMLElement>()
-const searchQuery = ref('')
-const selectedIndex = ref(-1)
+const searchQuery = ref<string>('')
+const selectedIndex = ref<number>(-1)
 const resultRefs = ref<Map<string, HTMLElement>>(new Map())
 
-// Mac 감지
-const isMac = ref(false)
+// 페이지 데이터 가져오기
+const { pages, isLoading } = usePages()
 
-// 검색 결과 데이터
-// ex) [{ title: '페이지 1', description: '페이지 1 설명', icon: 'pi pi-file', category: '페이지' }]
-const allResults: SearchResult[] = []
+const allResults = computed<SearchResult[]>(() => {
+  return pages.value.map((page: Page) => ({
+    title: page.name,
+    description: page.description || '페이지',
+    icon: 'pi pi-file',
+    category: '페이지',
+    page: page,
+    action: () => {
+      visible.value = false
+    }
+  }))
+})
 
 // 검색 결과 필터링 및 그룹화
 const groupedResults = computed<ResultGroup[]>(() => {
   if (!searchQuery.value.trim()) return []
   
   const query = searchQuery.value.toLowerCase()
-  const filtered = allResults.filter(result => 
+  const filtered = allResults.value.filter(result => 
     result.title.toLowerCase().includes(query) || 
     result.description.toLowerCase().includes(query) ||
     result.category.toLowerCase().includes(query)
@@ -200,13 +227,6 @@ function setResultRef(el: any, groupIndex: number, resultIndex: number) {
   }
 }
 
-// 텍스트 하이라이트
-function highlightText(text: string, query: string): string {
-  if (!query) return text
-  const regex = new RegExp(`(${query})`, 'gi')
-  return text.replace(regex, '<u>$1</u>')
-}
-
 // 네비게이션: 아래로
 function navigateDown() {
   if (flatResults.value.length === 0) return
@@ -247,10 +267,8 @@ function selectResult() {
   }
 }
 
-// 검색어 클리어
-function clearSearch() {
-  searchQuery.value = ''
-  selectedIndex.value = -1
+// InputText 포커스 헬퍼 함수
+function focusInput(): void {
   nextTick(() => {
     if (searchInputRef.value) {
       const input = searchInputRef.value as any
@@ -266,10 +284,7 @@ function clearSearch() {
 
 // 결과 클릭 처리
 function handleResultClick(result: SearchResult) {
-  if (result.action) {
-    result.action()
-  }
-  close()
+  // [개발예정] 검색 페이지 매칭 기능은 추후 구현 예정
 }
 
 // 닫기
@@ -284,64 +299,39 @@ function onHide() {
   resultRefs.value.clear()
 }
 
-// 키보드 단축키 설정
-onMounted(() => {
-  // Mac 감지
-  isMac.value = /Mac|iPhone|iPod|iPad/i.test(navigator.platform) || 
-                /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
-  
-  const handleKeyDown = (e: KeyboardEvent) => {
-    // 모달이 열려있을 때만 처리
-    if (!visible.value) {
-      const isMacKey = isMac.value
-      const isCtrlOrCmd = isMacKey ? e.metaKey : e.ctrlKey
-      
-      if (isCtrlOrCmd && e.key === 'k') {
-        e.preventDefault()
-        visible.value = true
-        
-        // 모달이 열릴 때 검색 입력창에 포커스
-        nextTick(() => {
-          if (searchInputRef.value) {
-            const input = searchInputRef.value as any
-            if (input.$el?.querySelector) {
-              const inputElement = input.$el.querySelector('input') || input.$el
-              inputElement.focus({ preventScroll: true })
-            } else {
-              input.focus?.({ preventScroll: true })
-            }
-          }
-        })
-      }
-    }
-  }
-  
-  window.addEventListener('keydown', handleKeyDown)
-  
-  onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown)
-  })
-})
-
 // 모달이 열릴 때 포커스
 watch(visible, (newVal) => {
   if (newVal) {
-    nextTick(() => {
-      if (searchInputRef.value) {
-        const input = searchInputRef.value as any
-        if (input.$el?.querySelector) {
-          const inputElement = input.$el.querySelector('input') || input.$el
-          inputElement.focus({ preventScroll: true })
-        } else {
-          input.focus?.({ preventScroll: true })
-        }
-      }
-    })
+    focusInput()
   } else {
     searchQuery.value = ''
     selectedIndex.value = -1
   }
 })
+
+// 키보드 단축키 핸들러
+const handleKeyDown = (e: KeyboardEvent): void => {
+  if (!visible.value) {
+    const isMacKey = isMac()
+    const isCtrlOrCmd = isMacKey ? e.metaKey : e.ctrlKey
+    
+    if (isCtrlOrCmd && e.key === 'k') {
+      e.preventDefault()
+      visible.value = true
+      focusInput()
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
+
+
 </script>
 
 <style lang="scss" scoped>
@@ -357,22 +347,33 @@ watch(visible, (newVal) => {
     border-bottom: 1px solid rgb(var(--surface-200));
   }
   
-  .p-dialog-content {
-    padding: 0;
-    overflow: hidden;
-  }
-  
-  // 모바일에서 입력 필드 포커스 시 스크롤 방지
-  @media (max-width: 640px) {
-    position: fixed;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    margin: 0 !important;
-  }
-  
   .p-dialog-header-close {
     display: none;
+  }
+}
+
+:deep(.search-dialog-mobile) {
+  .p-dialog {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    position: fixed;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+  
+  .p-dialog-content {
+    height: calc(100vh - 80px);
+    padding: 0;
+  }
+  
+  .p-dialog-header {
+    border-radius: 0;
+    padding: 1rem;
   }
 }
 
@@ -415,4 +416,3 @@ kbd {
   }
 }
 </style>
-

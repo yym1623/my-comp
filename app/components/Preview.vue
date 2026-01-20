@@ -1,23 +1,42 @@
 <template>
-  <main class="flex-1 h-full flex items-center justify-center px-2.5 md:px-10 py-10 overflow-hidden relative preview-root">
-    <!-- 프리뷰 모드 표시 배지 -->
+  <main class="flex-1 h-full overflow-hidden relative preview-root" :class="props.isMobile ? 'w-full h-full flex' : (props.simple ? 'flex items-center justify-center px-2.5 md:px-10 py-10' : 'flex items-center justify-center px-2.5 md:px-10 py-10')">
+    <!-- 프리뷰 모드 표시 배지 (단순 프리뷰 페이지에서는 숨김) -->
+    <!-- 데스크탑용 배지 -->
     <div 
-      v-if="isPreviewMode" 
+      v-if="isPreviewMode && !props.simple && !props.isMobile" 
       class="absolute top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary-500 text-white text-xs font-medium rounded-full flex items-center gap-2 shadow-lg z-10"
     >
       <i class="pi pi-eye text-xs" />
-      미리보기 모드 
+      미리보기 모드
+    </div>
+    <!-- 모바일용 작은 배지 (QR 버튼 바로 아래) -->
+    <div
+      v-if="isPreviewMode && !props.simple && props.isMobile"
+      class="absolute top-16 -right-[1px] w-10 h-8 rounded-l-md rounded-r-none bg-primary-500 dark:bg-primary-600 border border-l-primary-500 border-y-primary-500 border-r-transparent dark:border-l-primary-600 dark:border-y-primary-600 dark:border-r-transparent shadow-md flex items-center justify-center text-white z-20"
+    >
+      <i class="pi pi-eye text-sm" />
     </div>
     <div
-      class="preview-card w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] bg-surface-0 dark:bg-surface-800 rounded-2xl overflow-hidden flex flex-col shadow-lg relative"
-      :class="{ 'ring-2 ring-primary-500': isPreviewMode, 'preview-mode': isPreviewMode }"
+      class="preview-card bg-surface-0 dark:bg-surface-800 overflow-hidden flex flex-col relative"
+      :class="[
+        props.isMobile 
+          ? 'w-full h-full rounded-none shadow-none'
+          : (props.simple 
+            ? 'w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] rounded-2xl shadow-lg'
+            : 'w-[min(660px,calc(100%-20px))] md:w-[min(660px,calc(100%-40px))] h-[min(700px,calc(100%-10px))] rounded-2xl shadow-lg'),
+        { 
+          'ring-2 ring-primary-500 highlight-border': isPreviewMode && !props.simple, 
+          'preview-mode': isPreviewMode,
+          'highlight-border': !isPreviewMode
+        }
+      ]"
       @dragover.prevent="!isPreviewMode"
       @drop="!isPreviewMode && $emit('drop')"
       @click="!isPreviewMode && $emit('deselect')"
     >
-      <!-- QR 플립 버튼 (프리뷰 카드 오른쪽 끝에 ㄷ자 모양으로 붙는 형태) -->
+      <!-- QR 플립 버튼 (프리뷰 카드 오른쪽 끝에 ㄷ자 모양으로 붙는 형태, 단순 프리뷰 페이지에서는 숨김, 미리보기 모드일 때만 표시) -->
       <button
-        v-if="qrUrl && isPreviewMode"
+        v-if="qrUrl && !props.simple && props.isPreviewMode"
         class="absolute top-5 -right-[1px] w-10 h-8 rounded-l-md rounded-r-none bg-surface-0 dark:bg-surface-900 border border-l-surface-200 border-y-surface-200 border-r-transparent dark:border-l-surface-600 dark:border-y-surface-600 dark:border-r-transparent shadow-md flex items-center justify-center text-surface-600 dark:text-surface-200 hover:text-primary-500 hover:border-l-primary-500 hover:border-y-primary-500 dark:hover:border-l-primary-400 dark:hover:border-y-primary-400 transition-all z-20"
        
         @click.stop="toggleQrPanel"
@@ -30,57 +49,92 @@
         <!-- 앞면: 기존 캔버스 -->
         <div class="preview-face preview-front">
           <!-- 기본 캔버스 영역 -->
-          <Transition name="fade" mode="out-in">
-            <div v-if="canvasItems.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-          <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4 shrink-0">
-            <i class="pi pi-objects-column text-2xl text-primary-500" />
-          </div>
-          <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-1 whitespace-nowrap">컴포넌트 추가</h3>
-          <div class="flex flex-col items-center">
-            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">{{ isMobile ? '메뉴' : '왼쪽' }}에서 컴포넌트를 드래그하거나</p>
-            <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap mt-1">클릭하여 추가하세요</p>
+          <!-- 로딩 중일 때 스켈레톤 표시 -->
+          <Skeletons v-if="props.isLoading" type="preview" />
+          <template v-else>
+            <Transition name="fade" mode="out-in">
+              <!-- 로딩 끝 + 컴포넌트 없음: 빈 상태 메시지 -->
+              <div
+                v-if="props.canvasItems.length === 0"
+                class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none"
+              >
+                <!-- 일반 모드: 컴포넌트 추가 안내 -->
+                <template v-if="!props.simple">
+                  <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4 shrink-0">
+                    <i class="pi pi-objects-column text-2xl text-primary-500" />
+                  </div>
+                  <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-1 whitespace-nowrap">컴포넌트 추가</h3>
+                  <div class="flex flex-col items-center">
+                    <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap">{{ isMobile ? '메뉴' : '왼쪽' }}에서 컴포넌트를 드래그하거나</p>
+                    <p class="text-xs text-surface-400 leading-relaxed whitespace-nowrap mt-1">클릭하여 추가하세요</p>
+                  </div>
+                  <div class="flex items-center gap-2 mt-4 text-xs text-surface-400 shrink-0">
+                    <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">드래그</span>
+                    <span class="whitespace-nowrap">또는</span>
+                    <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">클릭</span>
+                  </div>
+                </template>
 
-          </div>
-          <div class="flex items-center gap-2 mt-4 text-xs text-surface-400 shrink-0">
-            <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">드래그</span>
-            <span class="whitespace-nowrap">또는</span>
-            <span class="px-2 py-1 bg-surface-100 dark:bg-surface-700 rounded whitespace-nowrap">클릭</span>
-          </div>
-            </div>
-          </Transition>
-          <Transition name="fade" mode="out-in">
-            <Draggable
-              v-if="canvasItems.length > 0"
-              :model-value="canvasItems"
-              item-key="uid"
-              :disabled="isPreviewMode"
-              @update:model-value="$emit('update:canvasItems', $event)"
-            >
+                <!-- Simple 모드: 페이지 없음 또는 콘텐츠 없음 안내 -->
+                <template v-else>
+                  <!-- 페이지가 존재하지 않음 -->
+                  <template v-if="props.pageNotFound">
+                    <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4 shrink-0">
+                      <i class="pi pi-exclamation-triangle text-2xl text-red-500 dark:text-red-400" />
+                    </div>
+                    <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-1 whitespace-nowrap">페이지를 찾을 수 없습니다</h3>
+                    <div class="flex flex-col items-center">
+                      <p class="text-xs text-surface-500 dark:text-surface-400 leading-relaxed whitespace-nowrap">요청하신 페이지가 존재하지 않거나</p>
+                      <p class="text-xs text-surface-500 dark:text-surface-400 leading-relaxed whitespace-nowrap mt-1">삭제되었을 수 있습니다</p>
+                    </div>
+                  </template>
+                  <!-- 페이지는 있지만 컴포넌트가 없음 -->
+                  <template v-else>
+                    <div class="w-16 h-16 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center mb-4 shrink-0">
+                      <i class="pi pi-exclamation-triangle text-2xl text-yellow-500 dark:text-yellow-400" />
+                    </div>
+                    <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-1 whitespace-nowrap">콘텐츠가 없습니다</h3>
+                    <div class="flex flex-col items-center">
+                      <p class="text-xs text-surface-500 dark:text-surface-400 leading-relaxed whitespace-nowrap">이 페이지에는 표시할 컴포넌트가</p>
+                      <p class="text-xs text-surface-500 dark:text-surface-400 leading-relaxed whitespace-nowrap mt-1">존재하지 않습니다</p>
+                    </div>
+                  </template>
+                </template>
+              </div>
+
+              <!-- 로딩 끝 + 데이터 있음: Draggable 렌더링 -->
+              <Draggable
+                v-else
+                :model-value="props.canvasItems"
+                item-key="uid"
+                :disabled="isPreviewMode"
+                @update:model-value="$emit('update:canvasItems', $event)"
+              >
               <template #item="{ element, index }">
-            <div
-              class="canvas-item group relative"
-              :class="{ selected: selectedIndex === index && !isPreviewMode }"
-              @click.stop="!isPreviewMode && $emit('select', index)"
-            >
-                <!-- 복사/삭제 버튼 -->
-                <div 
-                  v-if="!isPreviewMode" 
-                  class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
-                  :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                <div
+                  class="canvas-item group relative"
+                  :class="{ selected: selectedIndex === index && !isPreviewMode }"
+                  @click.stop="!isPreviewMode && $emit('select', index)"
                 >
-                  <button
-                    class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                <!-- 복사/삭제 버튼 -->
+              <div 
+                v-if="!isPreviewMode" 
+                class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
+                :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+              >
+                <button
+                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
                     @click.stop="$emit('copy', index)"
-                  >
+                >
                     <i class="pi pi-copy text-xs text-primary-500 dark:text-primary-400" />
-                  </button>
-                  <button
-                    class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                    @click.stop="$emit('delete', index)"
-                  >
-                    <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
-                  </button>
-                </div>
+                </button>
+                <button
+                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                  @click.stop="$emit('delete', index)"
+                >
+                  <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
+                </button>
+              </div>
               <!-- Heading 1 -->
               <h1
                 v-if="element.type === 'heading1'"
@@ -150,14 +204,14 @@
                   {{ element.props.label }}
                 </label>
                 <Textarea
-                  :key="`textarea-${element.uid}-${index}`"
+                  :key="`textarea-${element.id}-${index}`"
                   :model-value="element.props.content || ''"
                   :rows="4"
                   placeholder="설명 내용을 입력하세요."
                   :style="{ minHeight: '6rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
                   :readonly="!isPreviewMode"
                   :class="{ 'edit-mode': !isPreviewMode }"
-                />
+              />
               </div>
               
               <!-- 나머지 컴포넌트들 -->
@@ -171,7 +225,7 @@
                   {{ element.props.label }}
                 </label>
                 <InputText
-                  :key="`input-text-${element.uid}-${index}`"
+                  :key="`input-text-${element.id}-${index}`"
                   type="text"
                   :model-value="''"
                   :placeholder="element.props.placeholder || '입력하세요...'"
@@ -191,7 +245,7 @@
                   {{ element.props.label }}
                 </label>
                 <InputText
-                  :key="`input-password-${element.uid}-${index}`"
+                  :key="`input-password-${element.id}-${index}`"
                   type="password"
                   :model-value="''"
                   :placeholder="element.props.placeholder || '비밀번호를 입력하세요'"
@@ -211,7 +265,7 @@
                   {{ element.props.label }}
                 </label>
                 <InputText
-                  :key="`input-email-${element.uid}-${index}`"
+                  :key="`input-email-${element.id}-${index}`"
                   type="email"
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'example@email.com'"
@@ -231,7 +285,7 @@
                   {{ element.props.label }}
                 </label>
                 <DatePicker
-                  :key="`input-date-${element.uid}-${index}`"
+                  :key="`input-date-${element.id}-${index}`"
                   :model-value="null"
                   :placeholder="element.props.placeholder || '날짜를 선택하세요'"
                   dateFormat="yy.mm.dd"
@@ -251,7 +305,7 @@
                   {{ element.props.label }}
                 </label>
                 <DatePicker
-                  :key="`input-time-${element.uid}-${index}`"
+                  :key="`input-time-${element.id}-${index}`"
                   :model-value="null"
                   :placeholder="element.props.placeholder || '시간을 선택하세요'"
                   timeOnly
@@ -272,7 +326,7 @@
                   {{ element.props.label }}
                 </label>
                 <Select
-                  :key="`select-${element.uid}-${index}`"
+                  :key="`select-${element.id}-${index}`"
                   :model-value="null"
                   :options="element.props.options || []"
                   :placeholder="element.props.placeholder || '선택하세요'"
@@ -292,7 +346,7 @@
                   {{ element.props.label }}
                 </label>
                 <InputText
-                  :key="`input-url-${element.uid}-${index}`"
+                  :key="`input-url-${element.id}-${index}`"
                   type="url"
                   :model-value="''"
                   :placeholder="element.props.placeholder || 'https://example.com'"
@@ -313,7 +367,7 @@
                 </label>
                 <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <Checkbox
-                    :key="`checkbox-${element.uid}-${index}`"
+                    :key="`checkbox-${element.id}-${index}`"
                     :model-value="element.props.checked || false"
                     :binary="true"
                     :readonly="!isPreviewMode"
@@ -335,14 +389,14 @@
                 <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element) }">
                   <div
                     v-for="(option, optIndex) in (element.props.options || [])"
-                    :key="`radio-${element.uid}-${index}-${optIndex}`"
+                    :key="`radio-${element.id}-${index}-${optIndex}`"
                     class="flex items-center gap-2"
                     :style="getFormInputStyle(element)"
                   >
                     <RadioButton
                       :model-value="element.props.selected || element.props.options?.[0]"
                       :value="option"
-                      :name="`radio-${element.uid}`"
+                      :name="`radio-${element.id}`"
                       :readonly="!isPreviewMode"
                       :class="{ 'edit-mode': !isPreviewMode }"
                     />
@@ -362,7 +416,7 @@
                 </label>
                 <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <ToggleSwitch
-                    :key="`toggle-${element.uid}-${index}`"
+                    :key="`toggle-${element.id}-${index}`"
                     :model-value="element.props.checked || false"
                     :readonly="!isPreviewMode"
                     :class="{ 'edit-mode': !isPreviewMode }"
@@ -378,7 +432,7 @@
                 :style="getButtonWrapperStyle(element)"
               >
                 <Button
-                  :key="`button-${element.uid}-${index}`"
+                  :key="`button-${element.id}-${index}`"
                   :label="element.props.text || '버튼'"
                   severity="primary"
                   :outlined="element.props.outlined || false"
@@ -420,7 +474,7 @@
                   v-for="(cellItems, cellIndex) in (element.props.items && element.props.items.length > 0 ? element.props.items : Array(element.props.columns || 2).fill([]))"
                   :key="cellIndex"
                   class="min-h-[60px] border border-dashed border-surface-300 dark:border-surface-600 rounded-md bg-surface-50 dark:bg-surface-900/30 p-2 transition-all"
-                  :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGrid === `${element.uid}-${cellIndex}` }"
+                  :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGrid === `${element.id}-${cellIndex}` }"
                   @dragover.prevent="!isPreviewMode && handleGridDragOver($event, element, Number(cellIndex))"
                   @dragleave="!isPreviewMode && handleGridDragLeave(element, Number(cellIndex))"
                   @drop="!isPreviewMode && handleGridDrop($event, element, Number(cellIndex))"
@@ -442,7 +496,7 @@
               <div
                 v-if="element.type === 'group'"
                 class="border border-dashed border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900/30 overflow-hidden transition-all"
-                :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGroup === element.uid }"
+                :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGroup === element.id }"
                 :style="getElementStyle(element)"
                 @dragover.prevent="!isPreviewMode && handleGroupDragOver($event, element)"
                 @dragleave="!isPreviewMode && handleGroupDragLeave(element)"
@@ -478,7 +532,7 @@
                         class="px-3 py-2 font-semibold text-surface-600 dark:text-surface-200 border-b border-surface-200 dark:border-surface-700"
                       >
                         <InputText
-                          v-if="!isPreviewMode && editingTable === `${element.uid}-header-${i}`"
+                          v-if="!isPreviewMode && editingTable === `${element.id}-header-${i}`"
                           :model-value="col"
                           @blur="handleTableHeaderBlur(element, Number(i), $event)"
                           @keyup.enter="handleTableHeaderBlur(element, Number(i), $event)"
@@ -489,7 +543,7 @@
                           v-else
                           class="cursor-pointer"
                           :class="{ 'hover:text-primary-500': !isPreviewMode }"
-                          @click.stop="!isPreviewMode && (editingTable = `${element.uid}-header-${i}`)"
+                          @click.stop="!isPreviewMode && (editingTable = `${element.id}-header-${i}`)"
                         >
                           {{ col }}
                         </span>
@@ -507,7 +561,7 @@
                         class="px-3 py-2 text-surface-500 dark:text-surface-400 border-b border-surface-100 dark:border-surface-800"
                       >
                         <InputText
-                          v-if="!isPreviewMode && editingTable === `${element.uid}-cell-${rowIndex}-${cellIndex}`"
+                          v-if="!isPreviewMode && editingTable === `${element.id}-cell-${rowIndex}-${cellIndex}`"
                           :model-value="cell"
                           @blur="handleTableCellBlur(element, Number(rowIndex), Number(cellIndex), $event)"
                           @keyup.enter="handleTableCellBlur(element, Number(rowIndex), Number(cellIndex), $event)"
@@ -518,7 +572,7 @@
                           v-else
                           class="cursor-pointer"
                           :class="{ 'hover:text-primary-500': !isPreviewMode }"
-                          @click.stop="!isPreviewMode && (editingTable = `${element.uid}-cell-${rowIndex}-${cellIndex}`)"
+                          @click.stop="!isPreviewMode && (editingTable = `${element.id}-cell-${rowIndex}-${cellIndex}`)"
                         >
                           {{ cell }}
                         </span>
@@ -539,10 +593,11 @@
                   </button>
                 </div>
               </div>
-                </div>
-              </template>
-            </Draggable>
-          </Transition>
+            </div>
+          </template>
+        </Draggable>
+            </Transition>
+          </template>
         </div>
 
         <!-- 뒷면: QR 패널 -->
@@ -582,31 +637,39 @@
 
 
     </div>
+
+    <!-- 모바일에서만 표시되는 미리보기 버튼 -->
+    <Button
+      v-if="props.isMobile"
+      :icon="props.isPreviewMode ? 'pi pi-pencil' : 'pi pi-eye'"
+      :severity="props.isPreviewMode ? 'primary' : 'secondary'"
+      text
+      size="small"
+      :disabled="!props.currentPage"
+      class="fixed bottom-6 right-6 md:bottom-8 md:right-8 !w-9 !h-9 shadow-sm z-50 bg-primary-500 dark:bg-primary-600 text-white"
+
+      v-tooltip.left="props.currentPage ? (props.isPreviewMode ? '편집 모드' : '미리보기') : '페이지를 선택해주세요'"
+      @click="$emit('toggle-preview')"
+    />
   </main>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { useRequestURL } from '#app'
 import QrcodeVue from 'qrcode.vue'
 import type { PreviewProps, PreviewEmits } from '~/types/preview'
 import type { CanvasItem } from '~/types/component'
 import draggable from 'vuedraggable'
-import ComponentRenderer from './ComponentRenderer.vue'
 import Divider from 'primevue/divider'
 
 const Draggable = draggable
 
-type Props = PreviewProps
-type Emits = PreviewEmits
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const props = defineProps<PreviewProps>()
+const emit = defineEmits<PreviewEmits>()
 
 const { getComponentLabel } = useElements()
 
 // QR 플립 패널 상태
-const showQrPanel = ref(false)
+const showQrPanel = ref<boolean>(false)
 
 // 현재 페이지의 프리뷰 URL (전체 URL)
 const requestURL = useRequestURL()
@@ -855,13 +918,13 @@ const isDraggingOverGrid = ref<string | null>(null)
 const isDraggingOverGroup = ref<string | null>(null)
 
 function handleGridDragOver(event: DragEvent, gridElement: CanvasItem, cellIndex: number) {
-  isDraggingOverGrid.value = `${gridElement.uid}-${cellIndex}`
+  isDraggingOverGrid.value = `${gridElement.id}-${cellIndex}`
 }
 
 function handleGridDragLeave(gridElement: CanvasItem, cellIndex: number) {
   // 실제로 영역을 벗어났는지 확인
   setTimeout(() => {
-    if (isDraggingOverGrid.value === `${gridElement.uid}-${cellIndex}`) {
+    if (isDraggingOverGrid.value === `${gridElement.id}-${cellIndex}`) {
       isDraggingOverGrid.value = null
     }
   }, 50)
@@ -873,13 +936,13 @@ function handleGridDrop(event: DragEvent, gridElement: CanvasItem, cellIndex: nu
 }
 
 function handleGroupDragOver(event: DragEvent, groupElement: CanvasItem) {
-  isDraggingOverGroup.value = groupElement.uid
+  isDraggingOverGroup.value = groupElement.id
 }
 
 function handleGroupDragLeave(groupElement: CanvasItem) {
   // 실제로 영역을 벗어났는지 확인
   setTimeout(() => {
-    if (isDraggingOverGroup.value === groupElement.uid) {
+    if (isDraggingOverGroup.value === groupElement.id) {
       isDraggingOverGroup.value = null
     }
   }, 50)
@@ -963,18 +1026,25 @@ function handleAddTableRow(element: CanvasItem) {
 
 .canvas-item {
   @apply p-4 border border-transparent transition-all cursor-pointer;
-
-  &:hover {
-    @apply border-primary-500;
-  }
-
-  &.selected {
-    @apply border-primary-500;
-  }
+  border-radius: 0 !important;
 }
 
-// 미리보기 모드에서는 canvas-item 호버 시 보더 변경 차단 (최고 우선순위로 오버라이드)
-// 미리보기 모드에서는 canvas-item 호버 시 보더 변경 차단 (최고 우선순위로 오버라이드)
+// 하이라이트 보더는 편집 화면에서만 사용 (preview/[id] 단순 프리뷰에서는 비적용)
+.highlight-border .canvas-item:hover {
+  @apply border-primary-500;
+  border-radius: 0 !important;
+}
+
+.highlight-border .canvas-item.selected {
+  @apply border-primary-500;
+  border-radius: 0 !important;
+}
+
+// 미리보기 모드에서는 canvas-item 호버 시 보더 변경 차단 및 커서 기본값으로 변경
+.preview-mode .canvas-item {
+  cursor: default !important;
+}
+
 .preview-mode .canvas-item:hover {
   // Tailwind의 color-mix를 완전히 오버라이드
   border-color: transparent !important;
@@ -1091,7 +1161,7 @@ function handleAddTableRow(element: CanvasItem) {
   border: none !important;
   border-top: none !important;
   margin: 0 !important;
-}
+  }
 
 :deep(.divider-default.p-divider-vertical) {
   background-color: var(--p-surface-200, #e5e7eb) !important;
@@ -1102,7 +1172,7 @@ function handleAddTableRow(element: CanvasItem) {
 // 다크 모드
 :deep(.dark .divider-default) {
   background-color: var(--p-surface-700, #374151) !important;
-}
+  }
 
 :deep(.dark .divider-default hr) {
   background-color: var(--p-surface-700, #374151) !important;

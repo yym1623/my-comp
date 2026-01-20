@@ -1,13 +1,21 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
 
-export const createServerSupabaseClient = () => {
+// Supabase 설정 가져오기 (공통 로직)
+const getSupabaseConfig = () => {
   const config = useRuntimeConfig()
-  
-  const supabaseUrl = config.supabaseUrl
-  const supabaseServiceRoleKey = config.supabaseServiceRoleKey
+  const supabaseUrl = config.supabaseUrl || config.public.supabaseUrl
+  return { config, supabaseUrl }
+}
+
+// Service Role 키로 Supabase 클라이언트 생성 (RLS 우회)
+export const createServerSupabaseClient = (): SupabaseClient => {
+  const { config, supabaseUrl } = getSupabaseConfig()
+  // 우선순위: SERVICE_ROLE_KEY > ANON_KEY > public.anonKey
+  const supabaseServiceRoleKey = config.supabaseServiceRoleKey || config.supabaseAnonKey || config.public.supabaseAnonKey
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Supabase URL and Service Role Key must be provided in server environment')
+    throw new Error('Supabase URL and key(SERVICE_ROLE or ANON) must be provided in server environment')
   }
 
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -17,29 +25,3 @@ export const createServerSupabaseClient = () => {
     }
   })
 }
-
-/**
- * 클라이언트에서 전달받은 세션을 사용하는 Supabase 클라이언트
- * 사용자 인증이 필요한 경우 사용
- */
-export const createServerSupabaseClientWithSession = (accessToken: string) => {
-  const config = useRuntimeConfig()
-  
-  const supabaseUrl = config.supabaseUrl
-  const supabaseAnonKey = config.supabaseAnonKey
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL and Anon Key must be provided in server environment')
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  })
-
-  return supabase
-}
-

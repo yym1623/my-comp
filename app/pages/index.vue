@@ -27,6 +27,7 @@
             <Pages
               :current-page-id="currentPage?.id"
               :is-preview-mode="isPreviewMode"
+              :is-loading="isPagesLoading"
               @update:pages="handleUpdatePages"
               @select="handleSelectPage"
               @create="openCreatePageModal"
@@ -36,32 +37,31 @@
       </Tabs>
       
       <!-- 최상단 버튼 바 (데스크탑만) -->
-      <div v-if="!isMobile" class="absolute top-2 -right-[52px] flex flex-col gap-2 z-20">
+      <div v-if="!isMobile" class="absolute top-2 -right-[52px] flex flex-col z-20 button-group-container">
         <Button
           icon="pi pi-pencil"
           :severity="!isPreviewMode ? 'primary' : 'secondary'"
           text
-          rounded
           size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border shadow-sm"
+          class="button-group-top !w-9 !h-9 shadow-sm"
           :class="!isPreviewMode 
-            ? 'border-primary-500 dark:border-primary-400' 
-            : 'border-surface-200 dark:border-surface-700'"
+            ? 'bg-primary-500 dark:bg-primary-600 text-white' 
+            : 'bg-surface-0 dark:bg-surface-800'"
           v-tooltip.right="'편집 모드'"
-          @click="setEditMode"
+          @click="isPreviewMode = false"
         />
         <Button
           icon="pi pi-eye"
           :severity="isPreviewMode ? 'primary' : 'secondary'"
           text
-          rounded
           size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border shadow-sm"
+          :disabled="!currentPage"
+          class="button-group-bottom !w-9 !h-9 shadow-sm"
           :class="isPreviewMode 
-            ? 'border-primary-500 dark:border-primary-400' 
-            : 'border-surface-200 dark:border-surface-700'"
-          v-tooltip.right="'미리보기'"
-          @click="setPreviewMode"
+            ? 'bg-primary-500 dark:bg-primary-600 text-white' 
+            : 'bg-surface-0 dark:bg-surface-800'"
+          v-tooltip.right="currentPage ? '미리보기' : '페이지를 선택해주세요'"
+          @click="isPreviewMode = true"
         />
       </div>
       
@@ -71,25 +71,13 @@
           icon="pi pi-refresh"
           severity="secondary"
           text
-          rounded
+          
           size="small"
-          class="!w-9 !h-9 bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-sm"
+          class="!w-9 !h-9 shadow-sm"
+          :class="'bg-surface-0 dark:bg-surface-800'"
           v-tooltip.right="'컴포넌트 초기화'"
-          :disabled="isPreviewMode || !currentPage || canvasItems.length === 0"
-          @click="resetPageComponents"
-        />
-      </div>
-
-      <!-- 모바일 닫기 버튼 -->
-      <div v-if="isMobile && isLeftPanelOpen" class="absolute top-1 right-3 z-10 flex gap-2">
-        <Button
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          rounded
-          size="small"
-          class="!w-9 !h-9"
-          @click="isLeftPanelOpen = false"
+          :disabled="!currentPage || canvasItems.length === 0"
+          @click="onResetPageClick"
         />
       </div>
     </aside>
@@ -101,6 +89,8 @@
       :is-preview-mode="isPreviewMode"
       :is-mobile="isMobile"
       :preview-path="currentPage ? `/preview/${currentPage.id}` : ''"
+      :is-loading="isPageLoading"
+      :current-page="currentPage"
       @update:canvas-items="handleUpdateCanvasItems"
       @select="selectItem"
       @delete="deleteItem"
@@ -109,6 +99,7 @@
       @deselect="selectedIndex = null"
       @grid-drop="handleGridDrop"
       @group-drop="handleGroupDrop"
+      @toggle-preview="isPreviewMode = !isPreviewMode"
     />
 
     <!-- 오른쪽: 트리 + 속성 패널 -->
@@ -124,25 +115,48 @@
         :is-responsive-change="isResponsiveChange"
         :saved-pages-data="savedPagesData"
         :pages="pages"
+        :is-saving="isSaving"
+        :is-deleting="isDeleting"
+        :is-page-loading="isPageLoading"
+        :show-tree-view="showTreeView"
         @update:canvas-items="handleUpdateCanvasItems"
         @select-item="selectItem"
+        @copy-item="copyItem"
         @delete-item="deleteItem"
-        @save-page="saveCurrentPage"
+        @save-page="handleSavePageClick"
         @delete-page="onDeletePageClick"
         @close-options="selectedIndex = null"
         @update-page-name="handleUpdatePageName"
+        @edit-page="handleEditPage"
+        @update:show-tree-view="showTreeView = $event"
       />
       
-      <!-- 모바일 닫기 버튼 -->
-      <div v-if="isMobile && isRightPanelOpen" class="absolute top-1 right-3 z-10">
+      <!-- 최상단 버튼 바 (데스크탑만) -->
+      <div v-if="!isMobile" class="absolute top-2 -left-[52px] flex flex-col z-20 button-group-container">
         <Button
-          icon="pi pi-times"
-          severity="secondary"
+          icon="pi pi-list"
+          :severity="!showTreeView ? 'primary' : 'secondary'"
           text
-          rounded
           size="small"
-          class="!w-9 !h-9"
-          @click="isRightPanelOpen = false"
+          class="button-group-top !w-9 !h-9 shadow-sm"
+          :class="!showTreeView 
+            ? 'bg-primary-500 dark:bg-primary-600 text-white' 
+            : 'bg-surface-0 dark:bg-surface-800'"
+          v-tooltip.left="'옵션 편집 모드'"
+          @click="showTreeView = false"
+        />
+        <Button
+          icon="pi pi-sitemap"
+          :severity="showTreeView ? 'primary' : 'secondary'"
+          text
+          size="small"
+          class="button-group-bottom !w-9 !h-9 shadow-sm"
+          :class="showTreeView 
+            ? 'bg-primary-500 dark:bg-primary-600 text-white' 
+            : 'bg-surface-0 dark:bg-surface-800'"
+          :disabled="!currentPage || canvasItems.length === 0 || (selectedIndex !== null && selectedItem !== null)"
+          v-tooltip.left="currentPage ? '트리 뷰' : '페이지를 선택해주세요'"
+          @click="showTreeView = true"
         />
       </div>
     </aside>
@@ -150,7 +164,24 @@
     <!-- 페이지 생성 모달 -->
     <ModalsCreatePage
       v-model="isCreatePageModalOpen"
+      mode="create"
+      title="새 페이지 생성"
+      description="페이지 이름과 설명을 입력하세요"
+      button-label="생성"
       @create="handleCreatePage"
+    />
+    
+    <!-- 페이지 수정 모달 -->
+    <ModalsCreatePage
+      v-model="isEditPageModalOpen"
+      mode="edit"
+      :page-id="editingPage?.id"
+      :initial-name="editingPage?.name"
+      :initial-description="editingPage?.description"
+      title="새 페이지 수정"
+      description="페이지 이름과 설명을 입력하세요"
+      button-label="수정"
+      @update="handleUpdatePage"
     />
 
     <!-- 페이지 삭제 확인 모달 -->
@@ -160,6 +191,33 @@
       message="현재 페이지의 컴포넌트 구성을 삭제하시겠어요?"
       action-type="delete"
       @confirm="confirmDeletePage"
+    />
+
+    <!-- 페이지 저장 확인 모달 -->
+    <ModalsConfirm
+      v-model="isSavePageConfirmOpen"
+      header="페이지 저장"
+      message="현재 페이지의 컴포넌트 구성을 저장하시겠어요?"
+      action-type="save"
+      @confirm="confirmSavePage"
+    />
+
+    <!-- 페이지 전환 확인 모달 (저장되지 않은 컴포넌트가 있을 때) -->
+    <ModalsConfirm
+      v-model="isChangePageConfirmOpen"
+      header="페이지 이동"
+      message="저장되지 않은 컴포넌트가 있습니다. 페이지를 이동하시겠어요?"
+      action-type="success"
+      @confirm="confirmChangePage"
+    />
+
+    <!-- 컴포넌트 초기화 확인 모달 -->
+    <ModalsConfirm
+      v-model="isResetPageConfirmOpen"
+      header="컴포넌트 초기화"
+      message="저장되지 않은 내용은 모두 사라집니다."
+      action-type="success"
+      @confirm="confirmResetPage"
     />
 
     <!-- 모바일 메뉴 -->
@@ -172,6 +230,12 @@
       :selected-index="selectedIndex"
       :selected-item="selectedItem ?? null"
       :is-preview-mode="isPreviewMode"
+      :is-pages-loading="isPagesLoading"
+      :saved-pages-data="savedPagesData"
+      :pages="pages"
+      :is-saving="isSaving"
+      :is-deleting="isDeleting"
+      :is-page-loading="isPageLoading"
       @close="panelStore.closeMobileMenu()"
       @open-panel="(panel: string) => panelStore.openPanel(panel as 'elements' | 'pages' | 'options')"
       @close-panel="panelStore.closePanel()"
@@ -181,24 +245,36 @@
       @create-page="openCreatePageModal"
       @update:canvas-items="handleUpdateCanvasItems"
       @select-item="selectItem"
+      @clear-selection="selectedIndex = null"
+      @copy-item="copyItem"
       @delete-item="deleteItem"
-      @save-page="saveCurrentPage"
+      @save-page="handleSavePageClick"
+      @delete-page="onDeletePageClick"
+      @update-page-name="handleUpdatePageName"
+      @edit-page="handleEditPage"
     />
 
     <!-- 전역 Toast -->
     <Toast />
+
+    <!-- 활동 타임아웃 모달 -->
+    <ModalsActivityTimeout
+      :visible="activityTimeout.isModalVisible.value"
+      :countdown="activityTimeout.countdown.value"
+      @stay="activityTimeout.handleStay"
+      @logout="activityTimeout.handleLogout"
+    />
+
   </div>
 </template>
 
 <script lang="ts" setup>
 import { usePanelStore } from '@/stores/panel'
 import type { ComponentDef, CanvasItem, Page } from '~/types/component'
-import { useElements } from '~/composables/useElements'
-import { useCanvas } from '~/composables/useCanvas'
-import { useResponsive } from '~/composables/useResponsive'
-import { usePages } from '~/composables/usePages'
-
+import { getComponentDefaultLayout, getComponentDefaultTypography, isTextComponent } from '~/utils/component'
+import { createEmptyGridCells, compareArrayIds, findIndexById } from '~/utils/array'
 useSeoMeta({
+  title: 'MyComp',
   description: '컴포넌트를 쉽게 만들고 관리하세요. 실시간 미리보기와 직관적인 편집 도구를 제공합니다.',
   ogTitle: 'MyComp',
   ogDescription: '컴포넌트를 쉽게 만들고 관리하세요',
@@ -208,71 +284,65 @@ useSeoMeta({
   ogImageHeight: 630
 })
 
-// Pinia store
+const route = useRoute()
 const panelStore = usePanelStore()
 
-// Composables
 const { generateUid } = useElements()
 const { cloneCanvasItems } = useCanvas()
 const { isMobile, checkScreenSize } = useResponsive()
-const { pages } = usePages()
+const { pages, isLoading: isPagesLoading, loadPages, createPage, updatePage, deletePage, loadPageData } = usePages()
 const { getDefaultProps } = useElementOptions()
 
-// 왼쪽 탭 상태
-const leftTab = ref('elements')
+const leftTab = ref<string>('elements')
 
-// 패널 상태 - 초기값을 화면 크기에 맞게 설정
-// 클라이언트 사이드에서 즉시 화면 크기 확인
-// SSR에서는 PC로 가정 (패널 열림)하여 PC에서 깜빡임 방지
-const initialMobile = process.client ? window.innerWidth < 1024 : false
-const isLeftPanelOpen = ref(!initialMobile)
-const isRightPanelOpen = ref(!initialMobile)
-const isPreviewMode = ref(false)
-const isResponsiveChange = ref(false) // 화면 크기 변경으로 인한 패널 변경인지 구분
-const isInitialized = ref(false) // 초기화 완료 여부
+const initialMobile = import.meta.client ? window.innerWidth < 1024 : false
+const isLeftPanelOpen = ref<boolean>(!initialMobile)
+const isRightPanelOpen = ref<boolean>(!initialMobile)
+const isPreviewMode = ref<boolean>(false)
+const isResponsiveChange = ref<boolean>(false)
+const isInitialized = ref<boolean>(false)
+const showTreeView = ref<boolean>(false)
 
-// 편집 모드/미리보기 모드 전환 함수
-const setEditMode = () => {
-  if (!isPreviewMode.value) return
-  isPreviewMode.value = false
-  // 편집 모드일 때 패널 열기
-  isLeftPanelOpen.value = true
-  isRightPanelOpen.value = true
+const isChangePageConfirmOpen = ref<boolean>(false)
+const isResetPageConfirmOpen = ref<boolean>(false)
+const pendingTargetPage = ref<Page | null>(null)
+
+// 페이지 목록 및 데이터 로드 (최초 한 번만)
+async function ensurePagesLoaded(): Promise<void> {
+  if (pages.value.length > 0) return
+
+  await loadPages()
+
+  for (const page of pages.value) {
+    const elements = await loadPageData(page.id)
+    savedPagesData.value[page.id] = elements || []
+    pagesData.value[page.id] = cloneCanvasItems(elements || [])
+  }
 }
 
-const setPreviewMode = () => {
-  if (isPreviewMode.value) return
-  isPreviewMode.value = true
-  // 미리보기 모드일 때 패널 닫기
-  isLeftPanelOpen.value = false
-  isRightPanelOpen.value = false
-}
-
-// 페이지 컴포넌트 초기화
-const resetPageComponents = () => {
+// 현재 페이지의 컴포넌트 초기화
+const resetPageComponents = (): void => {
   if (!currentPage.value) return
   pagesData.value[currentPage.value.id] = []
   selectedIndex.value = null
 }
 
 const currentPage = ref<Page | null>(null)
-const isCreatePageModalOpen = ref(false)
-const isDeletePageConfirmOpen = ref(false)
+const isCreatePageModalOpen = ref<boolean>(false)
+const isEditPageModalOpen = ref<boolean>(false)
+const editingPage = ref<Page | null>(null)
+const isDeletePageConfirmOpen = ref<boolean>(false)
+const isSavePageConfirmOpen = ref<boolean>(false)
+const isSaving = ref<boolean>(false)
+const isDeleting = ref<boolean>(false)
 
-// 페이지별 컴포넌트 저장 (목업 데이터)
-// savedPagesData: 실제 저장된 상태
-// pagesData: 현재 편집 중인 상태 (저장 버튼 누를 때만 savedPagesData에 반영)
-const savedPagesData = ref<Record<string, CanvasItem[]>>({
-  '1': [],
-  '2': [],
-  '3': []
-})
+const savedPagesData = ref<Record<string, CanvasItem[]>>({})
+const pagesData = ref<Record<string, CanvasItem[]>>({})
 
-const pagesData = ref<Record<string, CanvasItem[]>>({
-  '1': [],
-  '2': [],
-  '3': []
-})
+
+const { showSuccess, showError } = useAppToast()
+const activityTimeout = useActivityTimeout()
+
 
 const canvasItems = computed({
   get: () => {
@@ -285,14 +355,13 @@ const canvasItems = computed({
   }
 })
 
-function handleUpdateCanvasItems(items: CanvasItem[]) {
+function handleUpdateCanvasItems(items: CanvasItem[]): void {
   canvasItems.value = items
 }
 
 const selectedIndex = ref<number | null>(null)
 const draggedComponent = ref<ComponentDef | null>(null)
 
-// 프리뷰 모드 전환 시 선택 해제
 watch(isPreviewMode, (preview) => {
   if (preview) {
     selectedIndex.value = null
@@ -306,185 +375,267 @@ const selectedItem = computed(() => {
   return pageItems[selectedIndex.value]
 })
 
-// Toast 인스턴스
-const toast = useToast()
+// 현재 페이지의 아이템 배열 가져오기
+function getCurrentPageItems(): CanvasItem[] | null {
+  if (!currentPage.value) return null
+  const pageId = currentPage.value.id
+  const pageItems = pagesData.value[pageId]
+  return pageItems || null
+}
 
-// 초기화: 클라이언트 사이드에서 화면 크기 확인 후 패널 상태 동기화
-onMounted(() => {
-  if (process.client) {
-    const mobile = checkScreenSize()
-    isResponsiveChange.value = true
-    
-    // 초기값과 실제 값이 다르면 업데이트 (애니메이션 없이)
-    if (mobile !== initialMobile) {
-      if (mobile) {
-        isLeftPanelOpen.value = false
-        isRightPanelOpen.value = false
-      } else {
-        isLeftPanelOpen.value = true
-        isRightPanelOpen.value = true
-      }
-    }
-    
-    // 초기화 완료 후 플래그 해제 (다음 틱에서)
-    nextTick(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isResponsiveChange.value = false
-          isInitialized.value = true
-        })
-      })
-    })
+// 드래그된 컴포넌트로 새 아이템 생성
+function createItemFromDraggedComponent(): CanvasItem | null {
+  if (!draggedComponent.value) return null
+  return {
+    id: generateUid(),
+    type: draggedComponent.value.type,
+    props: { ...draggedComponent.value.defaultProps }
   }
-})
+}
 
-// 반응형 처리 (초기화 후 화면 크기 변경 시에만 실행)
-watch(isMobile, (mobile) => {
-  // 초기화 전에는 실행하지 않음
-  if (!isInitialized.value) return
-  
-  // 화면 크기 변경으로 인한 패널 변경임을 표시 (슬라이드 애니메이션 제거)
-  isResponsiveChange.value = true
-  
-  if (mobile) {
-    isLeftPanelOpen.value = false
-    isRightPanelOpen.value = false
-  } else {
-    isLeftPanelOpen.value = true
-    isRightPanelOpen.value = true
-  }
-  
-  if (process.client) {
+// 패널 상태 업데이트
+function updatePanelState(mobile: boolean): void {
+  isLeftPanelOpen.value = !mobile
+  isRightPanelOpen.value = !mobile
+}
+
+// 반응형 변경 플래그 해제 (이중 requestAnimationFrame)
+function resetResponsiveChangeFlag(): void {
+  if (import.meta.client) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         isResponsiveChange.value = false
       })
     })
   } else {
-    // SSR 환경에서는 즉시 플래그 해제
     isResponsiveChange.value = false
   }
-})
+}
 
-function handleSelectPage(page: Page) {
+// 현재 페이지에 저장되지 않은 컴포넌트가 있는지 확인
+function hasUnsavedComponentsForCurrentPage(): boolean {
+  const page = currentPage.value
+  if (!page) return false
+
+  const saved = savedPagesData.value[page.id] || []
+  const current = pagesData.value[page.id] || []
+
+  return !compareArrayIds(saved, current)
+}
+
+// 페이지 선택 처리 (저장되지 않은 변경사항 확인)
+function handleSelectPage(page: Page): void {
   if (currentPage.value?.id === page.id) return
+
+  if (hasUnsavedComponentsForCurrentPage()) {
+    pendingTargetPage.value = page
+    isChangePageConfirmOpen.value = true
+    return
+  }
+
   selectPage(page)
 }
 
-function handleUpdatePages(updatedPages: Page[]) {
+// 페이지 전환 확인 처리
+function confirmChangePage(): void {
+  if (pendingTargetPage.value) {
+    selectPage(pendingTargetPage.value)
+    pendingTargetPage.value = null
+  }
+  isChangePageConfirmOpen.value = false
+}
+
+// 컴포넌트 초기화 확인 모달 열기
+function onResetPageClick(): void {
+  if (!currentPage.value || !pagesData.value[currentPage.value.id]?.length) return
+  isResetPageConfirmOpen.value = true
+}
+
+// 컴포넌트 초기화 확인 처리
+function confirmResetPage(): void {
+  resetPageComponents()
+  isResetPageConfirmOpen.value = false
+}
+
+// 페이지 목록 업데이트
+function handleUpdatePages(updatedPages: Page[]): void {
   pages.value = updatedPages
 }
 
-function selectPage(page: Page) {
-  // 페이지 전환 시: 저장된 데이터 기준으로 편집용 데이터를 초기화
-  if (!savedPagesData.value[page.id]) {
-    savedPagesData.value[page.id] = []
-  }
-  pagesData.value[page.id] = cloneCanvasItems(savedPagesData.value[page.id] || [])
+const isPageLoading = ref<boolean>(false)
 
-  currentPage.value = page
-  selectedIndex.value = null
+// 페이지 선택 및 데이터 로드
+async function selectPage(page: Page): Promise<void> {
+  isPageLoading.value = true
+  
+  await nextTick()
+  
+  const previousPage = currentPage.value
+  if (previousPage) {
+    currentPage.value = null
+    selectedIndex.value = null
+  }
+  
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 150))
+  
+  try {
+    const loadedElements = await loadPageData(page.id)
+    savedPagesData.value[page.id] = loadedElements || []
+    pagesData.value[page.id] = cloneCanvasItems(loadedElements || [])
+
+    currentPage.value = page
+    selectedIndex.value = null
+  } finally {
+    isPageLoading.value = false
+  }
 }
 
-function openCreatePageModal() {
+function openCreatePageModal(): void {
   isCreatePageModalOpen.value = true
 }
 
-function handleCreatePage(data: { name: string; description: string }) {
-  const newPage: Page = {
-    id: Date.now().toString(),
-    name: data.name,
-    description: data.description || undefined
+// 페이지 생성 처리
+async function handleCreatePage(data: { name: string; description: string }): Promise<void> {
+  await nextTick()
+  
+  const newPage = pages.value.find((p: Page) => p.name === data.name)
+  if (newPage) {
+    pagesData.value[newPage.id] = []
+    savedPagesData.value[newPage.id] = []
   }
-  
-  pages.value.push(newPage)
-  pagesData.value[newPage.id] = []
-  
-  toast.add({
-    severity: 'secondary',
-    summary: '페이지 생성',
-    detail: `"${newPage.name}" 페이지가 생성되었습니다.`,
-    life: 3000
-  })
 }
 
-function handleUpdatePageName(name: string) {
+// 페이지 이름 업데이트 (로컬 상태만)
+function handleUpdatePageName(name: string): void {
   if (!currentPage.value) return
-  const pageIndex = pages.value.findIndex((p: Page) => p.id === currentPage.value!.id)
-  if (pageIndex !== -1 && pages.value[pageIndex]) {
-    pages.value[pageIndex].name = name
-    currentPage.value.name = name
+  
+  const pageIndex = findIndexById(pages.value, currentPage.value.id)
+    if (pageIndex !== -1 && pages.value[pageIndex]) {
+      pages.value[pageIndex].name = name
+      currentPage.value.name = name
   }
 }
 
-// 페이지 삭제 (선택 해제)
-function deletePage() {
+// 페이지 수정 모달 열기
+function handleEditPage(page: Page): void {
+  editingPage.value = page
+  isEditPageModalOpen.value = true
+}
+
+// 페이지 수정 처리 (로컬 상태만)
+async function handleUpdatePage(data: { name: string; description: string }): Promise<void> {
+  if (!editingPage.value) return
+  
+  const pageIndex = findIndexById(pages.value, editingPage.value.id)
+  if (pageIndex !== -1 && pages.value[pageIndex]) {
+    pages.value[pageIndex].name = data.name
+    pages.value[pageIndex].description = data.description
+  }
+  
+  if (currentPage.value && currentPage.value.id === editingPage.value.id) {
+    currentPage.value.name = data.name
+    currentPage.value.description = data.description
+  }
+  
+  isEditPageModalOpen.value = false
+  editingPage.value = null
+}
+
+// 현재 페이지 상태 초기화
+function clearCurrentPage(): void {
   currentPage.value = null
   selectedIndex.value = null
 }
 
-function onDeletePageClick() {
+// 페이지 삭제 확인 모달 열기
+function onDeletePageClick(): void {
   if (!currentPage.value) return
-  const items = pagesData.value[currentPage.value.id] || []
-
-  // 컴포넌트가 없으면 바로 삭제
-  if (!items.length) {
-    deletePage()
-    return
-  }
-
-  // 컴포넌트가 하나라도 있으면 확인 모달 표시
   isDeletePageConfirmOpen.value = true
 }
 
-function confirmDeletePage() {
-  deletePage()
+// 페이지 삭제 확인 처리
+async function confirmDeletePage(): Promise<void> {
+  if (!currentPage.value) return
+  
   isDeletePageConfirmOpen.value = false
+  await deleteCurrentPage()
 }
 
-function saveCurrentPage() {
+// 페이지 삭제 실행
+async function deleteCurrentPage(): Promise<void> {
+  if (!currentPage.value) return
+  
+  isDeleting.value = true
+  try {
+    await deletePage(currentPage.value.id)
+    
+    delete pagesData.value[currentPage.value.id]
+    delete savedPagesData.value[currentPage.value.id]
+    
+    clearCurrentPage()
+    
+    showSuccess('페이지 삭제', '페이지가 삭제되었습니다.')
+  } catch (error: any) {
+    showError('페이지 삭제 실패', error.message || '페이지 삭제 중 오류가 발생했습니다.')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+// 페이지 저장 확인 모달 열기
+function handleSavePageClick(): void {
+  isSavePageConfirmOpen.value = true
+}
+
+// 페이지 저장 확인 처리
+async function confirmSavePage(): Promise<void> {
+  isSavePageConfirmOpen.value = false
+  await saveCurrentPage()
+}
+
+// 페이지 저장 실행
+async function saveCurrentPage(): Promise<void> {
   if (!currentPage.value) return
   const items = pagesData.value[currentPage.value.id] || []
-  if (!items.length) return
+  
+  isSaving.value = true
+  try {
+    await updatePage(
+      currentPage.value.id,
+      {
+        name: currentPage.value.name,
+        description: currentPage.value.description
+      },
+      items
+    )
+    
+    savedPagesData.value[currentPage.value.id] = cloneCanvasItems(items)
 
-  savedPagesData.value[currentPage.value.id] = cloneCanvasItems(items)
-
-  toast.add({
-    severity: 'secondary',
-    summary: '페이지 저장',
-    detail: `"${currentPage.value.name}" 페이지 구성이 저장되었습니다.`,
-    life: 2500
-  })
+    showSuccess('페이지 저장', `"${currentPage.value.name}" 페이지 구성이 저장되었습니다.`)
+  } catch (error: any) {
+    showError('페이지 저장 실패', error.message || '페이지 저장 중 오류가 발생했습니다.')
+  } finally {
+    isSaving.value = false
+  }
 }
 
-function addComponent(comp: ComponentDef) {
-  // 페이지가 선택되지 않았으면 Toast 메시지 표시
+// 컴포넌트 추가
+function addComponent(comp: ComponentDef): void {
   if (!currentPage.value) {
-    toast.add({
-      severity: 'secondary',
-      summary: '페이지 선택 필요',
-      detail: '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.',
-      life: 3000
-    })
+    showSuccess('페이지 선택 필요', '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.')
     return
   }
 
-  // 컴포저블에서 기본값 가져오기
   const defaultStylesFromComposable = getDefaultProps().styles
   
-  // 컴포넌트별 기본값과 컴포저블 기본값 병합
   const mergedProps: Record<string, any> = {
-    // 컴포넌트별 기본 props (styles 제외)
     ...Object.fromEntries(
       Object.entries(comp.defaultProps).filter(([key]) => key !== 'styles')
     ),
-    // styles 객체 병합
     styles: {
-      // 컴포저블 기본값 먼저 설정
       ...defaultStylesFromComposable,
-      // 컴포넌트별 styles 병합 (컴포넌트 기본값이 우선)
       ...(comp.defaultProps.styles || {}),
-      // 중첩 객체 병합
       position: {
         ...defaultStylesFromComposable.position,
         ...(comp.defaultProps.styles?.position || {})
@@ -492,22 +643,7 @@ function addComponent(comp: ComponentDef) {
       layout: {
         ...defaultStylesFromComposable.layout,
         ...(comp.defaultProps.styles?.layout || {}),
-        // 컴포넌트별 기본 width, height 설정 (컴포넌트 기본값이 우선)
-        ...(comp.type === 'heading1' ? { width: 100, widthUnit: '%', height: 48 } :
-          comp.type === 'heading2' ? { width: 100, widthUnit: '%', height: 36 } :
-          comp.type === 'heading3' ? { width: 100, widthUnit: '%', height: 28 } :
-          comp.type === 'button' ? { width: 100, widthUnit: 'px', height: 40 } :
-          comp.type === 'inputText' || comp.type === 'inputPassword' || comp.type === 'inputEmail' || comp.type === 'inputUrl' ? { width: 100, widthUnit: '%', height: 40 } :
-          comp.type === 'inputDate' || comp.type === 'inputTime' ? { width: 100, widthUnit: '%', height: 40 } :
-          comp.type === 'select' ? { width: 100, widthUnit: '%', height: 40 } :
-          comp.type === 'textarea' ? { width: 100, widthUnit: '%', height: 120 } :
-          comp.type === 'image' ? { width: 100, widthUnit: '%', height: 100, heightUnit: 'px' } :
-          comp.type === 'checkbox' || comp.type === 'toggleSwitch' ? { width: 100, widthUnit: '%', height: 40 } :
-          comp.type === 'radio' ? { width: 100, widthUnit: '%', height: 20 } :
-          comp.type === 'prevNext' ? { width: 100, widthUnit: 'px', height: 40 } :
-          comp.type === 'spacer' ? { width: 100, widthUnit: '%', height: 16, heightUnit: 'px' } :
-          comp.type === 'divider' ? { width: 100, widthUnit: '%', height: 1, heightUnit: 'px' } :
-          {})
+        ...getComponentDefaultLayout(comp.type)
       },
       appearance: {
         ...defaultStylesFromComposable.appearance,
@@ -516,33 +652,27 @@ function addComponent(comp: ComponentDef) {
       typography: {
         ...defaultStylesFromComposable.typography,
         ...(comp.defaultProps.styles?.typography || {}),
-        // Typography 기본값 (텍스트 관련 요소만, 컴포넌트별 fontSize 우선)
-        ...(comp.type === 'heading1' || comp.type === 'heading2' || comp.type === 'heading3' || comp.type === 'textarea' || comp.type === 'button' ? {
-          fontSize: comp.type === 'heading1' ? 32 : comp.type === 'heading2' ? 24 : comp.type === 'heading3' ? 18 : 14
-        } : {})
+        ...(isTextComponent(comp.type) ? getComponentDefaultTypography(comp.type) : {})
       }
     }
   }
-  
+
   const newItem: CanvasItem = {
-    uid: generateUid(),
+    id: generateUid(),
     type: comp.type,
     props: mergedProps
   }
   
-  // 그리드 타입인 경우 items 배열 초기화 (columns 수만큼 빈 배열 생성)
   if (comp.type === 'grid' && newItem.props.columns) {
-    newItem.props.items = Array(newItem.props.columns).fill([]).map(() => [])
+    newItem.props.items = createEmptyGridCells(newItem.props.columns)
   }
   
-  // 테이블 타입인 경우 rows 배열 초기화
   if (comp.type === 'table' && newItem.props.columns) {
     if (!newItem.props.rows) {
       newItem.props.rows = [newItem.props.columns.map(() => '데이터')]
     }
   }
   
-  // 현재 페이지의 컴포넌트 배열에 추가
   const pageId = currentPage.value.id
   if (!pagesData.value[pageId]) {
     pagesData.value[pageId] = []
@@ -551,26 +681,32 @@ function addComponent(comp: ComponentDef) {
   pageItems.push(newItem)
 }
 
-function onDragStart(comp: ComponentDef) {
+// 드래그 시작 처리
+function onDragStart(comp: ComponentDef): void {
   draggedComponent.value = comp
 }
 
-function onDrop() {
+// 드롭 처리
+function onDrop(): void {
   if (draggedComponent.value) {
     addComponent(draggedComponent.value)
     draggedComponent.value = null
   }
 }
 
-function selectItem(index: number) {
+// 컴포넌트 선택
+function selectItem(index: number): void {
   selectedIndex.value = index
+  
+  if (isMobile.value) {
+    panelStore.openMobileMenu()
+    panelStore.openPanel('options')
+  }
 }
 
-function deleteItem(index: number) {
-  if (!currentPage.value) return
-  
-  const pageId = currentPage.value.id
-  const pageItems = pagesData.value[pageId]
+// 컴포넌트 삭제
+function deleteItem(index: number): void {
+  const pageItems = getCurrentPageItems()
   if (!pageItems) return
   
   pageItems.splice(index, 1)
@@ -581,14 +717,11 @@ function deleteItem(index: number) {
   }
 }
 
-function copyItem(index: number) {
-  if (!currentPage.value) return
-  
-  const pageId = currentPage.value.id
-  const pageItems = pagesData.value[pageId]
+// 컴포넌트 복사
+function copyItem(index: number): void {
+  const pageItems = getCurrentPageItems()
   if (!pageItems || !pageItems[index]) return
   
-  // 현재 요소를 깊은 복사
   const originalItem = pageItems[index]
   const copiedItems = cloneCanvasItems([originalItem])
   
@@ -597,86 +730,122 @@ function copyItem(index: number) {
   const copiedItem = copiedItems[0]
   if (!copiedItem) return
   
-  // 새로운 UID 생성
-  copiedItem.uid = generateUid()
-  
-  // 바로 아래에 삽입 (index + 1 위치)
+  copiedItem.id = generateUid()
   pageItems.splice(index + 1, 0, copiedItem)
-  
-  // 원래 항목에 포커스 유지
-  selectedIndex.value = index
 }
 
-function handleGridDrop(data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }) {
-  if (!draggedComponent.value || !currentPage.value) return
+// 그리드에 컴포넌트 드롭 처리
+function handleGridDrop(data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }): void {
+  const pageItems = getCurrentPageItems()
+  if (!draggedComponent.value || !pageItems) return
   
-  const pageId = currentPage.value.id
-  const pageItems = pagesData.value[pageId]
-  if (!pageItems) return
-  
-  // 그리드 요소 찾기
-  const gridIndex = pageItems.findIndex(item => item.uid === data.gridElement.uid)
+  const gridIndex = findIndexById(pageItems, data.gridElement.id)
   if (gridIndex === -1) return
   
   const gridItem = pageItems[gridIndex]
   if (!gridItem) return
   
-  // items 배열 초기화 (없으면)
   if (!gridItem.props.items) {
-    gridItem.props.items = Array(gridItem.props.columns || 2).fill([]).map(() => [])
+    gridItem.props.items = createEmptyGridCells(gridItem.props.columns || 2)
   }
   
-  // 새로운 컴포넌트 생성
-  const newItem: CanvasItem = {
-    uid: generateUid(),
-    type: draggedComponent.value.type,
-    props: { ...draggedComponent.value.defaultProps }
-  }
+  const newItem = createItemFromDraggedComponent()
+  if (!newItem) return
   
-  // 해당 셀에 추가 (하나만 가능, 기존 컴포넌트가 있으면 교체)
   if (!gridItem.props.items[data.cellIndex]) {
     gridItem.props.items[data.cellIndex] = []
   }
-  gridItem.props.items[data.cellIndex] = [newItem] // 하나만 가능하도록 교체
+  gridItem.props.items[data.cellIndex] = [newItem]
   
   draggedComponent.value = null
 }
 
-function handleGroupDrop(data: { groupElement: CanvasItem; event: DragEvent }) {
-  if (!draggedComponent.value || !currentPage.value) return
+// 그룹에 컴포넌트 드롭 처리
+function handleGroupDrop(data: { groupElement: CanvasItem; event: DragEvent }): void {
+  const pageItems = getCurrentPageItems()
+  if (!draggedComponent.value || !pageItems) return
   
-  const pageId = currentPage.value.id
-  const pageItems = pagesData.value[pageId]
-  if (!pageItems) return
-  
-  // 그룹 요소 찾기
-  const groupIndex = pageItems.findIndex(item => item.uid === data.groupElement.uid)
+  const groupIndex = findIndexById(pageItems, data.groupElement.id)
   if (groupIndex === -1) return
   
   const groupItem = pageItems[groupIndex]
   if (!groupItem) return
   
-  // items 배열 초기화 (없으면)
   if (!groupItem.props.items) {
     groupItem.props.items = []
   }
   
-  // 새로운 컴포넌트 생성
-  const newItem: CanvasItem = {
-    uid: generateUid(),
-    type: draggedComponent.value.type,
-    props: { ...draggedComponent.value.defaultProps }
-  }
+  const newItem = createItemFromDraggedComponent()
+  if (!newItem) return
   
-  // 그룹에는 하나의 컴포넌트만 가능 (기존 컴포넌트가 있으면 교체)
   groupItem.props.items = [newItem]
   
   draggedComponent.value = null
 }
+
+watch(isMobile, (mobile) => {
+  if (!isInitialized.value) return
+  
+  isResponsiveChange.value = true
+  updatePanelState(mobile)
+  resetResponsiveChangeFlag()
+})
+
+watch(leftTab, async (tab) => {
+  if (tab === 'pages') {
+    await ensurePagesLoaded()
+  }
+})
+
+watch(
+  () => panelStore.activeMobilePanel,
+  async (panel) => {
+    if (panel === 'pages') {
+      await ensurePagesLoaded()
+    }
+  }
+)
+
+onMounted(async () => {
+  if (import.meta.client) {
+    const status = route.query.status as string | undefined
+    if (status === 'logged_in') {
+      showSuccess('로그인 완료', '로그인되었습니다.')
+    } else if (status === 'guest') {
+      showSuccess('게스트 모드로 접속', '게스트로 로그인되었습니다.')
+    }
+    if (status) {
+      const query = { ...route.query }
+      delete query.status
+      navigateTo({ query })
+    }
+
+    const mobile = checkScreenSize()
+    isResponsiveChange.value = true
+    
+    if (mobile !== initialMobile) {
+      updatePanelState(mobile)
+    }
+    
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          isResponsiveChange.value = false
+          isInitialized.value = true
+        })
+      })
+    })
+
+    activityTimeout.start()
+  }
+})
+
+onBeforeUnmount(() => {
+  activityTimeout.stop()
+})
 </script>
 
 <style lang="scss" scoped>
-/* PrimeVue Tabs 배경 오버라이드 */
 :deep(.p-tabs) {
   background: transparent !important;
 }
@@ -697,5 +866,27 @@ function handleGroupDrop(data: { groupElement: CanvasItem; event: DragEvent }) {
 }
 :deep(.p-tablist-active-bar) {
   display: none !important;
+}
+
+.button-group-container {
+  gap: 0;
+  
+  .button-group-top {
+    border-radius: 0.375rem 0.375rem 0 0 !important;
+  }
+  
+  .button-group-bottom {
+    border-radius: 0 0 0.375rem 0.375rem !important;
+  }
+  
+  :deep(.p-button) {
+    border: none !important;
+  }
+}
+</style>
+
+<style lang="scss">
+.p-toast {
+  z-index: 1300 !important;
 }
 </style>

@@ -1,7 +1,6 @@
 <template>
   <header class="py-3 px-6 flex justify-between items-center border-b border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900">
     <div class="flex items-center gap-2">
-
       <NuxtLink to="/" class="flex items-center gap-2 no-underline">
         <span class="logo-icon">
           <span class="rounded-sm bg-primary-500" />
@@ -28,7 +27,6 @@
         @click="toggleTheme"
       />
       <Button
-        ref="userButtonRef"
         icon="pi pi-user"
         severity="secondary"
         rounded
@@ -36,7 +34,7 @@
         @click="toggleUserPanel"
       />
       
-      <!-- 모바일 햄버거 메뉴 버튼 -->
+      <!-- 모바일 -->
       <Button
         v-if="isMobile"
         icon="pi pi-bars"
@@ -48,22 +46,22 @@
     </div>
 
     <ModalsUser ref="userPanelRef" />
-    <ModalsSearch v-model:visible="isSearchOpen" />
+
+    <ModalsSearch 
+      v-model:visible="isSearchOpen"
+    />
   </header>
 </template>
 
 <script lang="ts" setup>
 import { usePanelStore } from '@/stores/panel'
-import { useResponsive } from '~/composables/useResponsive'
 
-// Pinia store
-const panelStore = usePanelStore()
 const { isMobile } = useResponsive()
+const panelStore = usePanelStore()
 
-// 초기 테마를 다크 모드 기준으로 설정 (app.head.htmlAttrs.class = 'dark'와 일치)
-const isDark = ref(true)
-const userPanelRef = ref()
-const isSearchOpen = ref(false)
+const isDark = ref<boolean>(true)
+const userPanelRef = ref<any>()
+const isSearchOpen = ref<boolean>(false)
 
 function toggleUserPanel(event: Event) {
   userPanelRef.value?.toggle(event)
@@ -81,10 +79,7 @@ function toggleTheme() {
 }
 
 onMounted(() => {
-  // HTML에 설정된 초기 dark 클래스 여부 확인
-  if (process.client) {
-    isDark.value = document.documentElement.classList.contains('dark')
-  }
+  isDark.value = document.documentElement.classList.contains('dark')
 })
 </script>
 

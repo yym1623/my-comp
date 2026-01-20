@@ -1,21 +1,7 @@
-type ComponentOptionField = {
-  key: string
-  label: string
-  component: 'InputNumber' | 'Select'
-  componentProps?: Record<string, unknown>
-  section?: string
-  defaultValue?: unknown
-  disabled?: boolean
-}
-
-type SectionReady = {
-  Position?: boolean
-  Layout?: boolean
-  Appearance?: boolean
-  Typography?: boolean
-}
+import type { ComponentOptionField, SectionReady } from '~/types/elementoptions'
 
 export const useElementOptions = () => {
+  // 컴포넌트 타입에 따른 섹션 준비 상태 반환
   const getSectionReady = (type?: string): SectionReady => {
     const baseReady = {
       Position: true,
@@ -24,24 +10,18 @@ export const useElementOptions = () => {
       Typography: true
     }
     
-    // spacer, divider, button, prevNext일 경우 Appearance 섹션 준비중
     if (type === 'spacer' || type === 'divider' || type === 'button' || type === 'prevNext') {
-      const result: SectionReady = {
+      return {
         ...baseReady,
-        Appearance: false
+        Appearance: false,
+        Typography: false
       }
-      
-      // divider, spacer, button, prevNext일 경우 Typography 섹션도 준비중
-      if (type === 'divider' || type === 'spacer' || type === 'button' || type === 'prevNext') {
-        result.Typography = false
-      }
-      
-      return result
     }
     
     return baseReady
   }
 
+  // 공통 옵션 필드 목록 반환
   const getCommonOptions = (): ComponentOptionField[] => {
     return [
       {
@@ -240,10 +220,11 @@ export const useElementOptions = () => {
     ]
   }
 
-  const getOptionsForType = (type: string) => getCommonOptions()
+  // 컴포넌트 타입에 따른 옵션 필드 목록 반환
+  const getOptionsForType = (type: string): ComponentOptionField[] => getCommonOptions()
 
-  // 컴포넌트 생성 시 사용할 기본 props 반환 (styles 객체 구조)
-  const getDefaultProps = () => {
+  // 컴포넌트 기본 props 반환 (styles 객체 구조)
+  const getDefaultProps = (): { styles: Record<string, any> } => {
     const commonOptions = getCommonOptions()
     const styles: Record<string, any> = {}
     

@@ -3,7 +3,7 @@
     :visible="modelValue"
     modal
     position="top"
-    :style="{ width: '420px', marginTop: '1.5rem' }"
+    style="width: 420px; margin-top: 1.5rem"
     :closable="false"
     :header="header"
     @update:visible="(val) => $emit('update:modelValue', val)"
@@ -34,16 +34,23 @@
 </template>
 
 <script lang="ts" setup>
-import type { ConfirmProps, ConfirmEmits } from '~/types/confirm'
-
-type Props = ConfirmProps
-type Emits = ConfirmEmits
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean
+    header: string
+    message: string
+    actionType?: 'delete' | 'create' | 'update' | 'save' | 'success'
+    to?: string
+  }>(),
+  {
   actionType: 'delete'
-})
+  }
+)
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'confirm'): void
+}>()
 
 const actionLabel = computed(() => {
   switch (props.actionType) {
@@ -53,6 +60,8 @@ const actionLabel = computed(() => {
       return '생성'
     case 'update':
       return '수정'
+    case 'save':
+      return '저장'
     case 'success':
       return '확인'
     default:
@@ -71,13 +80,10 @@ const actionSeverity = computed(() => {
   }
 })
 
-const { go } = useNavigation()
-
 const handleConfirm = () => {
   emit('confirm')
   if (props.to) {
-    go(props.to)
+    navigateTo(props.to)
   }
 }
 </script>
-

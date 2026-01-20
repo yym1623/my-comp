@@ -16,77 +16,76 @@
         <h3 class="text-xs font-semibold text-surface-500 dark:text-surface-400 mb-2 uppercase tracking-wide">
           Field
         </h3>
-      <div class="grid gap-2">
-        <div
-            v-for="comp in fieldComponents"
-          :key="comp.id"
-          class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
-          :class="[
-            comp.ready === false
-              ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
-              : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
-            { 'opacity-50 pointer-events-none': isPreviewMode }
-          ]"
-          :draggable="comp.ready !== false && !isPreviewMode"
-          @dragstart="comp.ready !== false && !isPreviewMode && $emit('dragStart', comp)"
-          @click="comp.ready !== false && !isPreviewMode && handleAdd(comp)"
-        >
-          <!-- 준비중 오버레이 -->
-          <Ready v-if="comp.ready === false" />
-          <div 
-            class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-            :class="comp.ready === false
-              ? 'bg-surface-100 dark:bg-surface-700 opacity-50'
-              : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
+        <div class="grid gap-2">
+          <div
+              v-for="comp in fieldComponents"
+            :key="comp.id"
+            class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
+            :class="[
+              comp.ready === false
+                ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
+                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer'
+            ]"
+            :draggable="comp.ready !== false"
+            @dragstart="comp.ready !== false && $emit('dragStart', comp)"
+            @click="comp.ready !== false && handleAdd(comp)"
           >
-              <template v-if="comp.type === 'heading1'">
-                <H1Icon 
-                  :class="comp.ready === false
-                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
-                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
-                />
-              </template>
-              <template v-else-if="comp.type === 'heading2'">
-                <H2Icon 
-                  :class="comp.ready === false
-                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
-                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
-                />
-              </template>
-              <template v-else-if="comp.type === 'heading3'">
-                <H3Icon 
-                  :class="comp.ready === false
-                    ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
-                    : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
-                />
-              </template>
-              <i
-                v-else
-                :class="[
-                  comp.icon,
-                  'text-lg',
-                  comp.ready === false
-                    ? 'text-surface-400 dark:text-surface-500'
-                    : 'text-primary-600 dark:text-primary-400'
-                ]"
-              />
-          </div>
-          <div class="flex flex-col min-w-0">
-            <span 
-              class="text-sm font-semibold"
+            <!-- 준비중 오버레이 -->
+            <Ready v-if="comp.ready === false" />
+            <div 
+              class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors"
               :class="comp.ready === false
-                ? 'text-surface-400 dark:text-surface-500'
-                : 'text-surface-700 dark:text-surface-200'"
-            >{{ comp.name }}</span>
-            <span 
-              class="text-xs truncate"
-              :class="comp.ready === false
-                ? 'text-surface-400 dark:text-surface-500'
-                : 'text-surface-400'"
-            >{{ comp.description }}</span>
+                ? 'bg-surface-100 dark:bg-surface-700 opacity-50'
+                : 'bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50'"
+            >
+                <template v-if="comp.type === 'heading1'">
+                  <H1Icon 
+                    :class="comp.ready === false
+                      ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                      : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                  />
+                </template>
+                <template v-else-if="comp.type === 'heading2'">
+                  <H2Icon 
+                    :class="comp.ready === false
+                      ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                      : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                  />
+                </template>
+                <template v-else-if="comp.type === 'heading3'">
+                  <H3Icon 
+                    :class="comp.ready === false
+                      ? 'w-5 h-5 text-surface-400 dark:text-surface-500'
+                      : 'w-5 h-5 text-primary-600 dark:text-primary-400'"
+                  />
+                </template>
+                <i
+                  v-else
+                  :class="[
+                    comp.icon,
+                    'text-lg',
+                    comp.ready === false
+                      ? 'text-surface-400 dark:text-surface-500'
+                      : 'text-primary-600 dark:text-primary-400'
+                  ]"
+                />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span 
+                class="text-sm font-semibold"
+                :class="comp.ready === false
+                  ? 'text-surface-400 dark:text-surface-500'
+                  : 'text-surface-700 dark:text-surface-200'"
+              >{{ comp.name }}</span>
+              <span 
+                class="text-xs truncate"
+                :class="comp.ready === false
+                  ? 'text-surface-400 dark:text-surface-500'
+                  : 'text-surface-400'"
+              >{{ comp.description }}</span>
+            </div>
           </div>
         </div>
-      </div>
       </section>
       <!-- Form 그룹 -->
       <section v-if="formComponents.length">
@@ -101,12 +100,11 @@
             :class="[
               comp.ready === false
                 ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
-                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
-              { 'opacity-50 pointer-events-none': isPreviewMode }
+                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer'
             ]"
-            :draggable="comp.ready !== false && !isPreviewMode"
-            @dragstart="comp.ready !== false && !isPreviewMode && $emit('dragStart', comp)"
-            @click="comp.ready !== false && !isPreviewMode && handleAdd(comp)"
+            :draggable="comp.ready !== false"
+            @dragstart="comp.ready !== false && $emit('dragStart', comp)"
+            @click="comp.ready !== false && handleAdd(comp)"
           >
             <!-- 준비중 오버레이 -->
             <Ready v-if="comp.ready === false" />
@@ -170,22 +168,46 @@
 </template>
 
 <script lang="ts" setup>
-import type { ComponentDef } from '~/types/component'
-import type { ElementsProps, ElementsEmits } from '~/types/elements'
-import { useElements } from '~/composables/useElements'
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
+import type { ComponentDef } from '~/types/component'
 
-type Props = ElementsProps
-type Emits = ElementsEmits
+interface ElementsProps {
+  isPreviewMode?: boolean
+  variant?: 'desktop' | 'mobile'
+}
 
-const props = withDefaults(defineProps<Props>(), {
+interface ElementsEmits {
+  (e: 'add', comp: ComponentDef): void
+  (e: 'dragStart', comp: ComponentDef): void
+  (e: 'close'): void
+}
+
+const props = withDefaults(defineProps<ElementsProps>(), {
   variant: 'desktop'
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<ElementsEmits>()
 
-// composable에서 컴포넌트 데이터 직접 가져오기
+
+const searchQuery = ref<string>('')
+
 const { fieldComponents: allFieldComponents, formComponents: allFormComponents } = useElements()
+
+const fieldComponents = computed(() => filterComponents(allFieldComponents))
+const formComponents = computed(() => filterComponents(allFormComponents))
+
+
+
+const filterComponents = (components: ComponentDef[]) => {
+  if (!searchQuery.value.trim()) {
+    return components
+  }
+  const query = searchQuery.value.toLowerCase()
+  return components.filter(comp => 
+    comp.name.toLowerCase().includes(query) ||
+    comp.description.toLowerCase().includes(query)
+  )
+}
 
 const handleAdd = (comp: ComponentDef) => {
   emit('add', comp)
@@ -193,29 +215,4 @@ const handleAdd = (comp: ComponentDef) => {
     emit('close')
   }
 }
-
-const searchQuery = ref('')
-
-const fieldComponents = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return allFieldComponents
-  }
-  const query = searchQuery.value.toLowerCase()
-  return allFieldComponents.filter(comp => 
-    comp.name.toLowerCase().includes(query) ||
-    comp.description.toLowerCase().includes(query)
-  )
-})
-
-const formComponents = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return allFormComponents
-  }
-  const query = searchQuery.value.toLowerCase()
-  return allFormComponents.filter(comp => 
-    comp.name.toLowerCase().includes(query) ||
-    comp.description.toLowerCase().includes(query)
-  )
-})
 </script>
-
