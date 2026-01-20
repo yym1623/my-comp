@@ -35,9 +35,5 @@
     "vitest": "^3.2.4",
     "happy-dom": "^20.0.11",
     "sass-embedded": "^1.97.1"
-  },
-  "engines": {
-    "node": ">=18 <21",
-    "npm": ">=9 <11"
   }
 }
