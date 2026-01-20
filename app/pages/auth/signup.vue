@@ -272,8 +272,8 @@ const handleSignup = async (): Promise<void> => {
   await execute(async () => {
     const { supabase } = useSupabase()
     const config = useRuntimeConfig()
-    
-    const host = config.public.host || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
+
+    const host = config.public.host
     const redirectUrl = `${host}/auth/success`
     
     await supabase.auth.signUp({

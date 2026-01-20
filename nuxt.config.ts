@@ -41,7 +41,6 @@ export default defineNuxtConfig({
     // 서버 사이드에서만 접근 가능 (환경 변수)
     supabaseUrl: process.env.SUPABASE_URL,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     
     // 클라이언트 사이드에서도 접근 가능 (public)
     public: {
