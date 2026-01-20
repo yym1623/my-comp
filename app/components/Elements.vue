@@ -1,12 +1,13 @@
 <template>
   <div class="h-full flex flex-col overflow-hidden">
     <div class="px-3 py-2.5 border-b border-surface-200 dark:border-surface-700">
-      <div class="relative">
+        <div class="relative">
         <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400 text-xs z-10" />
         <InputText
           v-model="searchQuery"
           placeholder="컴포넌트 검색..."
-          class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            :disabled="props.isPreviewMode"
+            class="w-full pl-8 pr-3 py-2 text-sm bg-surface-50 dark:bg-surface-700/50 border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
         />
       </div>
     </div>
@@ -18,17 +19,18 @@
         </h3>
         <div class="grid gap-2">
           <div
-              v-for="comp in fieldComponents"
+            v-for="comp in fieldComponents"
             :key="comp.id"
             class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
             :class="[
               comp.ready === false
                 ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
-                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer'
+                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
+              props.isPreviewMode && 'opacity-50 pointer-events-none'
             ]"
-            :draggable="comp.ready !== false"
-            @dragstart="comp.ready !== false && $emit('dragStart', comp)"
-            @click="comp.ready !== false && handleAdd(comp)"
+            :draggable="comp.ready !== false && !props.isPreviewMode"
+            @dragstart="comp.ready !== false && !props.isPreviewMode && $emit('dragStart', comp)"
+            @click="comp.ready !== false && !props.isPreviewMode && handleAdd(comp)"
           >
             <!-- 준비중 오버레이 -->
             <Ready v-if="comp.ready === false" />
@@ -100,11 +102,12 @@
             :class="[
               comp.ready === false
                 ? 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 cursor-not-allowed'
-                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer'
+                : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-700/50 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-sm group cursor-pointer',
+              props.isPreviewMode && 'opacity-50 pointer-events-none'
             ]"
-            :draggable="comp.ready !== false"
-            @dragstart="comp.ready !== false && $emit('dragStart', comp)"
-            @click="comp.ready !== false && handleAdd(comp)"
+            :draggable="comp.ready !== false && !props.isPreviewMode"
+            @dragstart="comp.ready !== false && !props.isPreviewMode && $emit('dragStart', comp)"
+            @click="comp.ready !== false && !props.isPreviewMode && handleAdd(comp)"
           >
             <!-- 준비중 오버레이 -->
             <Ready v-if="comp.ready === false" />

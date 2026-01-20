@@ -41,7 +41,7 @@
 
     <div class="flex flex-col overflow-hidden" :style="isMobile ? 'height: calc(100vh - 80px); max-height: calc(100vh - 80px);' : 'height: 400px; max-height: 400px;'">
       <div v-if="searchQuery.trim() && isLoading" class="flex-1 overflow-y-auto">
-        <Skeleton type="searchPages" />
+        <Skeletons type="searchPages" />
       </div>
       <!-- 검색 결과 영역 -->
       <div v-else-if="searchQuery.trim() && !hasNoResults" class="flex-1 overflow-y-auto">
