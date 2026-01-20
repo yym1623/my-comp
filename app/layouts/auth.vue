@@ -52,7 +52,7 @@
                   </div>
                 </div>
 
-                <!-- 버튼 컴포넌트들 -->
+                <!-- 버튼 컴포넌트 -->
                 <div class="flex gap-2">
                   <div class="flex-1 h-10 rounded-lg bg-white/90 flex items-center justify-center">
                     <span class="text-primary font-medium text-sm">Primary</span>
@@ -68,7 +68,7 @@
                   <span class="text-white/40 text-sm">Search components...</span>
                 </div>
 
-                <!-- 통계 카드들 -->
+                <!-- 통계 카드 -->
                 <div class="grid grid-cols-3 gap-2">
                   <div class="bg-white/10 rounded-lg p-3 text-center">
                     <div class="text-white font-bold text-lg">128</div>
@@ -87,14 +87,12 @@
             </div>
           </div>
 
-          <!-- 텍스트 -->
           <div class="mt-8 text-center">
             <h2 class="text-white text-2xl font-bold mb-2">Build Faster, Ship Smarter</h2>
             <p class="text-white/70">컴포넌트 기반 개발로 생산성을 높이세요</p>
           </div>
         </div>
 
-        <!-- 장식 요소들 -->
         <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
         <div class="absolute -top-20 -left-20 w-60 h-60 bg-cyan-400/20 rounded-full blur-3xl"></div>
       </div>
@@ -111,11 +109,11 @@
 </template>
 
 <script setup lang="ts">
-// 반응형 브레이크포인트 감지
-const showLeftPanel = ref(true)
-const lgBreakpoint = 1024
+const showLeftPanel = ref<boolean>(true)
+const lgBreakpoint: number = 1024
 
-const checkBreakpoint = () => {
+// 화면 크기 확인 및 왼쪽 패널 표시 여부 업데이트
+const checkBreakpoint = (): void => {
   if (import.meta.client) {
     showLeftPanel.value = window.innerWidth >= lgBreakpoint
   }
@@ -134,7 +132,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-// 슬라이드 애니메이션
 .slide-enter-active,
 .slide-leave-active {
   transition: all 0.4s ease-out;
@@ -150,17 +147,14 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-// 커스텀 duration
 .duration-400 {
   transition-duration: 400ms;
 }
 
-// PrimeVue 테마 변수 사용
 .bg-surface-ground {
   background-color: var(--p-surface-ground);
 }
 
-// 그리드 패턴 배경
 .grid-pattern {
   width: 100%;
   height: 100%;

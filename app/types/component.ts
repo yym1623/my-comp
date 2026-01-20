@@ -9,10 +9,10 @@ export interface ComponentDef {
 }
 
 export interface CanvasItem {
-  uid: string
+  id: string
   type: string
   props: Record<string, any>
-  items?: CanvasItem[] // 그리드나 그룹 안에 들어가는 컴포넌트들
+  items?: CanvasItem[]
 }
 
 export interface Page {

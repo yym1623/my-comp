@@ -48,8 +48,8 @@
                   Position
                 </span>
               </div>
-                <div class="space-y-2">
-                  <!-- X/Y -->
+              <div class="space-y-2">
+                <!-- X/Y -->
                 <div class="grid grid-cols-[1fr_1fr] gap-2 w-full min-w-0">
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">X</label>
@@ -236,6 +236,7 @@
                 </div>
               </div>
             </div>
+
             <Divider />
             
             <!-- Typography 섹션 -->
@@ -333,17 +334,26 @@
 </template>
 
 <script lang="ts" setup>
-import type { Page, CanvasItem } from '~/types/component'
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
-import Ready from './Ready.vue'
 
-interface Props {
+interface Page {
+  id: string
+  name: string
+  description?: string
+}
+
+interface CanvasItem {
+  id: string
+  type: string
+  props: Record<string, any>
+  items?: CanvasItem[]
+}
+
+const props = defineProps<{
   currentPage: Page | null
   selectedIndex: number | null
   selectedItem: CanvasItem | null
-}
-
-const props = defineProps<Props>()
+}>()
 
 const emit = defineEmits<{
   closeOptions: []
@@ -359,29 +369,22 @@ const sectionReady = computed(() => getSectionReady(props.selectedItem?.type))
 // 옵션 가져오기
 const options = computed(() => getOptionsForType(props.selectedItem?.type || ''))
 
-// Font Family 옵션
-const fontFamilyOptions = computed(() => {
-  const fontFamilyField = options.value.find(opt => opt.key === 'typography.fontFamily')
-  return Array.isArray(fontFamilyField?.componentProps?.options) 
-    ? fontFamilyField.componentProps.options 
+// 공통 옵션 추출 유틸
+const getOptionsFor = (key: string) => {
+  const field = options.value.find(opt => opt.key === key)
+  return Array.isArray(field?.componentProps?.options)
+    ? field.componentProps.options
     : []
-})
+}
+
+// Font Family 옵션
+const fontFamilyOptions = computed(() => getOptionsFor('typography.fontFamily'))
 
 // Font Weight 옵션
-const fontWeightOptions = computed(() => {
-  const fontWeightField = options.value.find(opt => opt.key === 'typography.fontWeight')
-  return Array.isArray(fontWeightField?.componentProps?.options) 
-    ? fontWeightField.componentProps.options 
-    : []
-})
+const fontWeightOptions = computed(() => getOptionsFor('typography.fontWeight'))
 
 // Border Style 옵션
-const borderStyleOptions = computed(() => {
-  const borderStyleField = options.value.find(opt => opt.key === 'appearance.borderStyle')
-  return Array.isArray(borderStyleField?.componentProps?.options) 
-    ? borderStyleField.componentProps.options 
-    : []
-})
+const borderStyleOptions = computed(() => getOptionsFor('appearance.borderStyle'))
 
 // Border Style이 'none'인지 확인
 const isBorderDisabled = computed(() => {
@@ -392,56 +395,66 @@ const isBorderDisabled = computed(() => {
 })
 
 // Border Position 옵션
-const borderPositionOptions = computed(() => {
-  const borderPositionField = options.value.find(opt => opt.key === 'appearance.borderPosition')
-  return Array.isArray(borderPositionField?.componentProps?.options) 
-    ? borderPositionField.componentProps.options 
-    : []
-})
+const borderPositionOptions = computed(() => getOptionsFor('appearance.borderPosition'))
+
+// 필드 값 가져오기/설정 관련 내부 유틸
+const parseKey = (key: string) => {
+  if (!key.includes('.')) return null
+  const parts = key.split('.')
+  if (parts.length !== 2) return null
+  const [objKey, propKey] = parts
+  if (!objKey || !propKey) return null
+  return { objKey, propKey }
+}
+
+const getDefaultValue = (key: string) => {
+  const field = options.value.find(opt => opt.key === key)
+  return field?.defaultValue
+}
+
+const getFromStyles = (objKey: string, propKey: string) => {
+  const styles = (props.selectedItem as any).props.styles
+  if (!styles) return undefined
+  const obj = styles[objKey]
+  if (!obj || typeof obj !== 'object') return undefined
+  return obj[propKey]
+}
+
+const getFromLegacyProps = (objKey: string, propKey: string) => {
+  const rootProps = (props.selectedItem as any).props
+  const obj = rootProps[objKey]
+  if (!obj || typeof obj !== 'object') return undefined
+  return obj[propKey]
+}
 
 // 필드 값 가져오기 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
 const getFieldValue = (key: string) => {
   if (!props.selectedItem) return undefined
-  
-  // styles 객체 경로 처리 (예: 'position.x' -> props.styles.position.x)
-  if (key.includes('.')) {
-    const parts = key.split('.')
-    if (parts.length !== 2) return undefined
-    
-    const [objKey, propKey] = parts
-    if (!objKey || !propKey) return undefined
-    
+
+  const parsed = parseKey(key)
+  if (parsed) {
+    const { objKey, propKey } = parsed
+
     // styles 객체에서 가져오기
-    if (props.selectedItem.props.styles && props.selectedItem.props.styles[objKey]) {
-      const value = props.selectedItem.props.styles[objKey][propKey]
-      // 값이 없으면 컴포저블의 기본값 반환
-      if (value === undefined || value === null) {
-        const field = options.value.find(opt => opt.key === key)
-        return field?.defaultValue
-      }
-      return value
+    const styleValue = getFromStyles(objKey, propKey)
+    if (styleValue !== undefined && styleValue !== null) {
+      return styleValue
     }
-    
+
     // 기존 구조 지원 (하위 호환성)
-    if (props.selectedItem.props[objKey]) {
-      const value = props.selectedItem.props[objKey][propKey]
-      if (value === undefined || value === null) {
-        const field = options.value.find(opt => opt.key === key)
-        return field?.defaultValue
-      }
-      return value
+    const legacyValue = getFromLegacyProps(objKey, propKey)
+    if (legacyValue !== undefined && legacyValue !== null) {
+      return legacyValue
     }
-    
+
     // 값이 없으면 컴포저블의 기본값 반환
-    const field = options.value.find(opt => opt.key === key)
-    return field?.defaultValue
+    return getDefaultValue(key)
   }
-  
+
   // 일반 필드 (styles 객체가 아닌 경우)
-  const value = props.selectedItem.props[key]
+  const value = (props.selectedItem as any).props[key]
   if (value === undefined || value === null) {
-    const field = options.value.find(opt => opt.key === key)
-    return field?.defaultValue
+    return getDefaultValue(key)
   }
   return value
 }
@@ -453,79 +466,69 @@ const getFieldDisabled = (key: string) => {
 }
 
 
+const ensureStylesObject = (objKey: string) => {
+  const rootProps = (props.selectedItem as any).props
+  if (!rootProps.styles) {
+    rootProps.styles = {}
+  }
+  if (!rootProps.styles[objKey]) {
+    rootProps.styles[objKey] = {}
+  }
+  return rootProps.styles[objKey]
+}
+
 // 필드 값 업데이트 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
 const updateFieldValue = (key: string, value: any) => {
   if (!props.selectedItem) return
-  
-  // styles 객체 경로 처리 (예: 'position.x' -> props.styles.position.x)
-  if (key.includes('.')) {
-    const parts = key.split('.')
-    if (parts.length !== 2) return
-    
-    const [objKey, propKey] = parts
-    if (!objKey || !propKey) return
-    
-    // styles 객체 초기화
-    if (!props.selectedItem.props.styles) {
-      props.selectedItem.props.styles = {}
-    }
-    
-    // 중첩 객체 초기화
-    if (!props.selectedItem.props.styles[objKey]) {
-      props.selectedItem.props.styles[objKey] = {}
-    }
-    
-    // 값 설정
+
+  const parsed = parseKey(key)
+  const rootProps = (props.selectedItem as any).props
+
+  if (parsed) {
+    const { objKey, propKey } = parsed
+
+    const target = ensureStylesObject(objKey)
     if (typeof value === 'number') {
-      props.selectedItem.props.styles[objKey][propKey] = value
+      target[propKey] = value
     } else {
-      props.selectedItem.props.styles[objKey][propKey] = value ?? ''
+      target[propKey] = value ?? ''
     }
   } else {
     // 일반 필드 처리 (styles 객체가 아닌 경우)
     if (typeof value === 'number') {
-      props.selectedItem.props[key] = value
+      rootProps[key] = value
     } else {
-      props.selectedItem.props[key] = value ?? ''
+      rootProps[key] = value ?? ''
     }
   }
-  
+
   // 변경사항 알림
   emit('update')
 }
 
+const handleUnitChange = (sizeKey: string, unitKey: string, newUnit: string) => {
+  if (!props.selectedItem) return
+
+  const currentSize = getFieldValue(sizeKey)
+  const currentUnit = getFieldValue(unitKey) || 'px'
+
+  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
+  if (newUnit === '%' && currentUnit !== '%' && currentSize && currentSize > 100) {
+    updateFieldValue(sizeKey, 100)
+  }
+
+  updateFieldValue(unitKey, newUnit)
+}
+
 // widthUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleWidthUnitChange = (newUnit: string) => {
-  if (!props.selectedItem) return
-  
-  const currentWidth = getFieldValue('layout.width')
-  const currentUnit = getFieldValue('layout.widthUnit') || 'px'
-  
-  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
-  if (newUnit === '%' && currentUnit !== '%' && currentWidth && currentWidth > 100) {
-    updateFieldValue('layout.width', 100)
-  }
-  
-  updateFieldValue('layout.widthUnit', newUnit)
+  handleUnitChange('layout.width', 'layout.widthUnit', newUnit)
 }
 
 // heightUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleHeightUnitChange = (newUnit: string) => {
-  if (!props.selectedItem) return
-  
-  const currentHeight = getFieldValue('layout.height')
-  const currentUnit = getFieldValue('layout.heightUnit') || 'px'
-  
-  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
-  if (newUnit === '%' && currentUnit !== '%' && currentHeight && currentHeight > 100) {
-    updateFieldValue('layout.height', 100)
-  }
-  
-  updateFieldValue('layout.heightUnit', newUnit)
+  handleUnitChange('layout.height', 'layout.heightUnit', newUnit)
 }
-
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -542,14 +545,12 @@ const handleHeightUnitChange = (newUnit: string) => {
   transform: translateX(100%);
 }
 
-// 피그마 스타일
 .figma-label {
   font-size: 10px;
   font-weight: 500;
   color: var(--p-surface-500, #6b7280);
 }
 
-// Divider 스타일
 :deep(.p-divider) {
   border-color: var(--p-surface-200, #e5e7eb) !important;
   margin: 0.5rem 0 !important;
@@ -559,24 +560,14 @@ const handleHeightUnitChange = (newUnit: string) => {
   border-color: var(--p-surface-700, #374151) !important;
 }
 
-// ButtonGroup 스타일 (한 줄 다 채우기)
-:deep(.p-buttongroup),
-.p-buttongroup {
+:deep(.p-buttongroup) {
   width: 100% !important;
   max-width: 100% !important;
   display: flex !important;
   min-width: 0 !important;
 
   .p-button,
-  :deep(.p-button),
-  .p-button-sm,
-  :deep(.p-button-sm),
-  .p-button.p-button-sm,
-  :deep(.p-button.p-button-sm),
-  .p-buttongroup .p-button,
-  :deep(.p-buttongroup .p-button),
-  .p-buttongroup .p-button-sm,
-  :deep(.p-buttongroup .p-button-sm) {
+  :deep(.p-button) {
     flex: 1 1 0 !important;
     min-width: 0 !important;
     max-width: 100% !important;
@@ -588,45 +579,38 @@ const handleHeightUnitChange = (newUnit: string) => {
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
     transition: all 0.2s !important;
-    
-    // 기본 상태 (선택 안됨) - 연한 색
     background-color: transparent !important;
     color: var(--p-surface-500, #6b7280) !important;
     border-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
     
-    // 호버 상태 - color-mix 사용
     &:hover {
       background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
       color: var(--p-surface-700, #374151) !important;
       border-color: var(--p-surface-300, #d1d5db) !important;
     }
     
-    // Primary 버튼 (액티브 상태) - color-mix 사용
     &.p-button-primary {
       background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
       color: var(--p-surface-700, #374151) !important;
       border-color: var(--p-surface-200, #e5e7eb) !important;
+      
+      &:hover {
+        background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+        color: var(--p-surface-700, #374151) !important;
+        border-color: var(--p-surface-200, #e5e7eb) !important;
+      }
     }
     
-    // Primary 버튼 호버
-    &.p-button-primary:hover {
-      background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
-      color: var(--p-surface-700, #374151) !important;
-      border-color: var(--p-surface-200, #e5e7eb) !important;
-    }
-    
-    // Secondary 버튼 (비활성 상태) - 연한 색
     &.p-button-secondary {
       background-color: transparent !important;
       color: var(--p-surface-500, #6b7280) !important;
       border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-    }
-    
-    // Secondary 버튼 호버
-    &.p-button-secondary:hover {
-      background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
-      color: var(--p-surface-700, #374151) !important;
-      border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      
+      &:hover {
+        background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+        color: var(--p-surface-700, #374151) !important;
+        border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      }
     }
     
     &:first-child {
@@ -641,14 +625,11 @@ const handleHeightUnitChange = (newUnit: string) => {
   }
 }
 
-// 다크 모드에서 ButtonGroup 버튼 스타일
 :deep(.dark .p-buttongroup .p-button) {
-  // 기본 상태 (선택 안됨) - 연한 색
   background-color: transparent !important;
   color: var(--p-surface-500, #6b7280) !important;
   border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
   
-  // 호버 상태 - color-mix 사용
   &:hover {
     background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
     color: var(--p-surface-200, #e5e7eb) !important;
@@ -681,14 +662,12 @@ const handleHeightUnitChange = (newUnit: string) => {
 }
 
 
-// InputGroup 스타일 (W/H 전용)
 .input-group-width-height {
   :deep(.p-inputgroup),
   &.p-inputgroup {
     width: 100% !important;
     display: flex !important;
     border: 1px solid var(--p-surface-600, #4b5563) !important;
-    border-color: var(--p-surface-600, #4b5563) !important;
     border-radius: 4px !important;
     
     .p-inputnumber,
@@ -708,31 +687,13 @@ const handleHeightUnitChange = (newUnit: string) => {
       align-items: stretch !important;
     }
     
-    // InputNumber: 모든 border 제거 (InputGroup 안쪽만)
-    .p-inputnumber-input {
+    .p-inputnumber-input,
+    .p-inputnumber .p-inputnumber-input {
       border-top-right-radius: 0 !important;
       border-bottom-right-radius: 0 !important;
       border: none !important;
-      border-top: none !important;
-      border-right: none !important;
-      border-bottom: none !important;
-      border-left: none !important;
     }
     
-    // InputNumber wrapper에도 적용
-    .p-inputnumber {
-      .p-inputnumber-input {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border: none !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-left: none !important;
-      }
-    }
-    
-    // Select: width만 설정
     .p-select,
     .p-select.p-component,
     .p-select.p-inputwrapper,
@@ -742,38 +703,18 @@ const handleHeightUnitChange = (newUnit: string) => {
     }
   }
   
-  // InputGroup 내부의 InputNumber에만 스타일 적용 (모든 border 제거)
   .figma-input {
     :deep(.p-inputnumber-input) {
       border-top-right-radius: 0 !important;
       border-bottom-right-radius: 0 !important;
       border: none !important;
-      border-top: none !important;
-      border-right: none !important;
-      border-bottom: none !important;
-      border-left: none !important;
     }
   }
   
-  // 다크 모드
   :deep(.dark .p-inputgroup) {
-    // InputNumber의 모든 border 제거 (다크 모드)
-    .p-inputnumber-input {
+    .p-inputnumber-input,
+    .p-inputnumber .p-inputnumber-input {
       border: none !important;
-      border-top: none !important;
-      border-right: none !important;
-      border-bottom: none !important;
-      border-left: none !important;
-    }
-    
-    .p-inputnumber {
-      .p-inputnumber-input {
-        border: none !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-left: none !important;
-      }
     }
     
     .p-select,
@@ -782,7 +723,6 @@ const handleHeightUnitChange = (newUnit: string) => {
     .p-select.p-inputwrapper-filled,
     .p-select.p-inputwrapper-focus {
       background-color: var(--p-surface-700, #374151) !important;
-      background: var(--p-surface-700, #374151) !important;
       color: var(--p-surface-400, #9ca3af) !important;
     }
     
@@ -790,20 +730,14 @@ const handleHeightUnitChange = (newUnit: string) => {
     .p-select .p-select-label,
     .p-inputwrapper .p-select-label {
       background-color: var(--p-surface-700, #374151) !important;
-      background: var(--p-surface-700, #374151) !important;
       color: var(--p-surface-400, #9ca3af) !important;
     }
   }
   
-  // InputGroup 내부 Select의 다크 모드 border 색상
   .dark & {
     .figma-input {
       :deep(.p-inputnumber-input) {
         border: none !important;
-        border-top: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-left: none !important;
       }
       
       :deep(.p-select),
@@ -811,10 +745,7 @@ const handleHeightUnitChange = (newUnit: string) => {
       :deep(.p-select.p-inputwrapper),
       :deep(.p-select.p-inputwrapper-filled),
       :deep(.p-select.p-inputwrapper-focus) {
-        border-left: 1px solid var(--p-surface-600, #4b5563) !important;
-        border-top: 1px solid var(--p-surface-600, #4b5563) !important;
-        border-right: 1px solid var(--p-surface-600, #4b5563) !important;
-        border-bottom: 1px solid var(--p-surface-600, #4b5563) !important;
+        border: 1px solid var(--p-surface-600, #4b5563) !important;
       }
     }
   }
@@ -850,9 +781,7 @@ const handleHeightUnitChange = (newUnit: string) => {
     font-size: 11px !important;
     line-height: 1.2 !important;
     background-color: var(--p-surface-50, #f9fafb) !important;
-    background: var(--p-surface-50, #f9fafb) !important;
     border: 1px solid var(--p-surface-200, #e5e7eb) !important;
-    border-color: var(--p-surface-200, #e5e7eb) !important;
     border-radius: 4px !important;
     color: var(--p-text-color, #1f2937) !important;
     width: 100% !important;
@@ -861,26 +790,8 @@ const handleHeightUnitChange = (newUnit: string) => {
     box-sizing: border-box !important;
   }
 
-  :deep(.p-select .p-select-label),
-  :deep(.p-select-label),
-  :deep(.p-select .p-select-label.p-inputtext),
-  :deep(.p-inputwrapper .p-select-label) {
-    height: 26px !important;
-    min-height: 26px !important;
-    max-height: 26px !important;
-    background-color: var(--p-surface-50, #f9fafb) !important;
-    background: var(--p-surface-50, #f9fafb) !important;
-    color: var(--p-text-color, #1f2937) !important;
-  }
-
   :deep(.p-inputtext:focus),
-  :deep(.p-inputnumber-input:focus) {
-    background-color: var(--p-surface-0, #ffffff) !important;
-    border-color: var(--p-primary-500, #3b82f6) !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-    outline: none !important;
-  }
-
+  :deep(.p-inputnumber-input:focus),
   :deep(.p-select:focus),
   :deep(.p-select.p-inputwrapper-focus) {
     border-color: var(--p-primary-500, #3b82f6) !important;
@@ -888,8 +799,14 @@ const handleHeightUnitChange = (newUnit: string) => {
     outline: none !important;
   }
 
+  :deep(.p-inputtext:focus),
+  :deep(.p-inputnumber-input:focus) {
+    background-color: var(--p-surface-0, #ffffff) !important;
+  }
+
   :deep(.p-select-label),
   :deep(.p-select .p-select-label),
+  :deep(.p-select .p-select-label.p-inputtext),
   :deep(.p-inputwrapper .p-select-label) {
     padding: 4px 8px !important;
     font-size: 11px !important;
@@ -898,7 +815,6 @@ const handleHeightUnitChange = (newUnit: string) => {
     max-height: 26px !important;
     line-height: 1.2 !important;
     background-color: var(--p-surface-50, #f9fafb) !important;
-    background: var(--p-surface-50, #f9fafb) !important;
     color: var(--p-text-color, #1f2937) !important;
   }
 
@@ -906,7 +822,6 @@ const handleHeightUnitChange = (newUnit: string) => {
     width: 20px !important;
   }
 
-  // 다크 모드
   .dark & {
     :deep(.p-inputtext),
     :deep(.p-inputnumber-input) {
@@ -924,9 +839,7 @@ const handleHeightUnitChange = (newUnit: string) => {
       min-height: 26px !important;
       max-height: 26px !important;
       background-color: var(--p-surface-700, #374151) !important;
-      background: var(--p-surface-700, #374151) !important;
       border: 1px solid var(--p-surface-600, #4b5563) !important;
-      border-color: var(--p-surface-600, #4b5563) !important;
       color: var(--p-surface-400, #9ca3af) !important;
     }
 
@@ -937,7 +850,6 @@ const handleHeightUnitChange = (newUnit: string) => {
       min-height: 26px !important;
       max-height: 26px !important;
       background-color: var(--p-surface-700, #374151) !important;
-      background: var(--p-surface-700, #374151) !important;
       color: var(--p-surface-400, #9ca3af) !important;
     }
 
@@ -952,7 +864,6 @@ const handleHeightUnitChange = (newUnit: string) => {
 </style>
 
 <style lang="scss">
-// ButtonGroup 전역 스타일
 .p-buttongroup {
   width: 100% !important;
   max-width: 100% !important;
@@ -972,46 +883,39 @@ const handleHeightUnitChange = (newUnit: string) => {
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
     transition: all 0.2s !important;
-    
-    // 기본 상태 (선택 안됨) - 연한 색
     background-color: transparent !important;
     color: var(--p-surface-500, #6b7280) !important;
     border-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
     border-width: 1px !important;
     
-    // 호버 상태 - color-mix 사용
     &:hover {
       background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
       color: var(--p-surface-700, #374151) !important;
       border-color: var(--p-surface-300, #d1d5db) !important;
     }
     
-    // Primary 버튼 (액티브 상태) - color-mix 사용
     &.p-button-primary {
       background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
       color: var(--p-surface-700, #374151) !important;
       border-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+      
+      &:hover {
+        background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+        color: var(--p-surface-700, #374151) !important;
+        border-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+      }
     }
     
-    // Primary 버튼 호버
-    &.p-button-primary:hover {
-      background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
-      color: var(--p-surface-700, #374151) !important;
-      border-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
-    }
-    
-    // Secondary 버튼 (비활성 상태) - 연한 색
     &.p-button-secondary {
       background-color: transparent !important;
       color: var(--p-surface-500, #6b7280) !important;
       border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-    }
-    
-    // Secondary 버튼 호버
-    &.p-button-secondary:hover {
-      background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
-      color: var(--p-surface-700, #374151) !important;
-      border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      
+      &:hover {
+        background-color: color-mix(in srgb, var(--p-surface-100, #f3f4f6) calc(100% * 0.5), transparent) !important;
+        color: var(--p-surface-700, #374151) !important;
+        border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
+      }
     }
     
     &:first-child {
@@ -1026,14 +930,11 @@ const handleHeightUnitChange = (newUnit: string) => {
   }
 }
 
-// 다크 모드에서 ButtonGroup 버튼 스타일
 .dark .p-buttongroup .p-button {
-  // 기본 상태 (선택 안됨) - 연한 색
   background-color: transparent !important;
   color: var(--p-surface-500, #6b7280) !important;
   border-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
   
-  // 호버 상태 - color-mix 사용
   &:hover {
     background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
     color: var(--p-surface-200, #e5e7eb) !important;
@@ -1065,7 +966,6 @@ const handleHeightUnitChange = (newUnit: string) => {
   }
 }
 
-// Select 배경색 강제 적용 (전역 스타일)
 .p-select,
 .p-select.p-component,
 .p-select.p-inputwrapper,
@@ -1075,7 +975,6 @@ const handleHeightUnitChange = (newUnit: string) => {
   min-height: 26px !important;
   max-height: 26px !important;
   background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-  background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
 }
 
 .p-select .p-select-label,
@@ -1086,7 +985,6 @@ const handleHeightUnitChange = (newUnit: string) => {
   min-height: 26px !important;
   max-height: 26px !important;
   background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-  background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
 }
 
 .dark .p-select,
@@ -1098,7 +996,6 @@ const handleHeightUnitChange = (newUnit: string) => {
   min-height: 26px !important;
   max-height: 26px !important;
   background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-  background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
 }
 
 .dark .p-select .p-select-label,
@@ -1109,6 +1006,5 @@ const handleHeightUnitChange = (newUnit: string) => {
   min-height: 26px !important;
   max-height: 26px !important;
   background-color: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
-  background: color-mix(in srgb, var(--p-surface-700, #374151) calc(100% * 0.5), transparent) !important;
 }
 </style>

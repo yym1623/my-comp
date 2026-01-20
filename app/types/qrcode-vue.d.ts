@@ -4,5 +4,3 @@ declare module 'qrcode.vue' {
   const QrcodeVue: DefineComponent<any, any, any>
   export default QrcodeVue
 }
-
-

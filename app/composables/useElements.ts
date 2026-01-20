@@ -1,7 +1,7 @@
 import type { ComponentDef, CanvasItem } from '~/types/component'
 
 export const useElements = () => {
-  // Field 컴포넌트들
+    // Field 컴포넌트
   const fieldComponents: ComponentDef[] = [
     {
       id: 'heading1',
@@ -82,7 +82,7 @@ export const useElements = () => {
     }
   ]
 
-  // Form 컴포넌트들
+  // Form 컴포넌트
   const formComponents: ComponentDef[] = [
     {
       id: 'inputText',
@@ -225,7 +225,6 @@ export const useElements = () => {
     }
   ]
 
-  // Field 컴포넌트들에 button, prevNext, group, table, grid 추가
   const additionalFieldComponents: ComponentDef[] = [
     {
       id: 'button',
@@ -262,7 +261,7 @@ export const useElements = () => {
       type: 'group',
       defaultProps: {
         title: '그룹 제목',
-        items: [], // 그룹 안에 들어갈 컴포넌트들
+        items: [],
         styles: {}
       }
     },
@@ -275,7 +274,7 @@ export const useElements = () => {
       type: 'table',
       defaultProps: {
         columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
-        rows: [['데이터 1', '데이터 2', '데이터 3']], // 행 데이터 (배열의 배열)
+        rows: [['데이터 1', '데이터 2', '데이터 3']],
         styles: {}
       }
     },
@@ -289,19 +288,17 @@ export const useElements = () => {
       defaultProps: {
         columns: 2,
         gap: '1rem',
-        items: [[], []], // 각 그리드 셀에 들어갈 컴포넌트들 (배열의 배열) - 기본 2개 셀
+        items: [[], []], // default - 2
         styles: {}
       }
     }
   ]
 
-  // Field 컴포넌트 전체 (기본 Field + 추가 Field)
   const allFieldComponents: ComponentDef[] = [
     ...fieldComponents,
     ...additionalFieldComponents
   ]
 
-  // Field와 Form을 합친 전체 컴포넌트 배열
   const components: ComponentDef[] = [
     ...allFieldComponents,
     ...formComponents
@@ -357,17 +354,20 @@ export const useElements = () => {
     table: 'pi pi-table'
   }
 
-  const severityOptions = ['primary', 'secondary', 'success', 'info', 'warn', 'danger']
+  const severityOptions: string[] = ['primary', 'secondary', 'success', 'info', 'warn', 'danger']
 
-  const getComponentIcon = (type: string) => {
+  // 컴포넌트 타입에 따른 아이콘 반환
+  const getComponentIcon = (type: string): string => {
     return componentIcons[type] || 'pi pi-box'
   }
 
-  const getComponentName = (type: string) => {
+  // 컴포넌트 타입에 따른 이름 반환
+  const getComponentName = (type: string): string => {
     return componentNames[type] || type
   }
 
-  const getComponentLabel = (item: CanvasItem) => {
+  // 캔버스 아이템의 표시 레이블 반환
+  const getComponentLabel = (item: CanvasItem): string => {
     const name = getComponentName(item.type)
     if (['heading1', 'heading2', 'heading3'].includes(item.type)) {
       return item.props.text || name
@@ -378,7 +378,8 @@ export const useElements = () => {
     return name
   }
 
-  const generateUid = () => {
+  // 고유 ID 생성
+  const generateUid = (): string => {
     return Math.random().toString(36).substring(2, 9)
   }
 

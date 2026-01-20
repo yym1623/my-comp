@@ -23,7 +23,9 @@
         </button>
       </div>
     </div>
-    <div class="flex-1 overflow-y-auto p-3 min-h-0">
+    <!-- 로딩 중일 때 스켈레톤 표시 -->
+    <Skeletons v-if="props.isLoading" type="pages" />
+    <div v-else class="flex-1 overflow-y-auto p-3 min-h-0">
       <Draggable
         :model-value="filteredPages"
         item-key="id"
@@ -62,24 +64,34 @@
 </template>
 
 <script lang="ts" setup>
-import type { Page } from '~/types/component'
-import type { PagesProps, PagesEmits } from '~/types/pages'
-import { usePages } from '~/composables/usePages'
 import draggable from 'vuedraggable'
+import type { Page } from '~/types/component'
+
+interface PagesProps {
+  isPreviewMode?: boolean
+  currentPageId?: string | null
+  variant?: 'desktop' | 'mobile'
+  isLoading?: boolean
+}
+
+interface PagesEmits {
+  (e: 'update:pages', pages: Page[]): void
+  (e: 'select', page: Page): void
+  (e: 'create'): void
+  (e: 'closePanel'): void
+}
 
 const Draggable = draggable
 
-type Props = PagesProps
-type Emits = PagesEmits
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<PagesProps>(), {
   variant: 'desktop'
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<PagesEmits>()
 
-// composable에서 페이지 데이터 직접 가져오기
 const { pages } = usePages()
+
+const searchQuery = ref<string>('')
 
 const handleSelect = (page: Page) => {
   emit('select', page)
@@ -88,8 +100,6 @@ const handleSelect = (page: Page) => {
   }
 }
 
-const searchQuery = ref('')
-
 const filteredPages = computed(() => {
   if (!searchQuery.value.trim()) {
     return pages.value
@@ -97,7 +107,7 @@ const filteredPages = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return pages.value.filter(page => 
     page.name.toLowerCase().includes(query) ||
-    (page.description && page.description.toLowerCase().includes(query))
+    page.description?.toLowerCase().includes(query)
   )
 })
 
