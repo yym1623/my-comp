@@ -273,6 +273,7 @@ import { usePanelStore } from '@/stores/panel'
 import type { ComponentDef, CanvasItem, Page } from '~/types/component'
 import { getComponentDefaultLayout, getComponentDefaultTypography, isTextComponent } from '~/utils/component'
 import { createEmptyGridCells, compareArrayIds, findIndexById } from '~/utils/array'
+
 useSeoMeta({
   title: 'MyComp',
   description: '컴포넌트를 쉽게 만들고 관리하세요. 실시간 미리보기와 직관적인 편집 도구를 제공합니다.',

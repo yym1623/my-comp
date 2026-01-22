@@ -98,7 +98,7 @@
             text
             rounded
             size="small"
-              class="w-6 h-6 !p-0"
+            class="w-6 h-6 !p-0"
             @mousedown.prevent
             @click.stop="handleOpenEditPageModal"
           />
@@ -112,7 +112,7 @@
             :disabled="!currentPage || canvasItems.length === 0 || props.isSaving"
             @click="$emit('savePage')"
           >
-            <i v-if="props.isSaving" class="pi pi-spin pi-spinner text-xs" />
+            <i v-if="props.isSaving" class="pi pi-spin pi-spinner text-sm" />
           </Button>
           <Button
             :icon="props.isDeleting ? undefined : 'pi pi-trash'"
@@ -124,7 +124,7 @@
             :disabled="!currentPage || props.isDeleting"
             @click="$emit('deletePage')"
           >
-            <i v-if="props.isDeleting" class="pi pi-spin pi-spinner text-xs" />
+            <i v-if="props.isDeleting" class="pi pi-spin pi-spinner text-sm" />
           </Button>
           </div>
         </div>

@@ -28,11 +28,22 @@ export const usePages = () => {
       return null
     }
 
-    const response = await $fetch<{ pages: any[] }>('/api/pages', {
+    const { data, error } = await useFetch<{ pages: any[] }>('/api/pages', {
       headers: {
         Authorization: `Bearer ${session.access_token}`
-      }
+      },
+      server: false,
+      immediate: true
     })
+
+    if (error.value) {
+      throw error.value
+    }
+
+    const response = data.value
+    if (!response) {
+      return null
+    }
 
     pagesDataCache.value = {}
     if (response.pages) {
@@ -111,7 +122,7 @@ export const usePages = () => {
         return newPage
       }
 
-      const response = await $fetch<{ success: boolean; page: any }>('/api/pages', {
+      const { data, error } = await useFetch<{ success: boolean; page: any }>('/api/pages', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -122,8 +133,16 @@ export const usePages = () => {
             description: pageData.description
           },
           elements
-        }
+        },
+        server: false,
+        immediate: true
       })
+
+      if (error.value || !data.value) {
+        throw error.value || new Error('Failed to create page')
+      }
+
+      const response = data.value
 
       newPage = {
         id: response.page.id.toString(),
@@ -186,7 +205,7 @@ export const usePages = () => {
         return
       }
 
-      await $fetch(`/api/pages/${pageId}`, {
+      const { error } = await useFetch(`/api/pages/${pageId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -194,8 +213,14 @@ export const usePages = () => {
         body: {
           page: pageData,
           elements
-        }
+        },
+        server: false,
+        immediate: true
       })
+
+      if (error.value) {
+        throw error.value
+      }
 
       if (pageData) {
         const pageIndex = pages.value.findIndex(p => p.id === pageId)
@@ -226,12 +251,18 @@ export const usePages = () => {
         return
       }
 
-      await $fetch(`/api/pages/${pageId}`, {
+      const { error } = await useFetch(`/api/pages/${pageId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${session.access_token}`
-        }
+        },
+        server: false,
+        immediate: true
       })
+
+      if (error.value) {
+        throw error.value
+      }
 
       const pageIndex = pages.value.findIndex(p => p.id === pageId)
       if (pageIndex !== -1) {
