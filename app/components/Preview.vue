@@ -141,7 +141,7 @@
                 class="font-bold text-surface-800 dark:text-surface-100 m-0"
                 :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
-                {{ element.props.text }}
+                {{ element.props.data?.text ?? element.props.text ?? '' }}
               </h1>
               <!-- Heading 2 -->
               <h2
@@ -149,7 +149,7 @@
                 class="font-semibold text-surface-800 dark:text-surface-100 m-0"
                 :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
-                {{ element.props.text }}
+                {{ element.props.data?.text ?? element.props.text ?? '' }}
               </h2>
               <!-- Heading 3 -->
               <h3
@@ -157,7 +157,7 @@
                 class="font-semibold text-surface-800 dark:text-surface-100 m-0"
                 :style="{ ...getElementStyle(element), ...getTypographyStyle(element) }"
               >
-                {{ element.props.text }}
+                {{ element.props.data?.text ?? element.props.text ?? '' }}
               </h3>
               <!-- Spacer -->
               <div
@@ -177,9 +177,9 @@
                 :style="getElementStyle(element)"
               >
                 <Image
-                  v-if="element.props.src"
-                  :src="element.props.src"
-                  :alt="element.props.alt || '이미지'"
+                  v-if="element.props.data?.src ?? element.props.src"
+                  :src="element.props.data?.src ?? element.props.src"
+                  :alt="element.props.data?.alt ?? element.props.alt ?? '이미지'"
                   class="w-full"
                   :preview="isPreviewMode"
                 />
@@ -200,12 +200,12 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <Textarea
                   :key="`textarea-${element.id}-${index}`"
-                  :model-value="element.props.content || ''"
+                  :model-value="element.props.data?.content ?? element.props.content ?? ''"
                   :rows="4"
                   placeholder="설명 내용을 입력하세요."
                   :style="{ minHeight: '6rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -221,14 +221,14 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <InputText
                   :key="`input-text-${element.id}-${index}`"
                   type="text"
                   :model-value="''"
-                  :placeholder="element.props.placeholder || '입력하세요...'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? '입력하세요...'"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
                   :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -241,14 +241,14 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <InputText
                   :key="`input-password-${element.id}-${index}`"
                   type="password"
                   :model-value="''"
-                  :placeholder="element.props.placeholder || '비밀번호를 입력하세요'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? '비밀번호를 입력하세요'"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
                   :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -261,14 +261,14 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <InputText
                   :key="`input-email-${element.id}-${index}`"
                   type="email"
                   :model-value="''"
-                  :placeholder="element.props.placeholder || 'example@email.com'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? 'example@email.com'"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
                   :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -281,13 +281,13 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <DatePicker
                   :key="`input-date-${element.id}-${index}`"
                   :model-value="null"
-                  :placeholder="element.props.placeholder || '날짜를 선택하세요'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? '날짜를 선택하세요'"
                   dateFormat="yy.mm.dd"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
@@ -301,13 +301,13 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <DatePicker
                   :key="`input-time-${element.id}-${index}`"
                   :model-value="null"
-                  :placeholder="element.props.placeholder || '시간을 선택하세요'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? '시간을 선택하세요'"
                   timeOnly
                   hourFormat="24"
                   :readonly="!isPreviewMode"
@@ -322,14 +322,14 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <Select
                   :key="`select-${element.id}-${index}`"
                   :model-value="null"
-                  :options="element.props.options || []"
-                  :placeholder="element.props.placeholder || '선택하세요'"
+                  :options="element.props.data?.options ?? element.props.options ?? []"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? '선택하세요'"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
                   :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -342,14 +342,14 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <InputText
                   :key="`input-url-${element.id}-${index}`"
                   type="url"
                   :model-value="''"
-                  :placeholder="element.props.placeholder || 'https://example.com'"
+                  :placeholder="element.props.data?.placeholder ?? element.props.placeholder ?? 'https://example.com'"
                   :readonly="!isPreviewMode"
                   :class="[{ 'edit-mode': !isPreviewMode }]"
                   :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }"
@@ -362,13 +362,13 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <Checkbox
                     :key="`checkbox-${element.id}-${index}`"
-                    :model-value="element.props.checked || false"
+                    :model-value="element.props.data?.checked ?? element.props.checked ?? false"
                     :binary="true"
                     :readonly="!isPreviewMode"
                     :class="{ 'edit-mode': !isPreviewMode }"
@@ -383,18 +383,18 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element) }">
                   <div
-                    v-for="(option, optIndex) in (element.props.options || [])"
+                    v-for="(option, optIndex) in (element.props.data?.options ?? element.props.options ?? [])"
                     :key="`radio-${element.id}-${index}-${optIndex}`"
                     class="flex items-center gap-2"
                     :style="getFormInputStyle(element)"
                   >
                     <RadioButton
-                      :model-value="element.props.selected || element.props.options?.[0]"
+                      :model-value="element.props.data?.selected ?? element.props.selected ?? (element.props.data?.options ?? element.props.options)?.[0]"
                       :value="option"
                       :name="`radio-${element.id}`"
                       :readonly="!isPreviewMode"
@@ -411,17 +411,17 @@
                 :class="{ 'edit-mode': !isPreviewMode }"
                 :style="getElementStyle(element)"
               >
-                <label v-if="element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-                  {{ element.props.label }}
+                <label v-if="element.props.data?.label ?? element.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+                  {{ element.props.data?.label ?? element.props.label }}
                 </label>
                 <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(element), ...getFormInputStyle(element) }">
                   <ToggleSwitch
                     :key="`toggle-${element.id}-${index}`"
-                    :model-value="element.props.checked || false"
+                    :model-value="element.props.data?.checked ?? element.props.checked ?? false"
                     :readonly="!isPreviewMode"
                     :class="{ 'edit-mode': !isPreviewMode }"
                   />
-                  <span class="text-sm text-surface-700 dark:text-surface-200">{{ element.props.checked ? '켜짐' : '꺼짐' }}</span>
+                  <span class="text-sm text-surface-700 dark:text-surface-200">{{ (element.props.data?.checked ?? element.props.checked) ? '켜짐' : '꺼짐' }}</span>
                 </div>
               </div>
               <!-- 버튼 (Field 스타일 - primary 기본) -->
@@ -433,9 +433,9 @@
               >
                 <Button
                   :key="`button-${element.id}-${index}`"
-                  :label="element.props.text || '버튼'"
+                  :label="element.props.data?.text ?? element.props.text ?? '버튼'"
                   severity="primary"
-                  :outlined="element.props.outlined || false"
+                  :outlined="element.props.data?.outlined ?? element.props.outlined ?? false"
                   :readonly="!isPreviewMode"
                   :class="['button-element', { 'edit-mode': !isPreviewMode }]"
                   :style="{ ...getTypographyStyle(element), ...getButtonStyle(element) }"
@@ -468,10 +468,10 @@
               <div
                 v-if="element.type === 'grid'"
                 class="grid"
-                :style="{ gridTemplateColumns: `repeat(${element.props.columns || 2}, minmax(0, 1fr))`, gap: element.props.gap || '1rem', ...getElementStyle(element) }"
+                :style="{ gridTemplateColumns: `repeat(${element.props.data?.columns ?? element.props.columns ?? 2}, minmax(0, 1fr))`, gap: element.props.data?.gap ?? element.props.gap ?? '1rem', ...getElementStyle(element) }"
               >
                 <div
-                  v-for="(cellItems, cellIndex) in (element.props.items && element.props.items.length > 0 ? element.props.items : Array(element.props.columns || 2).fill([]))"
+                  v-for="(cellItems, cellIndex) in (element.props.items && element.props.items.length > 0 ? element.props.items : Array(element.props.data?.columns ?? element.props.columns ?? 2).fill([]))"
                   :key="cellIndex"
                   class="min-h-[60px] border border-dashed border-surface-300 dark:border-surface-600 rounded-md bg-surface-50 dark:bg-surface-900/30 p-2 transition-all"
                   :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGrid === `${element.id}-${cellIndex}` }"
@@ -527,7 +527,7 @@
                   <thead class="bg-surface-50 dark:bg-surface-800/60">
                     <tr>
                       <th
-                        v-for="(col, i) in (element.props.columns || [])"
+                        v-for="(col, i) in (element.props.data?.columns ?? element.props.columns ?? [])"
                         :key="i"
                         class="px-3 py-2 font-semibold text-surface-600 dark:text-surface-200 border-b border-surface-200 dark:border-surface-700"
                       >
@@ -552,7 +552,7 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="(row, rowIndex) in (element.props.rows || [['데이터 1', '데이터 2', '데이터 3']])"
+                      v-for="(row, rowIndex) in (element.props.data?.rows ?? element.props.rows ?? [['데이터 1', '데이터 2', '데이터 3']])"
                       :key="rowIndex"
                     >
                       <td
@@ -712,16 +712,22 @@ const getElementStyle = (element: CanvasItem) => {
   
   // Layout (form 컴포넌트는 제외)
   const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
-  if (styles.layout && !formTypes.includes(element.type)) {
-    // width가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || '%'
-      style.width = `${styles.layout.width}${widthUnit}`
+  if (!formTypes.includes(element.type)) {
+    // width가 정의되어 있으면 적용 (문자열 형식: "100%" 또는 "100px")
+    if (styles.width !== undefined && styles.width !== null) {
+      if (typeof styles.width === 'string') {
+        style.width = styles.width
+      } else if (typeof styles.width === 'number' && styles.width > 0) {
+        style.width = `${styles.width}px`
+      }
     }
-    // height가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
-      const heightUnit = styles.layout.heightUnit || 'px'
-      style.height = `${styles.layout.height}${heightUnit}`
+    // height가 정의되어 있으면 적용 (문자열 형식: "48px" 또는 "100%")
+    if (styles.height !== undefined && styles.height !== null) {
+      if (typeof styles.height === 'string') {
+        style.height = styles.height
+      } else if (typeof styles.height === 'number' && styles.height > 0) {
+        style.height = `${styles.height}px`
+      }
     }
   }
   
@@ -754,20 +760,24 @@ const getElementStyle = (element: CanvasItem) => {
 // 요소의 Typography 스타일 계산 함수
 const getTypographyStyle = (element: CanvasItem) => {
   const styles = element.props.styles || {}
-  const typography = styles.typography || {}
   const style: Record<string, string> = {}
   
-  if (typography.fontSize !== undefined) {
-    style.fontSize = `${typography.fontSize}px`
+  // styles에서 직접 Typography 관련 키 확인
+  if (styles.fontSize !== undefined && styles.fontSize !== null) {
+    if (typeof styles.fontSize === 'string') {
+      style.fontSize = styles.fontSize
+    } else if (typeof styles.fontSize === 'number') {
+      style.fontSize = `${styles.fontSize}px`
+    }
   }
-  if (typography.fontFamily) {
-    style.fontFamily = typography.fontFamily
+  if (styles.fontFamily) {
+    style.fontFamily = styles.fontFamily
   }
-  if (typography.fontWeight) {
-    style.fontWeight = typography.fontWeight
+  if (styles.fontWeight) {
+    style.fontWeight = styles.fontWeight
   }
-  if (typography.textAlign) {
-    style.textAlign = typography.textAlign
+  if (styles.textAlign) {
+    style.textAlign = styles.textAlign
   }
   
   return style
@@ -779,16 +789,20 @@ const getFormInputStyle = (element: CanvasItem) => {
   const style: Record<string, string> = {}
   
   // Layout (form 컴포넌트의 input 요소에만 적용)
-  if (styles.layout) {
-    // width가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || '%'
-      style.width = `${styles.layout.width}${widthUnit}`
+  // width가 정의되어 있으면 적용
+  if (styles.width !== undefined && styles.width !== null) {
+    if (typeof styles.width === 'string') {
+      style.width = styles.width
+    } else if (typeof styles.width === 'number' && styles.width > 0) {
+      style.width = `${styles.width}px`
     }
-    // height가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
-      const heightUnit = styles.layout.heightUnit || 'px'
-      style.height = `${styles.layout.height}${heightUnit}`
+  }
+  // height가 정의되어 있으면 적용
+  if (styles.height !== undefined && styles.height !== null) {
+    if (typeof styles.height === 'string') {
+      style.height = styles.height
+    } else if (typeof styles.height === 'number' && styles.height > 0) {
+      style.height = `${styles.height}px`
     }
   }
   
@@ -801,16 +815,20 @@ const getPrevNextButtonStyle = (element: CanvasItem) => {
   const style: Record<string, string> = {}
   
   // Layout (각 버튼에 적용)
-  if (styles.layout) {
-    // width가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || '%'
-      style.width = `${styles.layout.width}${widthUnit}`
+  // width가 정의되어 있으면 적용
+  if (styles.width !== undefined && styles.width !== null) {
+    if (typeof styles.width === 'string') {
+      style.width = styles.width
+    } else if (typeof styles.width === 'number' && styles.width > 0) {
+      style.width = `${styles.width}px`
     }
-    // height가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
-      const heightUnit = styles.layout.heightUnit || 'px'
-      style.height = `${styles.layout.height}${heightUnit}`
+  }
+  // height가 정의되어 있으면 적용
+  if (styles.height !== undefined && styles.height !== null) {
+    if (typeof styles.height === 'string') {
+      style.height = styles.height
+    } else if (typeof styles.height === 'number' && styles.height > 0) {
+      style.height = `${styles.height}px`
     }
   }
   
@@ -860,16 +878,20 @@ const getButtonStyle = (element: CanvasItem) => {
   const style: Record<string, string> = {}
   
   // Layout (버튼에 적용)
-  if (styles.layout) {
-    // width가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.width !== undefined && styles.layout.width !== null && styles.layout.width > 0) {
-      const widthUnit = styles.layout.widthUnit || '%'
-      style.width = `${styles.layout.width}${widthUnit}`
+  // width가 정의되어 있으면 적용
+  if (styles.width !== undefined && styles.width !== null) {
+    if (typeof styles.width === 'string') {
+      style.width = styles.width
+    } else if (typeof styles.width === 'number' && styles.width > 0) {
+      style.width = `${styles.width}px`
     }
-    // height가 정의되어 있고 0보다 크면 적용
-    if (styles.layout.height !== undefined && styles.layout.height !== null && styles.layout.height > 0) {
-      const heightUnit = styles.layout.heightUnit || 'px'
-      style.height = `${styles.layout.height}${heightUnit}`
+  }
+  // height가 정의되어 있으면 적용
+  if (styles.height !== undefined && styles.height !== null) {
+    if (typeof styles.height === 'string') {
+      style.height = styles.height
+    } else if (typeof styles.height === 'number' && styles.height > 0) {
+      style.height = `${styles.height}px`
     }
   }
   
@@ -958,30 +980,44 @@ const editingTable = ref<string | null>(null)
 
 function handleTableHeaderBlur(element: CanvasItem, colIndex: number, event: Event) {
   const target = event.target as HTMLInputElement
-  if (!element.props.columns) return
-  element.props.columns[colIndex] = target.value || `컬럼 ${colIndex + 1}`
+  const columns = element.props.data?.columns ?? element.props.columns
+  if (!columns) return
+  if (!element.props.data) {
+    element.props.data = {}
+  }
+  element.props.data.columns = element.props.data.columns ?? columns
+  element.props.data.columns[colIndex] = target.value || `컬럼 ${colIndex + 1}`
   editingTable.value = null
   emit('update:canvasItems', [...props.canvasItems])
 }
 
 function handleTableCellBlur(element: CanvasItem, rowIndex: number, cellIndex: number, event: Event) {
   const target = event.target as HTMLInputElement
-  if (!element.props.rows) return
-  if (!element.props.rows[rowIndex]) {
-    element.props.rows[rowIndex] = []
+  const rows = element.props.data?.rows ?? element.props.rows
+  if (!rows) return
+  if (!element.props.data) {
+    element.props.data = {}
   }
-  element.props.rows[rowIndex][cellIndex] = target.value || '데이터'
+  element.props.data.rows = element.props.data.rows ?? rows
+  if (!element.props.data.rows[rowIndex]) {
+    element.props.data.rows[rowIndex] = []
+  }
+  element.props.data.rows[rowIndex][cellIndex] = target.value || '데이터'
   editingTable.value = null
   emit('update:canvasItems', [...props.canvasItems])
 }
 
 function handleAddTableRow(element: CanvasItem) {
-  if (!element.props.columns) return
-  if (!element.props.rows) {
-    element.props.rows = []
+  const columns = element.props.data?.columns ?? element.props.columns
+  if (!columns) return
+  if (!element.props.data) {
+    element.props.data = {}
   }
-  const newRow = element.props.columns.map(() => '데이터')
-  element.props.rows.push(newRow)
+  if (!element.props.data.rows) {
+    element.props.data.rows = element.props.rows ?? []
+  }
+  const newRow = columns.map(() => '데이터')
+  element.props.data.rows.push(newRow)
   emit('update:canvasItems', [...props.canvasItems])
 }
 </script>

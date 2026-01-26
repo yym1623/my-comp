@@ -1,18 +1,26 @@
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// 이메일 유효성 검증
-export const isValidEmail = (email: string): boolean => {
-  return EMAIL_REGEX.test(email)
-}
-
 // 비밀번호 강도 검증
-export interface PasswordStrengthChecks {
+interface PasswordStrengthChecks {
   length: boolean
   hasUpperCase: boolean
   hasLowerCase: boolean
   hasNumber: boolean
   hasSpecialChar: boolean
 }
+
+// 비밀번호 강도 레벨 계산
+interface PasswordStrength {
+  level: 'weak' | 'medium' | 'strong'
+  percentage: number
+  label: string
+}
+
+
+// 이메일 유효성 검증
+export const isValidEmail = (email: string): boolean => {
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return EMAIL_REGEX.test(email)
+}
+
 
 const PASSWORD_REGEX = {
   UPPER_CASE: /[A-Z]/,
@@ -33,12 +41,6 @@ export const validatePasswordStrength = (password: string): PasswordStrengthChec
   }
 }
 
-// 비밀번호 강도 레벨 계산
-export interface PasswordStrength {
-  level: 'weak' | 'medium' | 'strong'
-  percentage: number
-  label: string
-}
 
 const PASSWORD_STRENGTH_THRESHOLDS = {
   STRONG: 5,

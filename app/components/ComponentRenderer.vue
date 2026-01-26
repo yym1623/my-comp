@@ -4,26 +4,26 @@
     v-if="item.type === 'heading1'"
     class="text-2xl font-bold text-surface-800 dark:text-surface-100 m-0"
   >
-    {{ item.props.text }}
+    {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h1>
   <!-- Heading 2 -->
   <h2
     v-if="item.type === 'heading2'"
     class="text-xl font-semibold text-surface-800 dark:text-surface-100 m-0"
   >
-    {{ item.props.text }}
+    {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h2>
   <!-- Heading 3 -->
   <h3
     v-if="item.type === 'heading3'"
     class="text-lg font-semibold text-surface-800 dark:text-surface-100 m-0"
   >
-    {{ item.props.text }}
+    {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h3>
   <!-- Spacer -->
   <div
     v-if="item.type === 'spacer'"
-    :style="{ height: item.props.height || '1rem' }"
+      :style="{ height: item.props.data?.height ?? item.props.height ?? '1rem' }"
   />
   <!-- Divider -->
   <hr
@@ -36,9 +36,9 @@
     class="rounded-lg overflow-hidden"
   >
     <Image
-      v-if="item.props.src"
-      :src="item.props.src"
-      :alt="item.props.alt || '이미지'"
+      v-if="item.props.data?.src ?? item.props.src"
+      :src="item.props.data?.src ?? item.props.src"
+      :alt="item.props.data?.alt ?? item.props.alt ?? '이미지'"
       class="w-full"
       preview
     />
@@ -57,12 +57,12 @@
     v-if="item.type === 'textarea'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <Textarea
       :key="`textarea-${item.id}`"
-      :model-value="item.props.content || ''"
+      :model-value="item.props.data?.content ?? item.props.content ?? ''"
       :rows="4"
       class="w-full"
       style="min-height: 6rem;"
@@ -74,14 +74,14 @@
     v-if="item.type === 'inputText'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <InputText
       :key="`input-text-${item.id}`"
       type="text"
       :model-value="''"
-      :placeholder="item.props.placeholder || '입력하세요...'"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '입력하세요...'"
       class="w-full"
       style="min-height: 2.5rem;"
     />
@@ -91,8 +91,8 @@
     v-if="item.type === 'inputPassword'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <InputText
       :key="`input-password-${item.id}`"
@@ -108,8 +108,8 @@
     v-if="item.type === 'inputEmail'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <InputText
       :key="`input-email-${item.id}`"
@@ -125,8 +125,8 @@
     v-if="item.type === 'inputDate'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <DatePicker
       :key="`input-date-${item.id}`"
@@ -142,8 +142,8 @@
     v-if="item.type === 'inputTime'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <DatePicker
       :key="`input-time-${item.id}`"
@@ -160,13 +160,13 @@
     v-if="item.type === 'select'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <Dropdown
       :key="`select-${item.id}`"
       :model-value="null"
-      :options="item.props.options || []"
+      :options="item.props.data?.options ?? item.props.options ?? []"
       :placeholder="item.props.placeholder || '선택하세요'"
       class="w-full"
       style="min-height: 2.5rem;"
@@ -177,8 +177,8 @@
     v-if="item.type === 'inputUrl'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <InputText
       :key="`input-url-${item.id}`"
@@ -194,16 +194,16 @@
     v-if="item.type === 'checkbox'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <div class="flex items-center gap-2" style="min-height: 2.5rem;">
       <Checkbox
         :key="`checkbox-${item.id}`"
-        :model-value="item.props.checked || false"
+        :model-value="item.props.data?.checked ?? item.props.checked ?? false"
         :binary="true"
       />
-      <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.props.label }}</span>
+      <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.props.data?.label ?? item.props.label }}</span>
     </div>
   </div>
   <!-- input(radio) -->
@@ -211,8 +211,8 @@
     v-if="item.type === 'radio'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <div class="flex flex-col gap-2" style="min-height: 2.5rem;">
       <div
@@ -221,7 +221,7 @@
         class="flex items-center gap-2"
       >
         <RadioButton
-          :model-value="item.props.selected || item.props.options?.[0]"
+          :model-value="item.props.data?.selected ?? item.props.selected ?? (item.props.data?.options ?? item.props.options)?.[0]"
           :value="option"
           :name="`radio-${item.id}`"
         />
@@ -234,15 +234,15 @@
     v-if="item.type === 'toggleSwitch'"
     class="flex flex-col gap-1 form-field-wrapper"
   >
-    <label v-if="item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.label }}
+    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.props.data?.label ?? item.props.label }}
     </label>
     <div class="flex items-center gap-2" style="min-height: 2.5rem;">
       <ToggleSwitch
         :key="`toggle-${item.id}`"
-        :model-value="item.props.checked || false"
+        :model-value="item.props.data?.checked ?? item.props.checked ?? false"
       />
-      <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.props.checked ? '켜짐' : '꺼짐' }}</span>
+      <span class="text-sm text-surface-700 dark:text-surface-200">{{ (item.props.data?.checked ?? item.props.checked) ? '켜짐' : '꺼짐' }}</span>
     </div>
   </div>
   <!-- button(default) -->
@@ -252,9 +252,9 @@
   >
     <Button
       :key="`button-${item.id}`"
-      :label="item.props.text || '버튼'"
+      :label="item.props.data?.text ?? item.props.text ?? '버튼'"
       severity="primary"
-      :outlined="item.props.outlined || false"
+      :outlined="item.props.data?.outlined ?? item.props.outlined ?? false"
       class="!w-auto"
     />
   </div>
@@ -264,13 +264,13 @@
     class="flex items-center justify-between gap-4"
   >
     <Button
-      :label="item.props.prevText"
+      :label="item.props.data?.prevText ?? item.props.prevText"
       severity="secondary"
       outlined
       class="!w-auto"
     />
     <Button
-      :label="item.props.nextText"
+      :label="item.props.data?.nextText ?? item.props.nextText"
       severity="primary"
       class="!w-auto"
     />

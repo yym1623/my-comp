@@ -271,7 +271,7 @@
 <script lang="ts" setup>
 import { usePanelStore } from '@/stores/panel'
 import type { ComponentDef, CanvasItem, Page } from '~/types/component'
-import { getComponentDefaultLayout, getComponentDefaultTypography, isTextComponent } from '~/utils/component'
+import { getComponentDefaults } from '~/utils/component'
 import { createEmptyGridCells, compareArrayIds, findIndexById } from '~/utils/array'
 
 useSeoMeta({
@@ -629,33 +629,39 @@ function addComponent(comp: ComponentDef): void {
   }
 
   const defaultStylesFromComposable = getDefaultProps().styles
+  const componentDefaults = getComponentDefaults(comp.type)
+  
+  // data 병합 (컴포넌트 정의의 data + 기본값의 data)
+  const mergedData: Record<string, any> = {
+    ...componentDefaults.data,
+    ...(comp.defaultProps.data || {}),
+    // styles가 아닌 다른 필드들도 data로 이동 (예: text, placeholder, label 등)
+    ...Object.fromEntries(
+      Object.entries(comp.defaultProps).filter(([key]) => key !== 'styles' && key !== 'data')
+    )
+  }
+  
+  // styles 병합 (통합된 구조)
+  const mergedStyles: Record<string, any> = {
+    ...defaultStylesFromComposable,
+    // 기본값의 styles (width, height, fontSize 등)
+    ...componentDefaults.styles,
+    // 컴포넌트 정의의 styles
+    ...(comp.defaultProps.styles || {}),
+    // position, appearance는 기존 구조 유지
+    position: {
+      ...defaultStylesFromComposable.position,
+      ...(comp.defaultProps.styles?.position || {})
+    },
+    appearance: {
+      ...defaultStylesFromComposable.appearance,
+      ...(comp.defaultProps.styles?.appearance || {})
+    }
+  }
   
   const mergedProps: Record<string, any> = {
-    ...Object.fromEntries(
-      Object.entries(comp.defaultProps).filter(([key]) => key !== 'styles')
-    ),
-    styles: {
-      ...defaultStylesFromComposable,
-      ...(comp.defaultProps.styles || {}),
-      position: {
-        ...defaultStylesFromComposable.position,
-        ...(comp.defaultProps.styles?.position || {})
-      },
-      layout: {
-        ...defaultStylesFromComposable.layout,
-        ...(comp.defaultProps.styles?.layout || {}),
-        ...getComponentDefaultLayout(comp.type)
-      },
-      appearance: {
-        ...defaultStylesFromComposable.appearance,
-        ...(comp.defaultProps.styles?.appearance || {})
-      },
-      typography: {
-        ...defaultStylesFromComposable.typography,
-        ...(comp.defaultProps.styles?.typography || {}),
-        ...(isTextComponent(comp.type) ? getComponentDefaultTypography(comp.type) : {})
-      }
-    }
+    data: mergedData,
+    styles: mergedStyles
   }
 
   const newItem: CanvasItem = {

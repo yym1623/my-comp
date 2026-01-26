@@ -1,57 +1,151 @@
-interface LayoutConfig {
-  width: number
-  widthUnit: '%' | 'px'
-  height: number
-  heightUnit?: 'px'
+// 컴포넌트 타입별 기본 설정 (data + styles 통합)
+interface ComponentDefaults {
+  data: Record<string, any>
+  styles: Record<string, any>
 }
 
-interface TypographyConfig {
-  fontSize: number
-}
-
-const TEXT_COMPONENT_TYPES = ['heading1', 'heading2', 'heading3', 'textarea', 'button']
-
-// 컴포넌트 타입별 기본 레이아웃 설정
-export const getComponentDefaultLayout = (type: string): Partial<LayoutConfig> => {
-  const layoutDefaults: Record<string, LayoutConfig> = {
-    heading1: { width: 100, widthUnit: '%', height: 48 },
-    heading2: { width: 100, widthUnit: '%', height: 36 },
-    heading3: { width: 100, widthUnit: '%', height: 28 },
-    button: { width: 100, widthUnit: 'px', height: 40 },
-    inputText: { width: 100, widthUnit: '%', height: 40 },
-    inputPassword: { width: 100, widthUnit: '%', height: 40 },
-    inputEmail: { width: 100, widthUnit: '%', height: 40 },
-    inputUrl: { width: 100, widthUnit: '%', height: 40 },
-    inputDate: { width: 100, widthUnit: '%', height: 40 },
-    inputTime: { width: 100, widthUnit: '%', height: 40 },
-    select: { width: 100, widthUnit: '%', height: 40 },
-    textarea: { width: 100, widthUnit: '%', height: 120 },
-    image: { width: 100, widthUnit: '%', height: 100, heightUnit: 'px' },
-    checkbox: { width: 100, widthUnit: '%', height: 40 },
-    toggleSwitch: { width: 100, widthUnit: '%', height: 40 },
-    radio: { width: 100, widthUnit: '%', height: 20 },
-    prevNext: { width: 100, widthUnit: 'px', height: 40 },
-    spacer: { width: 100, widthUnit: '%', height: 16, heightUnit: 'px' },
-    divider: { width: 100, widthUnit: '%', height: 1, heightUnit: 'px' }
+// 컴포넌트 타입별 기본 설정 반환
+export const getComponentDefaults = (type: string): ComponentDefaults => {
+  const defaults: Record<string, ComponentDefaults> = {
+    heading1: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '48px',
+        fontSize: 32
+      }
+    },
+    heading2: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '36px',
+        fontSize: 24
+      }
+    },
+    heading3: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '28px',
+        fontSize: 18
+      }
+    },
+    button: {
+      data: {},
+      styles: {
+        width: '100px',
+        height: '40px',
+        fontSize: 14
+      }
+    },
+    inputText: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    inputPassword: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    inputEmail: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    inputUrl: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    inputDate: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    inputTime: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    select: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    textarea: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '120px',
+        fontSize: 14
+      }
+    },
+    image: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '100px'
+      }
+    },
+    checkbox: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    toggleSwitch: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '40px'
+      }
+    },
+    radio: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '20px'
+      }
+    },
+    prevNext: {
+      data: {},
+      styles: {
+        width: '100px',
+        height: '40px'
+      }
+    },
+    spacer: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '16px'
+      }
+    },
+    divider: {
+      data: {},
+      styles: {
+        width: '100%',
+        height: '1px'
+      }
+    }
   }
   
-  return layoutDefaults[type] || {}
-}
-
-// 컴포넌트 타입별 기본 Typography 설정
-export const getComponentDefaultTypography = (type: string): Partial<TypographyConfig> => {
-  const typographyDefaults: Record<string, TypographyConfig> = {
-    heading1: { fontSize: 32 },
-    heading2: { fontSize: 24 },
-    heading3: { fontSize: 18 },
-    textarea: { fontSize: 14 },
-    button: { fontSize: 14 }
-  }
-  
-  return typographyDefaults[type] || {}
-}
-
-// 컴포넌트 타입이 텍스트 관련 요소인지 확인
-export const isTextComponent = (type: string): boolean => {
-  return TEXT_COMPONENT_TYPES.includes(type)
+  return defaults[type] || { data: {}, styles: {} }
 }
