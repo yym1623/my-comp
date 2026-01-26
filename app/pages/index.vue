@@ -19,8 +19,10 @@
           <TabPanel value="elements" class="h-full flex flex-col overflow-hidden">
             <Elements
               :is-preview-mode="isPreviewMode"
-              @add="addComponent"
-              @drag-start="onDragStart"
+              :current-page="currentPage"
+              :canvas-items="canvasItems"
+              @update:canvas-items="handleUpdateCanvasItems"
+              @drag-start="draggedComponent = $event"
             />
           </TabPanel>
           <TabPanel value="pages" class="h-full flex flex-col overflow-hidden">
@@ -29,7 +31,7 @@
               :is-preview-mode="isPreviewMode"
               :is-loading="isPagesLoading"
               @update:pages="handleUpdatePages"
-              @select="handleSelectPage"
+              @update:current-page="(page) => page && handleSelectPage(page)"
               @create="openCreatePageModal"
             />
           </TabPanel>
@@ -91,14 +93,10 @@
       :preview-path="currentPage ? `/preview/${currentPage.id}` : ''"
       :is-loading="isPageLoading"
       :current-page="currentPage"
+      :dragged-component="draggedComponent"
       @update:canvas-items="handleUpdateCanvasItems"
-      @select="selectItem"
-      @delete="deleteItem"
-      @copy="copyItem"
-      @drop="onDrop"
-      @deselect="selectedIndex = null"
-      @grid-drop="handleGridDrop"
-      @group-drop="handleGroupDrop"
+      @update:selected-index="selectedIndex = $event"
+      @update:dragged-component="draggedComponent = $event"
       @toggle-preview="isPreviewMode = !isPreviewMode"
     />
 
@@ -120,9 +118,7 @@
         :is-page-loading="isPageLoading"
         :show-tree-view="showTreeView"
         @update:canvas-items="handleUpdateCanvasItems"
-        @select-item="selectItem"
-        @copy-item="copyItem"
-        @delete-item="deleteItem"
+        @update:selected-index="selectedIndex = $event"
         @save-page="handleSavePageClick"
         @delete-page="onDeletePageClick"
         @close-options="selectedIndex = null"
@@ -240,14 +236,10 @@
       @open-panel="(panel: string) => panelStore.openPanel(panel as 'elements' | 'pages' | 'options')"
       @close-panel="panelStore.closePanel()"
       @update:pages="handleUpdatePages"
-      @add-component="addComponent"
       @select-page="handleSelectPage"
       @create-page="openCreatePageModal"
       @update:canvas-items="handleUpdateCanvasItems"
-      @select-item="selectItem"
-      @clear-selection="selectedIndex = null"
-      @copy-item="copyItem"
-      @delete-item="deleteItem"
+      @update:selected-index="selectedIndex = $event"
       @save-page="handleSavePageClick"
       @delete-page="onDeletePageClick"
       @update-page-name="handleUpdatePageName"
@@ -271,8 +263,8 @@
 <script lang="ts" setup>
 import { usePanelStore } from '@/stores/panel'
 import type { ComponentDef, CanvasItem, Page } from '~/types/component'
-import { getComponentDefaults } from '~/utils/component'
-import { createEmptyGridCells, compareArrayIds, findIndexById } from '~/utils/array'
+import { compareArrayIds } from '~/utils/array'
+const { cloneCanvasItems } = useCanvas()
 
 useSeoMeta({
   title: 'MyComp',
@@ -288,11 +280,8 @@ useSeoMeta({
 const route = useRoute()
 const panelStore = usePanelStore()
 
-const { generateUid } = useElements()
-const { cloneCanvasItems } = useCanvas()
 const { isMobile, checkScreenSize } = useResponsive()
 const { pages, isLoading: isPagesLoading, loadPages, createPage, updatePage, deletePage, loadPageData } = usePages()
-const { getDefaultProps } = useElementOptions()
 
 const leftTab = ref<string>('elements')
 
@@ -384,15 +373,6 @@ function getCurrentPageItems(): CanvasItem[] | null {
   return pageItems || null
 }
 
-// 드래그된 컴포넌트로 새 아이템 생성
-function createItemFromDraggedComponent(): CanvasItem | null {
-  if (!draggedComponent.value) return null
-  return {
-    id: generateUid(),
-    type: draggedComponent.value.type,
-    props: { ...draggedComponent.value.defaultProps }
-  }
-}
 
 // 패널 상태 업데이트
 function updatePanelState(mobile: boolean): void {
@@ -621,174 +601,6 @@ async function saveCurrentPage(): Promise<void> {
   }
 }
 
-// 컴포넌트 추가
-function addComponent(comp: ComponentDef): void {
-  if (!currentPage.value) {
-    showSuccess('페이지 선택 필요', '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.')
-    return
-  }
-
-  const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(comp.type)
-  
-  // data 병합 (컴포넌트 정의의 data + 기본값의 data)
-  const mergedData: Record<string, any> = {
-    ...componentDefaults.data,
-    ...(comp.defaultProps.data || {}),
-    // styles가 아닌 다른 필드들도 data로 이동 (예: text, placeholder, label 등)
-    ...Object.fromEntries(
-      Object.entries(comp.defaultProps).filter(([key]) => key !== 'styles' && key !== 'data')
-    )
-  }
-  
-  // styles 병합 (통합된 구조)
-  const mergedStyles: Record<string, any> = {
-    ...defaultStylesFromComposable,
-    // 기본값의 styles (width, height, fontSize 등)
-    ...componentDefaults.styles,
-    // 컴포넌트 정의의 styles
-    ...(comp.defaultProps.styles || {}),
-    // position, appearance는 기존 구조 유지
-    position: {
-      ...defaultStylesFromComposable.position,
-      ...(comp.defaultProps.styles?.position || {})
-    },
-    appearance: {
-      ...defaultStylesFromComposable.appearance,
-      ...(comp.defaultProps.styles?.appearance || {})
-    }
-  }
-  
-  const mergedProps: Record<string, any> = {
-    data: mergedData,
-    styles: mergedStyles
-  }
-
-  const newItem: CanvasItem = {
-    id: generateUid(),
-    type: comp.type,
-    props: mergedProps
-  }
-  
-  if (comp.type === 'grid' && newItem.props.columns) {
-    newItem.props.items = createEmptyGridCells(newItem.props.columns)
-  }
-  
-  if (comp.type === 'table' && newItem.props.columns) {
-    if (!newItem.props.rows) {
-      newItem.props.rows = [newItem.props.columns.map(() => '데이터')]
-    }
-  }
-  
-  const pageId = currentPage.value.id
-  if (!pagesData.value[pageId]) {
-    pagesData.value[pageId] = []
-  }
-  const pageItems = pagesData.value[pageId]
-  pageItems.push(newItem)
-}
-
-// 드래그 시작 처리
-function onDragStart(comp: ComponentDef): void {
-  draggedComponent.value = comp
-}
-
-// 드롭 처리
-function onDrop(): void {
-  if (draggedComponent.value) {
-    addComponent(draggedComponent.value)
-    draggedComponent.value = null
-  }
-}
-
-// 컴포넌트 선택
-function selectItem(index: number): void {
-  selectedIndex.value = index
-  
-  if (isMobile.value) {
-    panelStore.openMobileMenu()
-    panelStore.openPanel('options')
-  }
-}
-
-// 컴포넌트 삭제
-function deleteItem(index: number): void {
-  const pageItems = getCurrentPageItems()
-  if (!pageItems) return
-  
-  pageItems.splice(index, 1)
-  if (selectedIndex.value === index) {
-    selectedIndex.value = null
-  } else if (selectedIndex.value !== null && selectedIndex.value > index) {
-    selectedIndex.value--
-  }
-}
-
-// 컴포넌트 복사
-function copyItem(index: number): void {
-  const pageItems = getCurrentPageItems()
-  if (!pageItems || !pageItems[index]) return
-  
-  const originalItem = pageItems[index]
-  const copiedItems = cloneCanvasItems([originalItem])
-  
-  if (!copiedItems || copiedItems.length === 0) return
-  
-  const copiedItem = copiedItems[0]
-  if (!copiedItem) return
-  
-  copiedItem.id = generateUid()
-  pageItems.splice(index + 1, 0, copiedItem)
-}
-
-// 그리드에 컴포넌트 드롭 처리
-function handleGridDrop(data: { gridElement: CanvasItem; cellIndex: number; event: DragEvent }): void {
-  const pageItems = getCurrentPageItems()
-  if (!draggedComponent.value || !pageItems) return
-  
-  const gridIndex = findIndexById(pageItems, data.gridElement.id)
-  if (gridIndex === -1) return
-  
-  const gridItem = pageItems[gridIndex]
-  if (!gridItem) return
-  
-  if (!gridItem.props.items) {
-    gridItem.props.items = createEmptyGridCells(gridItem.props.columns || 2)
-  }
-  
-  const newItem = createItemFromDraggedComponent()
-  if (!newItem) return
-  
-  if (!gridItem.props.items[data.cellIndex]) {
-    gridItem.props.items[data.cellIndex] = []
-  }
-  gridItem.props.items[data.cellIndex] = [newItem]
-  
-  draggedComponent.value = null
-}
-
-// 그룹에 컴포넌트 드롭 처리
-function handleGroupDrop(data: { groupElement: CanvasItem; event: DragEvent }): void {
-  const pageItems = getCurrentPageItems()
-  if (!draggedComponent.value || !pageItems) return
-  
-  const groupIndex = findIndexById(pageItems, data.groupElement.id)
-  if (groupIndex === -1) return
-  
-  const groupItem = pageItems[groupIndex]
-  if (!groupItem) return
-  
-  if (!groupItem.props.items) {
-    groupItem.props.items = []
-  }
-  
-  const newItem = createItemFromDraggedComponent()
-  if (!newItem) return
-  
-  groupItem.props.items = [newItem]
-  
-  draggedComponent.value = null
-}
 
 watch(isMobile, (mobile) => {
   if (!isInitialized.value) return

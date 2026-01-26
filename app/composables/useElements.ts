@@ -10,11 +10,13 @@ export const useElements = () => {
       icon: 'heroicons:h1',
       type: 'heading1',
       defaultProps: {
-        text: '큰 제목 텍스트',
+        data: {
+          text: '큰 제목 텍스트'
+        },
         styles: {
-          typography: {
-            fontSize: 32
-          }
+          width: '100%',
+          height: '48px',
+          fontSize: 32
         }
       }
     },
@@ -25,11 +27,13 @@ export const useElements = () => {
       icon: 'heroicons:h2',
       type: 'heading2',
       defaultProps: {
-        text: '중간 제목 텍스트',
+        data: {
+          text: '중간 제목 텍스트'
+        },
         styles: {
-          typography: {
-            fontSize: 24
-          }
+          width: '100%',
+          height: '36px',
+          fontSize: 24
         }
       }
     },
@@ -40,11 +44,13 @@ export const useElements = () => {
       icon: 'heroicons:h3',
       type: 'heading3',
       defaultProps: {
-        text: '작은 제목 텍스트',
+        data: {
+          text: '작은 제목 텍스트'
+        },
         styles: {
-          typography: {
-            fontSize: 18
-          }
+          width: '100%',
+          height: '28px',
+          fontSize: 18
         }
       }
     },
@@ -55,8 +61,11 @@ export const useElements = () => {
       icon: 'pi pi-arrows-v',
       type: 'spacer',
       defaultProps: {
-        height: '1rem',
-        styles: {}
+        data: {},
+        styles: {
+          width: '100%',
+          height: '16px'
+        }
       }
     },
     {
@@ -66,7 +75,11 @@ export const useElements = () => {
       icon: 'pi pi-minus',
       type: 'divider',
       defaultProps: {
-        styles: {}
+        data: {},
+        styles: {
+          width: '100%',
+          height: '1px'
+        }
       }
     },
     {
@@ -76,8 +89,13 @@ export const useElements = () => {
       icon: 'pi pi-image',
       type: 'image',
       defaultProps: {
-        alt: '이미지 설명',
-        styles: {}
+        data: {
+          alt: '이미지 설명'
+        },
+        styles: {
+          width: '100%',
+          height: '100px'
+        }
       }
     }
   ]
@@ -91,9 +109,14 @@ export const useElements = () => {
       icon: 'pi pi-user',
       type: 'inputText',
       defaultProps: {
-        label: '아이디 레이블',
-        placeholder: '입력하세요...',
-        styles: {}
+        data: {
+          label: '아이디 레이블',
+          placeholder: '입력하세요...'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -103,9 +126,14 @@ export const useElements = () => {
       icon: 'pi pi-lock',
       type: 'inputPassword',
       defaultProps: {
-        label: '비밀번호',
-        placeholder: '비밀번호를 입력하세요',
-        styles: {}
+        data: {
+          label: '비밀번호',
+          placeholder: '비밀번호를 입력하세요'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -115,9 +143,14 @@ export const useElements = () => {
       icon: 'pi pi-envelope',
       type: 'inputEmail',
       defaultProps: {
-        label: '이메일',
-        placeholder: 'example@email.com',
-        styles: {}
+        data: {
+          label: '이메일',
+          placeholder: 'example@email.com'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -127,9 +160,14 @@ export const useElements = () => {
       icon: 'pi pi-calendar',
       type: 'inputDate',
       defaultProps: {
-        label: '날짜',
-        placeholder: 'yy.mm.dd',
-        styles: {}
+        data: {
+          label: '날짜',
+          placeholder: 'yy.mm.dd'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -139,9 +177,14 @@ export const useElements = () => {
       icon: 'pi pi-clock',
       type: 'inputTime',
       defaultProps: {
-        label: '시간',
-        placeholder: 'hh:ss',
-        styles: {}
+        data: {
+          label: '시간',
+          placeholder: 'hh:ss'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     
@@ -152,9 +195,14 @@ export const useElements = () => {
       icon: 'pi pi-link',
       type: 'inputUrl',
       defaultProps: {
-        label: 'URL',
-        placeholder: 'https://example.com',
-        styles: {}
+        data: {
+          label: 'URL',
+          placeholder: 'https://example.com'
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     
@@ -165,10 +213,15 @@ export const useElements = () => {
       icon: 'pi pi-circle',
       type: 'radio',
       defaultProps: {
-        label: '라디오 레이블',
-        options: ['옵션 1', '옵션 2', '옵션 3'],
-        selected: '옵션 1',
-        styles: {}
+        data: {
+          label: '라디오 레이블',
+          options: ['옵션 1', '옵션 2', '옵션 3'],
+          selected: '옵션 1'
+        },
+        styles: {
+          width: '100%',
+          height: '20px'
+        }
       }
     },
     {
@@ -178,9 +231,15 @@ export const useElements = () => {
       icon: 'pi pi-align-justify',
       type: 'textarea',
       defaultProps: {
-        label: '텍스트 레이블',
-        content: '',
-        styles: {}
+        data: {
+          label: '텍스트 레이블',
+          content: ''
+        },
+        styles: {
+          width: '100%',
+          height: '120px',
+          fontSize: 14
+        }
       }
     },
     {
@@ -191,10 +250,15 @@ export const useElements = () => {
       ready: false,
       type: 'select',
       defaultProps: {
-        label: '선택',
-        placeholder: '선택하세요',
-        options: ['옵션 1', '옵션 2', '옵션 3'],
-        styles: {}
+        data: {
+          label: '선택',
+          placeholder: '선택하세요',
+          options: ['옵션 1', '옵션 2', '옵션 3']
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -205,9 +269,14 @@ export const useElements = () => {
       ready: false,
       type: 'checkbox',
       defaultProps: {
-        label: '체크박스 레이블',
-        checked: false,
-        styles: {}
+        data: {
+          label: '체크박스 레이블',
+          checked: false
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     },
     {
@@ -218,9 +287,14 @@ export const useElements = () => {
       ready: false,
       type: 'toggleSwitch',
       defaultProps: {
-        label: '토글 레이블',
-        checked: false,
-        styles: {}
+        data: {
+          label: '토글 레이블',
+          checked: false
+        },
+        styles: {
+          width: '100%',
+          height: '40px'
+        }
       }
     }
   ]
@@ -233,11 +307,17 @@ export const useElements = () => {
       icon: 'pi pi-stop',
       type: 'button',
       defaultProps: {
-        label: '버튼 레이블',
-        text: '버튼',
-        severity: 'primary',
-        outlined: false,
-        styles: {}
+        data: {
+          label: '버튼 레이블',
+          text: '버튼',
+          severity: 'primary',
+          outlined: false
+        },
+        styles: {
+          width: '100px',
+          height: '40px',
+          fontSize: 14
+        }
       }
     },
     {
@@ -247,9 +327,14 @@ export const useElements = () => {
       icon: 'pi pi-arrow-right-arrow-left',
       type: 'prevNext',
       defaultProps: {
-        prevText: '이전 페이지',
-        nextText: '다음 페이지',
-        styles: {}
+        data: {
+          prevText: '이전 페이지',
+          nextText: '다음 페이지'
+        },
+        styles: {
+          width: '100px',
+          height: '40px'
+        }
       }
     },
     {
@@ -260,8 +345,10 @@ export const useElements = () => {
       ready: false,
       type: 'group',
       defaultProps: {
-        title: '그룹 제목',
-        items: [],
+        data: {
+          title: '그룹 제목',
+          items: []
+        },
         styles: {}
       }
     },
@@ -273,8 +360,10 @@ export const useElements = () => {
       ready: false,
       type: 'table',
       defaultProps: {
-        columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
-        rows: [['데이터 1', '데이터 2', '데이터 3']],
+        data: {
+          columns: ['컬럼 1', '컬럼 2', '컬럼 3'],
+          rows: [['데이터 1', '데이터 2', '데이터 3']]
+        },
         styles: {}
       }
     },
@@ -286,9 +375,10 @@ export const useElements = () => {
       ready: false,
       type: 'grid',
       defaultProps: {
-        columns: 2,
-        gap: '1rem',
-        items: [[], []], // default - 2
+        data: {
+          columns: 2,
+          gap: '1rem'
+        },
         styles: {}
       }
     }
@@ -370,10 +460,10 @@ export const useElements = () => {
   const getComponentLabel = (item: CanvasItem): string => {
     const name = getComponentName(item.type)
     if (['heading1', 'heading2', 'heading3'].includes(item.type)) {
-      return item.props.text || name
+      return item.props.data?.text || name
     }
     if (['button', 'inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch'].includes(item.type)) {
-      return item.props.label || name
+      return item.props.data?.label || name
     }
     return name
   }

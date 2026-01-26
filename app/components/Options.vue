@@ -1,5 +1,5 @@
 <template>
-  <aside 
+  <div 
     class="h-full bg-surface-0 dark:bg-surface-800 border-l border-surface-200 dark:border-surface-700 flex flex-col shrink-0"
     :class="[
       !props.isResponsiveChange && 'transition-all duration-300',
@@ -179,7 +179,7 @@
                     </div>
                     <span
                       class="text-sm flex-1 truncate"
-                      @click="$emit('selectItem', index)"
+                      @click="handleSelectItem(index)"
                     >
                       {{ getComponentLabel(element) }}
                     </span>
@@ -191,7 +191,7 @@
                       rounded
                       size="small"
                       class="w-6 h-6 !p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        @click="$emit('copyItem', index)"
+                        @click="handleCopyItem(index)"
                     />
                     <Button
                       icon="pi pi-trash"
@@ -200,7 +200,7 @@
                       rounded
                       size="small"
                       class="w-6 h-6 !p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        @click="$emit('deleteItem', index)"
+                        @click="handleDeleteItem(index)"
                     />
                     </div>
                   </div>
@@ -228,13 +228,15 @@
       :selected-item="selectedItem"
       @close-options="$emit('closeOptions')"
     />
-  </aside>
+  </div>
 </template>
 
 <script lang="ts" setup>
+
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
-import draggable from 'vuedraggable'
 import type { Page, CanvasItem } from '~/types/component'
+import draggable from 'vuedraggable'
+import { usePanelStore } from '@/stores/panel'
 
 interface OptionsProps {
   isOpen: boolean
@@ -256,9 +258,7 @@ interface OptionsProps {
 interface OptionsEmits {
   (e: 'update:isOpen', value: boolean): void
   (e: 'update:canvasItems', items: CanvasItem[]): void
-  (e: 'selectItem', index: number): void
-  (e: 'copyItem', index: number): void
-  (e: 'deleteItem', index: number): void
+  (e: 'update:selectedIndex', index: number | null): void
   (e: 'savePage'): void
   (e: 'deletePage'): void
   (e: 'closeOptions'): void
@@ -272,7 +272,54 @@ const Draggable = draggable
 const props = defineProps<OptionsProps>()
 const emit = defineEmits<OptionsEmits>()
 
-const { getComponentIcon, getComponentLabel } = useElements()
+const panelStore = usePanelStore()
+const { getComponentIcon, getComponentLabel, generateUid } = useElements()
+const { isMobile: isMobileResponsive } = useResponsive()
+const { cloneCanvasItems } = useCanvas()
+
+// 컴포넌트 선택 로직 (내부에서 처리)
+const handleSelectItem = (index: number) => {
+  emit('update:selectedIndex', index)
+  
+  if (isMobileResponsive.value) {
+    panelStore.openMobileMenu()
+    panelStore.openPanel('options')
+  }
+}
+
+// 컴포넌트 복사 로직 (내부에서 처리)
+const handleCopyItem = (index: number) => {
+  if (!props.canvasItems || !props.canvasItems[index]) return
+  
+  const originalItem = props.canvasItems[index]
+  const copiedItems = cloneCanvasItems([originalItem])
+  
+  if (!copiedItems || copiedItems.length === 0) return
+  
+  const copiedItem = copiedItems[0]
+  if (!copiedItem) return
+  
+  copiedItem.id = generateUid()
+  const updatedItems = [...props.canvasItems]
+  updatedItems.splice(index + 1, 0, copiedItem)
+  emit('update:canvasItems', updatedItems)
+}
+
+// 컴포넌트 삭제 로직 (내부에서 처리)
+const handleDeleteItem = (index: number) => {
+  if (!props.canvasItems) return
+  
+  const updatedItems = [...props.canvasItems]
+  updatedItems.splice(index, 1)
+  emit('update:canvasItems', updatedItems)
+  
+  // 선택된 인덱스 업데이트
+  if (props.selectedIndex === index) {
+    emit('update:selectedIndex', null)
+  } else if (props.selectedIndex !== null && props.selectedIndex > index) {
+    emit('update:selectedIndex', props.selectedIndex - 1)
+  }
+}
 
 const renderHeadingIcon = (type: string) => {
   if (type === 'heading1') return H1Icon
@@ -404,7 +451,7 @@ const handleTreeNodeSelect = (event: any) => {
     : event.node.data.index
     
   if (index !== undefined) {
-    emit('selectItem', index)
+    handleSelectItem(index)
   }
 }
 

@@ -2,49 +2,54 @@
   <!-- Heading 1 -->
   <h1
     v-if="item.type === 'heading1'"
-    class="text-2xl font-bold text-surface-800 dark:text-surface-100 m-0"
+    class="font-bold text-surface-800 dark:text-surface-100 m-0"
+    :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
     {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h1>
   <!-- Heading 2 -->
   <h2
     v-if="item.type === 'heading2'"
-    class="text-xl font-semibold text-surface-800 dark:text-surface-100 m-0"
+    class="font-semibold text-surface-800 dark:text-surface-100 m-0"
+    :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
     {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h2>
   <!-- Heading 3 -->
   <h3
     v-if="item.type === 'heading3'"
-    class="text-lg font-semibold text-surface-800 dark:text-surface-100 m-0"
+    class="font-semibold text-surface-800 dark:text-surface-100 m-0"
+    :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
     {{ item.props.data?.text ?? item.props.text ?? '' }}
   </h3>
   <!-- Spacer -->
   <div
     v-if="item.type === 'spacer'"
-      :style="{ height: item.props.data?.height ?? item.props.height ?? '1rem' }"
+    :style="getElementStyle(item)"
   />
   <!-- Divider -->
-  <hr
+  <Divider
     v-if="item.type === 'divider'"
-    class="border-t border-surface-200 dark:border-surface-700 my-2"
+    class="divider-default"
+    :style="getElementStyle(item)"
   />
   <!-- Image -->
   <div
     v-if="item.type === 'image'"
     class="rounded-lg overflow-hidden"
+    :style="getElementStyle(item)"
   >
     <Image
       v-if="item.props.data?.src ?? item.props.src"
       :src="item.props.data?.src ?? item.props.src"
       :alt="item.props.data?.alt ?? item.props.alt ?? '이미지'"
       class="w-full"
-      preview
+      :preview="isPreviewMode"
     />
     <div
       v-else
-      class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-center text-surface-400 min-h-[200px]"
+      class="bg-surface-100 dark:bg-surface-800 p-6 rounded-lg flex items-center justify-center text-surface-400"
     >
       <div class="flex flex-col items-center gap-2">
         <i class="pi pi-image text-3xl" />
@@ -56,6 +61,8 @@
   <div
     v-if="item.type === 'textarea'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -64,15 +71,18 @@
       :key="`textarea-${item.id}`"
       :model-value="item.props.data?.content ?? item.props.content ?? ''"
       :rows="4"
-      class="w-full"
-      style="min-height: 6rem;"
-      readonly
+      placeholder="설명 내용을 입력하세요."
+      :style="{ minHeight: '6rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
+      :readonly="!isPreviewMode"
+      :class="{ 'edit-mode': !isPreviewMode }"
     />
   </div>
   <!-- input(text) -->
   <div
     v-if="item.type === 'inputText'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -82,14 +92,17 @@
       type="text"
       :model-value="''"
       :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '입력하세요...'"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(password) -->
   <div
     v-if="item.type === 'inputPassword'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -98,15 +111,18 @@
       :key="`input-password-${item.id}`"
       type="password"
       :model-value="''"
-      :placeholder="item.props.placeholder || '비밀번호를 입력하세요'"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '비밀번호를 입력하세요'"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(email) -->
   <div
     v-if="item.type === 'inputEmail'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -115,15 +131,18 @@
       :key="`input-email-${item.id}`"
       type="email"
       :model-value="''"
-      :placeholder="item.props.placeholder || 'example@email.com'"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? 'example@email.com'"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(date) -->
   <div
     v-if="item.type === 'inputDate'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -131,16 +150,19 @@
     <DatePicker
       :key="`input-date-${item.id}`"
       :model-value="null"
-      :placeholder="item.props.placeholder || '날짜를 선택하세요'"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '날짜를 선택하세요'"
       dateFormat="yy.mm.dd"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(time) -->
   <div
     v-if="item.type === 'inputTime'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -148,34 +170,40 @@
     <DatePicker
       :key="`input-time-${item.id}`"
       :model-value="null"
-      :placeholder="item.props.placeholder || '시간을 선택하세요'"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '시간을 선택하세요'"
       timeOnly
       hourFormat="24"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(select) -->
   <div
     v-if="item.type === 'select'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
     </label>
-    <Dropdown
+    <Select
       :key="`select-${item.id}`"
       :model-value="null"
       :options="item.props.data?.options ?? item.props.options ?? []"
-      :placeholder="item.props.placeholder || '선택하세요'"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '선택하세요'"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(url) -->
   <div
     v-if="item.type === 'inputUrl'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
@@ -184,24 +212,29 @@
       :key="`input-url-${item.id}`"
       type="url"
       :model-value="''"
-      :placeholder="item.props.placeholder || 'https://example.com'"
-      class="w-full"
-      style="min-height: 2.5rem;"
+      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? 'https://example.com'"
+      :readonly="!isPreviewMode"
+      :class="[{ 'edit-mode': !isPreviewMode }]"
+      :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
     />
   </div>
   <!-- input(checkbox) -->
   <div
     v-if="item.type === 'checkbox'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
     </label>
-    <div class="flex items-center gap-2" style="min-height: 2.5rem;">
+    <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }">
       <Checkbox
         :key="`checkbox-${item.id}`"
         :model-value="item.props.data?.checked ?? item.props.checked ?? false"
         :binary="true"
+        :readonly="!isPreviewMode"
+        :class="{ 'edit-mode': !isPreviewMode }"
       />
       <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.props.data?.label ?? item.props.label }}</span>
     </div>
@@ -210,20 +243,25 @@
   <div
     v-if="item.type === 'radio'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
     </label>
-    <div class="flex flex-col gap-2" style="min-height: 2.5rem;">
+    <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item) }">
       <div
-        v-for="(option, optIndex) in (item.props.options || [])"
+        v-for="(option, optIndex) in (item.props.data?.options ?? item.props.options ?? [])"
         :key="`radio-${item.id}-${optIndex}`"
         class="flex items-center gap-2"
+        :style="getFormInputStyle(item)"
       >
         <RadioButton
           :model-value="item.props.data?.selected ?? item.props.selected ?? (item.props.data?.options ?? item.props.options)?.[0]"
           :value="option"
           :name="`radio-${item.id}`"
+          :readonly="!isPreviewMode"
+          :class="{ 'edit-mode': !isPreviewMode }"
         />
         <label class="text-sm text-surface-700 dark:text-surface-200 cursor-pointer">{{ option }}</label>
       </div>
@@ -233,14 +271,18 @@
   <div
     v-if="item.type === 'toggleSwitch'"
     class="flex flex-col gap-1 form-field-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getElementStyle(item)"
   >
     <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
       {{ item.props.data?.label ?? item.props.label }}
     </label>
-    <div class="flex items-center gap-2" style="min-height: 2.5rem;">
+    <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }">
       <ToggleSwitch
         :key="`toggle-${item.id}`"
         :model-value="item.props.data?.checked ?? item.props.checked ?? false"
+        :readonly="!isPreviewMode"
+        :class="{ 'edit-mode': !isPreviewMode }"
       />
       <span class="text-sm text-surface-700 dark:text-surface-200">{{ (item.props.data?.checked ?? item.props.checked) ? '켜짐' : '꺼짐' }}</span>
     </div>
@@ -248,45 +290,268 @@
   <!-- button(default) -->
   <div
     v-if="item.type === 'button'"
-    class="flex items-center"
+    class="flex items-center button-wrapper"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getButtonWrapperStyle(item)"
   >
     <Button
       :key="`button-${item.id}`"
       :label="item.props.data?.text ?? item.props.text ?? '버튼'"
       severity="primary"
       :outlined="item.props.data?.outlined ?? item.props.outlined ?? false"
-      class="!w-auto"
+      :readonly="!isPreviewMode"
+      :class="['button-element', { 'edit-mode': !isPreviewMode }]"
+      :style="{ ...getTypographyStyle(item), ...getButtonStyle(item) }"
     />
   </div>
   <!-- button(prevNext) -->
   <div
     v-if="item.type === 'prevNext'"
     class="flex items-center justify-between gap-4"
+    :class="{ 'edit-mode': !isPreviewMode }"
+    :style="getPrevNextWrapperStyle(item)"
   >
     <Button
       :label="item.props.data?.prevText ?? item.props.prevText"
       severity="secondary"
       outlined
-      class="!w-auto"
+      :readonly="!isPreviewMode"
+      :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+      :style="{ ...getTypographyStyle(item), ...getPrevNextButtonStyle(item) }"
     />
     <Button
       :label="item.props.data?.nextText ?? item.props.nextText"
       severity="primary"
-      class="!w-auto"
+      :readonly="!isPreviewMode"
+      :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
+      :style="{ ...getTypographyStyle(item), ...getPrevNextButtonStyle(item) }"
     />
+  </div>
+  <!-- 그리드 섹션 -->
+  <div
+    v-if="item.type === 'grid'"
+    class="grid"
+    :style="{ gridTemplateColumns: `repeat(${item.props.data?.columns ?? item.props.columns ?? 2}, minmax(0, 1fr))`, gap: item.props.data?.gap ?? item.props.gap ?? '1rem', ...getElementStyle(item) }"
+  >
+    <div
+      v-for="(cellItems, cellIndex) in (item.props.items && item.props.items.length > 0 ? item.props.items : Array(item.props.data?.columns ?? item.props.columns ?? 2).fill([]))"
+      :key="cellIndex"
+      class="min-h-[60px] border border-dashed border-surface-300 dark:border-surface-600 rounded-md bg-surface-50 dark:bg-surface-900/30 p-2 transition-all"
+      :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGrid === `${item.id}-${cellIndex}` }"
+      @dragover.prevent="!isPreviewMode && onGridDragOver && onGridDragOver($event, item, Number(cellIndex))"
+      @dragleave="!isPreviewMode && onGridDragLeave && onGridDragLeave(item, Number(cellIndex))"
+      @drop="!isPreviewMode && onGridDrop && onGridDrop($event, item, Number(cellIndex))"
+    >
+      <div v-if="!cellItems || cellItems.length === 0" class="h-full flex items-center justify-center text-xs text-surface-400">
+        드래그하여 추가
+      </div>
+      <div v-else>
+        <!-- 그리드 셀 안의 컴포넌트 렌더링 (하나만) -->
+        <ComponentRenderer
+          v-if="cellItems[0]"
+          :key="cellItems[0].id"
+          :item="cellItems[0]"
+          :is-preview-mode="isPreviewMode"
+          :get-element-style="getElementStyle"
+          :get-typography-style="getTypographyStyle"
+          :get-form-input-style="getFormInputStyle"
+          :get-button-style="getButtonStyle"
+          :get-button-wrapper-style="getButtonWrapperStyle"
+          :get-prev-next-button-style="getPrevNextButtonStyle"
+          :get-prev-next-wrapper-style="getPrevNextWrapperStyle"
+          :is-dragging-over-grid="isDraggingOverGrid"
+          :is-dragging-over-group="isDraggingOverGroup"
+          :on-grid-drag-over="onGridDragOver"
+          :on-grid-drag-leave="onGridDragLeave"
+          :on-grid-drop="onGridDrop"
+          :on-group-drag-over="onGroupDragOver"
+          :on-group-drag-leave="onGroupDragLeave"
+          :on-group-drop="onGroupDrop"
+          :editing-table="editingTable"
+          :on-table-header-blur="onTableHeaderBlur"
+          :on-table-cell-blur="onTableCellBlur"
+          :on-add-table-row="onAddTableRow"
+          :on-update-canvas-items="onUpdateCanvasItems"
+        />
+      </div>
+    </div>
+  </div>
+  <!-- 그룹 (카드 형식, 레이블 없음) -->
+  <div
+    v-if="item.type === 'group'"
+    class="border border-dashed border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900/30 overflow-hidden transition-all"
+    :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGroup === item.id }"
+    :style="getElementStyle(item)"
+    @dragover.prevent="!isPreviewMode && onGroupDragOver && onGroupDragOver($event, item)"
+    @dragleave="!isPreviewMode && onGroupDragLeave && onGroupDragLeave(item)"
+    @drop="!isPreviewMode && onGroupDrop && onGroupDrop($event, item)"
+  >
+    <div class="p-4 h-full">
+      <div v-if="!item.props.items || item.props.items.length === 0" class="h-full flex items-center justify-center text-xs text-surface-400">
+        드래그하여 추가
+      </div>
+      <div v-else>
+        <!-- 그룹 안의 컴포넌트 렌더링 (하나만) -->
+        <ComponentRenderer
+          v-if="item.props.items[0]"
+          :item="item.props.items[0]"
+          :is-preview-mode="isPreviewMode"
+          :get-element-style="getElementStyle"
+          :get-typography-style="getTypographyStyle"
+          :get-form-input-style="getFormInputStyle"
+          :get-button-style="getButtonStyle"
+          :get-button-wrapper-style="getButtonWrapperStyle"
+          :get-prev-next-button-style="getPrevNextButtonStyle"
+          :get-prev-next-wrapper-style="getPrevNextWrapperStyle"
+          :is-dragging-over-grid="isDraggingOverGrid"
+          :is-dragging-over-group="isDraggingOverGroup"
+          :on-grid-drag-over="onGridDragOver"
+          :on-grid-drag-leave="onGridDragLeave"
+          :on-grid-drop="onGridDrop"
+          :on-group-drag-over="onGroupDragOver"
+          :on-group-drag-leave="onGroupDragLeave"
+          :on-group-drop="onGroupDrop"
+          :editing-table="editingTable"
+          :on-table-header-blur="onTableHeaderBlur"
+          :on-table-cell-blur="onTableCellBlur"
+          :on-add-table-row="onAddTableRow"
+          :on-update-canvas-items="onUpdateCanvasItems"
+        />
+      </div>
+    </div>
+  </div>
+  <!-- 테이블 -->
+  <div
+    v-if="item.type === 'table'"
+    class="overflow-x-auto rounded-md border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900/20"
+    :style="getElementStyle(item)"
+  >
+    <table class="min-w-full text-left text-xs">
+      <thead class="bg-surface-50 dark:bg-surface-800/60">
+        <tr>
+          <th
+            v-for="(col, i) in (item.props.data?.columns ?? item.props.columns ?? [])"
+            :key="i"
+            class="px-3 py-2 font-semibold text-surface-600 dark:text-surface-200 border-b border-surface-200 dark:border-surface-700"
+          >
+            <InputText
+              v-if="!isPreviewMode && editingTable && editingTable.value === `${item.id}-header-${i}`"
+              :model-value="col"
+              @blur="onTableHeaderBlur && onTableHeaderBlur(item, Number(i), $event)"
+              @keyup.enter="onTableHeaderBlur && onTableHeaderBlur(item, Number(i), $event)"
+              class="w-full text-xs font-semibold bg-transparent border-none p-0 h-auto"
+              @click.stop
+            />
+            <span
+              v-else
+              class="cursor-pointer"
+              :class="{ 'hover:text-primary-500': !isPreviewMode }"
+              @click.stop="!isPreviewMode && editingTable && (editingTable.value = `${item.id}-header-${i}`)"
+            >
+              {{ col }}
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(row, rowIndex) in (item.props.data?.rows ?? item.props.rows ?? [['데이터 1', '데이터 2', '데이터 3']])"
+          :key="rowIndex"
+        >
+          <td
+            v-for="(cell, cellIndex) in row"
+            :key="cellIndex"
+            class="px-3 py-2 text-surface-500 dark:text-surface-400 border-b border-surface-100 dark:border-surface-800"
+          >
+            <InputText
+              v-if="!isPreviewMode && editingTable && editingTable.value === `${item.id}-cell-${rowIndex}-${cellIndex}`"
+              :model-value="cell"
+              @blur="onTableCellBlur && onTableCellBlur(item, Number(rowIndex), Number(cellIndex), $event)"
+              @keyup.enter="onTableCellBlur && onTableCellBlur(item, Number(rowIndex), Number(cellIndex), $event)"
+              class="w-full text-xs bg-transparent border-none p-0 h-auto"
+              @click.stop
+            />
+            <span
+              v-else
+              class="cursor-pointer"
+              :class="{ 'hover:text-primary-500': !isPreviewMode }"
+              @click.stop="!isPreviewMode && editingTable && (editingTable.value = `${item.id}-cell-${rowIndex}-${cellIndex}`)"
+            >
+              {{ cell }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div
+      v-if="!isPreviewMode"
+      class="px-3 py-1 border-t border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 flex items-center justify-center"
+    >
+      <button
+        class="flex items-center gap-1 text-xs text-surface-500 dark:text-surface-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+        @click.stop="onAddTableRow && onAddTableRow(item)"
+      >
+        <i class="pi pi-plus text-xs" />
+        <span>행 추가</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-interface CanvasItem {
-  id: string
-  type: string
-  props: Record<string, any>
-  items?: CanvasItem[]
+import type { CanvasItem } from '~/types/component'
+import type { Ref } from 'vue'
+import Divider from 'primevue/divider'
+
+interface ComponentRendererProps {
+  item: CanvasItem
+  isPreviewMode?: boolean
+  getElementStyle?: (element: CanvasItem) => Record<string, string>
+  getTypographyStyle?: (element: CanvasItem) => Record<string, string>
+  getFormInputStyle?: (element: CanvasItem) => Record<string, string>
+  getButtonStyle?: (element: CanvasItem) => Record<string, string>
+  getButtonWrapperStyle?: (element: CanvasItem) => Record<string, string>
+  getPrevNextButtonStyle?: (element: CanvasItem) => Record<string, string>
+  getPrevNextWrapperStyle?: (element: CanvasItem) => Record<string, string>
+  // 그리드/그룹 드래그 앤 드롭
+  isDraggingOverGrid?: string | null
+  isDraggingOverGroup?: string | null
+  onGridDragOver?: (event: DragEvent, gridElement: CanvasItem, cellIndex: number) => void
+  onGridDragLeave?: (gridElement: CanvasItem, cellIndex: number) => void
+  onGridDrop?: (event: DragEvent, gridElement: CanvasItem, cellIndex: number) => void
+  onGroupDragOver?: (event: DragEvent, groupElement: CanvasItem) => void
+  onGroupDragLeave?: (groupElement: CanvasItem) => void
+  onGroupDrop?: (event: DragEvent, groupElement: CanvasItem) => void
+  // 테이블 편집
+  editingTable?: Ref<string | null>
+  onTableHeaderBlur?: (element: CanvasItem, colIndex: number, event: Event) => void
+  onTableCellBlur?: (element: CanvasItem, rowIndex: number, cellIndex: number, event: Event) => void
+  onAddTableRow?: (element: CanvasItem) => void
+  onUpdateCanvasItems?: () => void
 }
 
-defineProps<{
-  item: CanvasItem
-}>()
+const props = withDefaults(defineProps<ComponentRendererProps>(), {
+  isPreviewMode: true,
+  getElementStyle: () => ({}),
+  getTypographyStyle: () => ({}),
+  getFormInputStyle: () => ({}),
+  getButtonStyle: () => ({}),
+  getButtonWrapperStyle: () => ({}),
+  getPrevNextButtonStyle: () => ({}),
+  getPrevNextWrapperStyle: () => ({}),
+  isDraggingOverGrid: null,
+  isDraggingOverGroup: null,
+  onGridDragOver: undefined,
+  onGridDragLeave: undefined,
+  onGridDrop: undefined,
+  onGroupDragOver: undefined,
+  onGroupDragLeave: undefined,
+  onGroupDrop: undefined,
+  editingTable: undefined,
+  onTableHeaderBlur: undefined,
+  onTableCellBlur: undefined,
+  onAddTableRow: undefined,
+  onUpdateCanvasItems: undefined
+})
 </script>
 

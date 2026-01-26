@@ -14,10 +14,10 @@ interface PasswordStrength {
   label: string
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // 이메일 유효성 검증
 export const isValidEmail = (email: string): boolean => {
-  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return EMAIL_REGEX.test(email)
 }
 

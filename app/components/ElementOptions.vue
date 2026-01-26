@@ -334,32 +334,24 @@
 </template>
 
 <script lang="ts" setup>
+
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
 import { parseSizeValue, formatSizeValue } from '~/utils/string'
+import type { Page, CanvasItem } from '~/types/component'
 
-interface Page {
-  id: string
-  name: string
-  description?: string
-}
-
-interface CanvasItem {
-  id: string
-  type: string
-  props: Record<string, any>
-  items?: CanvasItem[]
-}
-
-const props = defineProps<{
+interface ElementOptionsProps {
   currentPage: Page | null
   selectedIndex: number | null
   selectedItem: CanvasItem | null
-}>()
+}
 
-const emit = defineEmits<{
-  closeOptions: []
-  update: []
-}>()
+interface ElementOptionsEmits {
+  (e: 'closeOptions'): void
+  (e: 'update'): void
+}
+
+const props = defineProps<ElementOptionsProps>()
+const emit = defineEmits<ElementOptionsEmits>()
 
 const { getComponentName, getComponentIcon } = useElements()
 const { getOptionsForType, getSectionReady } = useElementOptions()

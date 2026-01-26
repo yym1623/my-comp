@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold text-color">Login</h1>
     </div>
 
-    <form @submit.prevent="handleLogin" class="space-y-6">
+    <Form @submit="handleLogin" class="space-y-6">
       <!-- 이메일 -->
       <div class="flex flex-col gap-2">
         <IconField>
@@ -118,7 +118,7 @@
           </template>
         </Button>
       </div>
-    </form>
+    </Form>
 
     <Toast />
   </div>
@@ -238,14 +238,11 @@ const handleGuestLogin = async (): Promise<void> => {
     await navigateTo({ path: '/', query: { status: 'guest' } })
   } catch (error) {
     console.error('Guest login error:', error)
-    // 에러가 있어도 홈페이지로 이동 (게스트는 세션 없이도 가능)
-    await navigateTo({ path: '/', query: { status: 'guest' } })
   } finally {
     socialLoading.value = null
   }
 }
 
-// 초기화: 로그아웃 상태 토스트 표시
 onMounted(() => {
   const status = route.query.status as string | undefined
   if (!status) return
