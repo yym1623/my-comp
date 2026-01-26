@@ -73,7 +73,9 @@
             <Elements
               :is-preview-mode="isPreviewMode"
               variant="mobile"
-              @add="$emit('addComponent', $event)"
+              :current-page="currentPage"
+              :canvas-items="canvasItems"
+              @update:canvas-items="$emit('update:canvasItems', $event)"
               @close="$emit('closePanel')"
             />
           </div>
@@ -90,7 +92,7 @@
               :is-preview-mode="isPreviewMode"
               :is-loading="isPagesLoading"
               @update:pages="$emit('update:pages', $event)"
-              @select="$emit('selectPage', $event)"
+              @update:current-page="(page) => page && $emit('selectPage', page)"
               @create="$emit('createPage')"
               @close-panel="$emit('closePanel')"
             />

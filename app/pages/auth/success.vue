@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+  
 useSeoMeta({
   title: 'MyComp - 로그인 성공',
   description: '이메일 확인이 완료되었습니다. 로그인해주세요.',

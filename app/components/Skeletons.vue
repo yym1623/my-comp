@@ -91,8 +91,6 @@
 </template>
 
 <script lang="ts" setup>
-import Skeleton from 'primevue/skeleton'
-
 type SkeletonType = 'preview' | 'options' | 'pages' | 'searchPages' | 'user'
 
 interface Props {
@@ -103,12 +101,14 @@ const props = defineProps<Props>()
 
 const pagesSkeletonContainer = ref<HTMLElement | null>(null)
 const skeletonCount = ref<number>(10) // 기본값
-// ResizeObserver로 화면 크기 변경 감지
+
+  // ResizeObserver로 화면 크기 변경 감지
 let resizeObserver: ResizeObserver | null = null
+
 // 각 페이지 아이템의 대략적인 높이 (p-3 + gap-2 + 아이콘 높이 등)
 const ITEM_HEIGHT = 88
 
-// 스켈레톤 개수 계산 함수
+// 동적 스켈레톤 개수 계산 함수 (pages & searchPages)
 const calculateSkeletonCount = () => {
   if (props.type !== 'pages' && props.type !== 'searchPages') return
   

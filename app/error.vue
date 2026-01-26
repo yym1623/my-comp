@@ -34,8 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import Button from 'primevue/button'
-
+  
 const props = defineProps<{
   error: {
     statusCode?: number

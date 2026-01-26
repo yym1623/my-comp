@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+  
 useSeoMeta({
   title: 'MyComp - 이메일 확인',
   description: '이메일 확인을 완료해주세요. 이메일을 확인하고 링크를 클릭하여 계정을 활성화해주세요.',

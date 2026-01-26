@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 import { isValidEmail, validatePasswordStrength, calculatePasswordStrength } from '~/utils/validation'
+
 useSeoMeta({
   title: 'MyComp - 회원가입',
   description: '회원가입하여 컴포넌트 빌더를 시작하세요. 무료로 시작할 수 있습니다.',

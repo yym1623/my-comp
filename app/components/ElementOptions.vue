@@ -131,39 +131,39 @@
                     <label class="figma-label">W</label>
                     <InputGroup class="w-full input-group-width-height">
                       <InputNumber
-                        :model-value="getFieldValue('layout.width')"
+                        :model-value="getWidthValue()"
                         :min="0"
-                        :disabled="getFieldDisabled('layout.width') || props.selectedItem?.type === 'spacer'"
+                        :disabled="getFieldDisabled('styles.width') || props.selectedItem?.type === 'spacer'"
                         class="figma-input w-[40%]"
-                        @update:model-value="updateFieldValue('layout.width', $event)"
+                        @update:model-value="handleWidthChange($event)"
                       />
-                        <Select
-                          :model-value="getFieldValue('layout.widthUnit') || 'px'"
-                          :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
-                          optionLabel="label"
-                          optionValue="value"
-                          :disabled="getFieldDisabled('layout.width') || props.selectedItem?.type === 'spacer'"
-                          class="figma-input w-[60%]"
-                          @update:model-value="handleWidthUnitChange($event)"
-                        />
+                      <Select
+                        :model-value="getWidthUnit()"
+                        :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
+                        optionLabel="label"
+                        optionValue="value"
+                        :disabled="getFieldDisabled('styles.width') || props.selectedItem?.type === 'spacer'"
+                        class="figma-input w-[60%]"
+                        @update:model-value="handleWidthUnitChange($event)"
+                      />
                     </InputGroup>
                   </div>
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">H</label>
                     <InputGroup class="w-full input-group-width-height">
                       <InputNumber
-                        :model-value="getFieldValue('layout.height')"
+                        :model-value="getHeightValue()"
                         :min="0"
-                        :disabled="getFieldDisabled('layout.height')"
+                        :disabled="getFieldDisabled('styles.height')"
                         class="figma-input w-[40%]"
-                        @update:model-value="updateFieldValue('layout.height', $event)"
+                        @update:model-value="handleHeightChange($event)"
                       />
                       <Select
-                        :model-value="getFieldValue('layout.heightUnit') || 'px'"
+                        :model-value="getHeightUnit()"
                         :options="[{ label: 'px', value: 'px' }, { label: '%', value: '%' }]"
                         optionLabel="label"
                         optionValue="value"
-                        :disabled="getFieldDisabled('layout.height')"
+                        :disabled="getFieldDisabled('styles.height')"
                         class="figma-input w-[60%]"
                         @update:model-value="handleHeightUnitChange($event)"
                       />
@@ -253,12 +253,12 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Size</label>
                     <InputNumber
-                      :model-value="getFieldValue('typography.fontSize')"
+                      :model-value="getFieldValue('styles.fontSize')"
                       :min="8"
                       :max="72"
-                      :disabled="getFieldDisabled('typography.fontSize')"
+                      :disabled="getFieldDisabled('styles.fontSize')"
                       class="figma-input w-full"
-                      @update:model-value="updateFieldValue('typography.fontSize', $event)"
+                      @update:model-value="updateFieldValue('styles.fontSize', $event)"
                     />
                   </div>
                   <div class="space-y-0.5 min-w-0">
@@ -266,27 +266,27 @@
                     <ButtonGroup class="w-full min-w-0">
                       <Button
                         icon="pi pi-align-left"
-                        :severity="(getFieldValue('typography.textAlign') || 'left') === 'left' ? 'primary' : 'secondary'"
+                        :severity="(getFieldValue('styles.textAlign') || 'left') === 'left' ? 'primary' : 'secondary'"
                         text
                         size="small"
                         class="flex-1"
-                        @click="updateFieldValue('typography.textAlign', 'left')"
+                        @click="updateFieldValue('styles.textAlign', 'left')"
                       />
                       <Button
                         icon="pi pi-align-center"
-                        :severity="(getFieldValue('typography.textAlign') || 'left') === 'center' ? 'primary' : 'secondary'"
+                        :severity="(getFieldValue('styles.textAlign') || 'left') === 'center' ? 'primary' : 'secondary'"
                         text
                         size="small"
                         class="flex-1"
-                        @click="updateFieldValue('typography.textAlign', 'center')"
+                        @click="updateFieldValue('styles.textAlign', 'center')"
                       />
                       <Button
                         icon="pi pi-align-right"
-                        :severity="(getFieldValue('typography.textAlign') || 'left') === 'right' ? 'primary' : 'secondary'"
+                        :severity="(getFieldValue('styles.textAlign') || 'left') === 'right' ? 'primary' : 'secondary'"
                         text
                         size="small"
                         class="flex-1"
-                        @click="updateFieldValue('typography.textAlign', 'right')"
+                        @click="updateFieldValue('styles.textAlign', 'right')"
                       />
                     </ButtonGroup>
                   </div>
@@ -296,25 +296,25 @@
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Family</label>
                     <Select
-                      :model-value="getFieldValue('typography.fontFamily')"
+                      :model-value="getFieldValue('styles.fontFamily')"
                       :options="fontFamilyOptions"
                       optionLabel="label"
                       optionValue="value"
                       :disabled="getFieldDisabled('typography.fontFamily')"
                       class="figma-input w-full"
-                      @update:model-value="updateFieldValue('typography.fontFamily', $event)"
+                      @update:model-value="updateFieldValue('styles.fontFamily', $event)"
                     />
                   </div>
                   <div class="space-y-0.5 min-w-0">
                     <label class="figma-label">Font Weight</label>
                     <Select
-                      :model-value="getFieldValue('typography.fontWeight')"
+                      :model-value="getFieldValue('styles.fontWeight')"
                       :options="fontWeightOptions"
                       optionLabel="label"
                       optionValue="value"
                       :disabled="getFieldDisabled('typography.fontWeight')"
                       class="figma-input w-full"
-                      @update:model-value="updateFieldValue('typography.fontWeight', $event)"
+                      @update:model-value="updateFieldValue('styles.fontWeight', $event)"
                     />
                   </div>
                 </div>
@@ -334,37 +334,33 @@
 </template>
 
 <script lang="ts" setup>
+
 import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
+import { parseSizeValue, formatSizeValue } from '~/utils/string'
+import type { Page, CanvasItem } from '~/types/component'
 
-interface Page {
-  id: string
-  name: string
-  description?: string
-}
-
-interface CanvasItem {
-  id: string
-  type: string
-  props: Record<string, any>
-  items?: CanvasItem[]
-}
-
-const props = defineProps<{
+interface ElementOptionsProps {
   currentPage: Page | null
   selectedIndex: number | null
   selectedItem: CanvasItem | null
-}>()
+}
 
-const emit = defineEmits<{
-  closeOptions: []
-  update: []
-}>()
+interface ElementOptionsEmits {
+  (e: 'closeOptions'): void
+  (e: 'update'): void
+}
+
+const props = defineProps<ElementOptionsProps>()
+const emit = defineEmits<ElementOptionsEmits>()
 
 const { getComponentName, getComponentIcon } = useElements()
 const { getOptionsForType, getSectionReady } = useElementOptions()
 
-// 섹션별 ready 상태
-const sectionReady = computed(() => getSectionReady(props.selectedItem?.type))
+// 섹션별 ready 상태 (스타일 객체 기준으로 Typography 판단)
+const sectionReady = computed(() => {
+  const styles = props.selectedItem?.props?.styles
+  return getSectionReady(props.selectedItem?.type, styles)
+})
 
 // 옵션 가져오기
 const options = computed(() => getOptionsForType(props.selectedItem?.type || ''))
@@ -415,6 +411,13 @@ const getDefaultValue = (key: string) => {
 const getFromStyles = (objKey: string, propKey: string) => {
   const styles = (props.selectedItem as any).props.styles
   if (!styles) return undefined
+  
+  // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
+  if (objKey === 'styles' && propKey) {
+    return styles[propKey]
+  }
+  
+  // 기존 구조 지원 (예: styles.position.x, styles.layout.width)
   const obj = styles[objKey]
   if (!obj || typeof obj !== 'object') return undefined
   return obj[propKey]
@@ -471,13 +474,20 @@ const ensureStylesObject = (objKey: string) => {
   if (!rootProps.styles) {
     rootProps.styles = {}
   }
+  
+  // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
+  if (objKey === 'styles') {
+    return rootProps.styles
+  }
+  
+  // 기존 구조 지원 (예: styles.position, styles.layout)
   if (!rootProps.styles[objKey]) {
     rootProps.styles[objKey] = {}
   }
   return rootProps.styles[objKey]
 }
 
-// 필드 값 업데이트 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
+// 필드 값 업데이트 (객체 경로 지원: 'position.x', 'styles.width' 등, styles 객체 사용)
 const updateFieldValue = (key: string, value: any) => {
   if (!props.selectedItem) return
 
@@ -487,11 +497,24 @@ const updateFieldValue = (key: string, value: any) => {
   if (parsed) {
     const { objKey, propKey } = parsed
 
-    const target = ensureStylesObject(objKey)
-    if (typeof value === 'number') {
-      target[propKey] = value
+    // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
+    if (objKey === 'styles') {
+      if (!rootProps.styles) {
+        rootProps.styles = {}
+      }
+      if (typeof value === 'number') {
+        rootProps.styles[propKey] = value
+      } else {
+        rootProps.styles[propKey] = value ?? ''
+      }
     } else {
-      target[propKey] = value ?? ''
+      // 기존 구조 지원 (예: position.x, layout.width)
+      const target = ensureStylesObject(objKey)
+      if (typeof value === 'number') {
+        target[propKey] = value
+      } else {
+        target[propKey] = value ?? ''
+      }
     }
   } else {
     // 일반 필드 처리 (styles 객체가 아닌 경우)
@@ -506,28 +529,98 @@ const updateFieldValue = (key: string, value: any) => {
   emit('update')
 }
 
-const handleUnitChange = (sizeKey: string, unitKey: string, newUnit: string) => {
-  if (!props.selectedItem) return
+// width 값 가져오기 (숫자만)
+const getWidthValue = (): number | undefined => {
+  const width = (props.selectedItem as any)?.props?.styles?.width
+  if (!width) return undefined
+  const parsed = parseSizeValue(width)
+  return parsed?.value
+}
 
-  const currentSize = getFieldValue(sizeKey)
-  const currentUnit = getFieldValue(unitKey) || 'px'
+// width 단위 가져오기
+const getWidthUnit = (): string => {
+  const width = (props.selectedItem as any)?.props?.styles?.width
+  if (!width) return 'px'
+  const parsed = parseSizeValue(width)
+  return parsed?.unit || 'px'
+}
 
-  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
-  if (newUnit === '%' && currentUnit !== '%' && currentSize && currentSize > 100) {
-    updateFieldValue(sizeKey, 100)
+// height 값 가져오기 (숫자만)
+const getHeightValue = (): number | undefined => {
+  const height = (props.selectedItem as any)?.props?.styles?.height
+  if (!height) return undefined
+  const parsed = parseSizeValue(height)
+  return parsed?.value
+}
+
+// height 단위 가져오기
+const getHeightUnit = (): string => {
+  const height = (props.selectedItem as any)?.props?.styles?.height
+  if (!height) return 'px'
+  const parsed = parseSizeValue(height)
+  return parsed?.unit || 'px'
+}
+
+// width 값 변경 핸들러
+const handleWidthChange = (value: number | null) => {
+  if (!props.selectedItem || value === null) return
+  const rootProps = (props.selectedItem as any).props
+  if (!rootProps.styles) {
+    rootProps.styles = {}
   }
-
-  updateFieldValue(unitKey, newUnit)
+  const currentUnit = getWidthUnit()
+  rootProps.styles.width = formatSizeValue(value, currentUnit)
+  emit('update')
 }
 
-// widthUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
+// width 단위 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleWidthUnitChange = (newUnit: string) => {
-  handleUnitChange('layout.width', 'layout.widthUnit', newUnit)
+  if (!props.selectedItem) return
+  const rootProps = (props.selectedItem as any).props
+  if (!rootProps.styles) {
+    rootProps.styles = {}
+  }
+  const currentValue = getWidthValue() || 0
+  let finalValue = currentValue
+  
+  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
+  if (newUnit === '%' && currentValue > 100) {
+    finalValue = 100
+  }
+  
+  rootProps.styles.width = formatSizeValue(finalValue, newUnit)
+  emit('update')
 }
 
-// heightUnit 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
+// height 값 변경 핸들러
+const handleHeightChange = (value: number | null) => {
+  if (!props.selectedItem || value === null) return
+  const rootProps = (props.selectedItem as any).props
+  if (!rootProps.styles) {
+    rootProps.styles = {}
+  }
+  const currentUnit = getHeightUnit()
+  rootProps.styles.height = formatSizeValue(value, currentUnit)
+  emit('update')
+}
+
+// height 단위 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleHeightUnitChange = (newUnit: string) => {
-  handleUnitChange('layout.height', 'layout.heightUnit', newUnit)
+  if (!props.selectedItem) return
+  const rootProps = (props.selectedItem as any).props
+  if (!rootProps.styles) {
+    rootProps.styles = {}
+  }
+  const currentValue = getHeightValue() || 0
+  let finalValue = currentValue
+  
+  // %로 변경되고 현재 값이 100을 초과하면 100으로 제한
+  if (newUnit === '%' && currentValue > 100) {
+    finalValue = 100
+  }
+  
+  rootProps.styles.height = formatSizeValue(finalValue, newUnit)
+  emit('update')
 }
 </script>
 

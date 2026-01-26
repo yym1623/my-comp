@@ -1,21 +1,27 @@
 import type { ComponentOptionField, SectionReady } from '~/types/elementoptions'
 
 export const useElementOptions = () => {
-  // 컴포넌트 타입에 따른 섹션 준비 상태 반환
-  const getSectionReady = (type?: string): SectionReady => {
+  // 컴포넌트 타입과 스타일 객체에 따른 섹션 준비 상태 반환
+  const getSectionReady = (type?: string, styles?: Record<string, any>): SectionReady => {
     const baseReady = {
       Position: true,
       Layout: true,
       Appearance: true,
-      Typography: true
+      Typography: false // 기본값은 false로 설정
     }
     
+    // 특정 타입은 Appearance 비활성화
     if (type === 'spacer' || type === 'divider' || type === 'button' || type === 'prevNext') {
       return {
         ...baseReady,
-        Appearance: false,
-        Typography: false
+        Appearance: false
       }
+    }
+    
+    // Typography는 스타일 객체에 Typography 관련 키가 있는지로 판단
+    // fontSize, fontFamily, fontWeight, textAlign 중 하나라도 있으면 Typography 섹션 표시
+    if (styles && (styles.fontSize !== undefined || styles.fontFamily !== undefined || styles.fontWeight !== undefined || styles.textAlign !== undefined)) {
+      baseReady.Typography = true
     }
     
     return baseReady
@@ -49,46 +55,20 @@ export const useElementOptions = () => {
         defaultValue: 0
       },
       {
-        key: 'layout.width',
+        key: 'styles.width',
         label: 'W',
         component: 'InputNumber',
         componentProps: { min: 0 },
         section: 'Layout',
-        defaultValue: 100
+        defaultValue: '100%'
       },
       {
-        key: 'layout.widthUnit',
-        label: 'Width Unit',
-        component: 'Select',
-        componentProps: {
-          options: [
-            { label: 'px', value: 'px' },
-            { label: '%', value: '%' }
-          ]
-        },
-        section: 'Layout',
-        defaultValue: '%'
-      },
-      {
-        key: 'layout.height',
+        key: 'styles.height',
         label: 'H',
         component: 'InputNumber',
         componentProps: { min: 0 },
         section: 'Layout',
-        defaultValue: 40
-      },
-      {
-        key: 'layout.heightUnit',
-        label: 'Height Unit',
-        component: 'Select',
-        componentProps: {
-          options: [
-            { label: 'px', value: 'px' },
-            { label: '%', value: '%' }
-          ]
-        },
-        section: 'Layout',
-        defaultValue: 'px'
+        defaultValue: '40px'
       },
       {
         key: 'appearance.opacity',
@@ -139,7 +119,7 @@ export const useElementOptions = () => {
         defaultValue: 'none'
       },
       {
-        key: 'typography.fontSize',
+        key: 'styles.fontSize',
         label: 'Font Size',
         component: 'InputNumber',
         componentProps: { min: 8, max: 72 },
@@ -148,7 +128,7 @@ export const useElementOptions = () => {
         disabled: true
       },
       {
-        key: 'typography.fontFamily',
+        key: 'styles.fontFamily',
         label: 'Font Family',
         component: 'Select',
         componentProps: {
@@ -188,7 +168,7 @@ export const useElementOptions = () => {
         defaultValue: 'Arial'
       },
       {
-        key: 'typography.fontWeight',
+        key: 'styles.fontWeight',
         label: 'Font Weight',
         component: 'Select',
         componentProps: {
@@ -204,7 +184,7 @@ export const useElementOptions = () => {
         defaultValue: '400'
       },
       {
-        key: 'typography.textAlign',
+        key: 'styles.textAlign',
         label: 'Text Align',
         component: 'Select',
         componentProps: {

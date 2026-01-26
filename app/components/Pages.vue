@@ -16,7 +16,7 @@
         <button
           :disabled="props.isPreviewMode"
           class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-semibold rounded-lg border transition-all bg-surface-0 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-200 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
-          @click="$emit('create')"
+          @click="handleCreate"
         >
           <i class="pi pi-plus text-sm"></i>
           <span>페이지 추가</span>
@@ -75,8 +75,8 @@ interface PagesProps {
 }
 
 interface PagesEmits {
+  (e: 'update:currentPage', page: Page | null): void
   (e: 'update:pages', pages: Page[]): void
-  (e: 'select', page: Page): void
   (e: 'create'): void
   (e: 'closePanel'): void
 }
@@ -89,15 +89,21 @@ const props = withDefaults(defineProps<PagesProps>(), {
 
 const emit = defineEmits<PagesEmits>()
 
-const { pages } = usePages()
+const { pages, loadPages } = usePages()
 
 const searchQuery = ref<string>('')
 
+// 페이지 선택 로직 (내부에서 처리)
 const handleSelect = (page: Page) => {
-  emit('select', page)
+  emit('update:currentPage', page)
   if (props.variant === 'mobile') {
     emit('closePanel')
   }
+}
+
+// 페이지 생성 모달 열기 (emit으로 상위에 알림)
+const handleCreate = () => {
+  emit('create')
 }
 
 const filteredPages = computed(() => {
@@ -116,4 +122,3 @@ const handleUpdatePages = (updatedPages: Page[]) => {
   emit('update:pages', updatedPages)
 }
 </script>
-
