@@ -110,31 +110,31 @@
                 :disabled="isPreviewMode"
                 @update:model-value="$emit('update:canvasItems', $event)"
               >
-                <template #item="{ element, index }">
-                  <div
-                    class="canvas-item group relative"
-                    :class="{ selected: selectedIndex === index && !isPreviewMode }"
-                    @click.stop="!isPreviewMode && handleSelect(index)"
-                  >
-                    <!-- 복사/삭제 버튼 -->
-                    <div 
-                      v-if="!isPreviewMode" 
-                      class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
-                      :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-                    >
-                      <button
-                        class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                        @click.stop="handleCopy(index)"
-                      >
-                        <i class="pi pi-copy text-xs text-primary-500 dark:text-primary-400" />
-                      </button>
-                      <button
-                        class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
-                        @click.stop="handleDelete(index)"
-                      >
-                        <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
-                      </button>
-                    </div>
+              <template #item="{ element, index }">
+                <div
+                  class="canvas-item group relative"
+                  :class="{ selected: selectedIndex === index && !isPreviewMode }"
+                      @click.stop="!isPreviewMode && handleSelect(index)"
+                >
+                <!-- 복사/삭제 버튼 -->
+              <div 
+                v-if="!isPreviewMode" 
+                class="absolute -top-5 right-0 flex items-center gap-1 z-10 transition-opacity"
+                :class="selectedIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+              >
+                <button
+                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                              @click.stop="handleCopy(index)"
+                >
+                    <i class="pi pi-copy text-xs text-primary-500 dark:text-primary-400" />
+                </button>
+                <button
+                  class="w-5 h-5 flex items-center justify-center bg-white dark:bg-surface-800 border border-primary-500 dark:border-primary-500 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                              @click.stop="handleDelete(index)"
+                >
+                  <i class="pi pi-trash text-xs text-primary-500 dark:text-primary-400" />
+                </button>
+              </div>
                     <!-- 모든 컴포넌트 (ComponentRenderer 사용) -->
                     <ComponentRenderer
                       :item="element"
@@ -160,9 +160,9 @@
                       :on-add-table-row="handleAddTableRow"
                       :on-update-canvas-items="() => emit('update:canvasItems', [...props.canvasItems])"
                     />
-                  </div>
-                </template>
-              </Draggable>
+            </div>
+          </template>
+        </Draggable>
             </Transition>
           </template>
         </div>
@@ -231,7 +231,6 @@ const Draggable = draggable
 import type { ComponentDef } from '~/types/component'
 import { createEmptyGridCells } from '~/utils/array'
 import { findIndexById } from '~/utils/array'
-import { getComponentDefaults } from '~/utils/component'
 
 interface PreviewProps {
   canvasItems: CanvasItem[]
@@ -275,8 +274,8 @@ const toggleQrPanel = () => {
 const getElementStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합 (component.ts 기본값 우선)
   const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -304,7 +303,7 @@ const getElementStyle = (element: CanvasItem) => {
   
   // Layout (form 컴포넌트는 제외)
   const formTypes = ['inputText', 'inputPassword', 'inputEmail', 'inputDate', 'inputTime', 'select', 'textarea', 'inputUrl', 'checkbox', 'radio', 'toggleSwitch']
-  if (!formTypes.includes(element.type)) {
+  if (element.type && !formTypes.includes(element.type)) {
     applySizeStyle(style, styles, 'width')
     applySizeStyle(style, styles, 'height')
   }
@@ -338,8 +337,8 @@ const getElementStyle = (element: CanvasItem) => {
 // 요소의 Typography 스타일 계산 함수
 const getTypographyStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -373,8 +372,8 @@ const getTypographyStyle = (element: CanvasItem) => {
 // Form 컴포넌트의 input 요소에만 적용할 Layout 스타일 계산 함수
 const getFormInputStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -394,8 +393,8 @@ const getFormInputStyle = (element: CanvasItem) => {
 // 이전/다음 버튼의 각 버튼에 적용할 Layout 스타일 계산 함수
 const getPrevNextButtonStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -416,8 +415,8 @@ const getPrevNextButtonStyle = (element: CanvasItem) => {
 const getPrevNextWrapperStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합 (component.ts 기본값 우선)
   const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -452,8 +451,8 @@ const getPrevNextWrapperStyle = (element: CanvasItem) => {
 // 일반 버튼에 적용할 Layout 스타일 계산 함수
 const getButtonStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -474,8 +473,8 @@ const getButtonStyle = (element: CanvasItem) => {
 const getButtonWrapperStyle = (element: CanvasItem) => {
   // 저장된 값과 기본값 병합 (component.ts 기본값 우선)
   const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(element.type)
-  const savedStyles = element.props.styles || {}
+  const componentDefaults = getComponentDefaults(element.type || '')
+  const savedStyles = element.styles || {}
   
   // 기본값 우선, 저장된 값으로 덮어쓰기
   const styles: Record<string, any> = {
@@ -524,7 +523,7 @@ function handleGridDragLeave(gridElement: CanvasItem, cellIndex: number) {
   }, 50)
 }
 
-const { generateUid } = useElements()
+const { generateUid, getComponentDefaults } = useElements()
 const { cloneCanvasItems } = useCanvas()
 const { getDefaultProps } = useElementOptions()
 
@@ -533,53 +532,13 @@ function createItemFromDraggedComponent(): CanvasItem | null {
   if (!props.draggedComponent) return null
   
   const comp = props.draggedComponent
-  const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(comp.type)
   
-  // data 병합 (component.ts 기본값 우선, 컴포넌트 정의로 덮어쓰기)
-  const mergedData: Record<string, any> = {
-    ...componentDefaults.data,
-    ...(comp.defaultProps.data || {})
-  }
+  // uniq id할당
+  const uniqueId = generateUid()
   
-  // styles 병합 (component.ts 기본값 우선, 공통 기본값, 컴포넌트 정의 순서)
-  const mergedStyles: Record<string, any> = {
-    // 1. component.ts의 타입별 기본값 (width, height, fontSize 등)
-    ...componentDefaults.styles,
-    // 2. 공통 기본값 (position, appearance 등)
-    ...defaultStylesFromComposable,
-    // 3. 컴포넌트 정의의 styles (덮어쓰기)
-    ...(comp.defaultProps.styles || {}),
-    // position, appearance는 중첩 객체이므로 별도 병합
-    position: {
-      ...defaultStylesFromComposable.position,
-      ...(comp.defaultProps.styles?.position || {})
-    },
-    appearance: {
-      ...defaultStylesFromComposable.appearance,
-      ...(comp.defaultProps.styles?.appearance || {})
-    }
-  }
-  
-  const mergedProps: Record<string, any> = {
-    data: mergedData,
-    styles: mergedStyles
-  }
-
   const newItem: CanvasItem = {
-    id: generateUid(),
-    type: comp.type,
-    props: mergedProps
-  }
-  
-  if (comp.type === 'grid' && newItem.props.data?.columns) {
-    newItem.props.items = createEmptyGridCells(newItem.props.data.columns)
-  }
-  
-  if (comp.type === 'table' && newItem.props.data?.columns) {
-    if (!newItem.props.data.rows) {
-      newItem.props.data.rows = [newItem.props.data.columns.map(() => '데이터')]
-    }
+    ...comp.defaultProps,
+    id: uniqueId
   }
   
   return newItem
@@ -649,17 +608,18 @@ function handleGridDrop(event: DragEvent, gridElement: CanvasItem, cellIndex: nu
   const gridItem = props.canvasItems[gridIndex]
   if (!gridItem) return
   
-  if (!gridItem.props.items) {
-    gridItem.props.items = createEmptyGridCells(gridItem.props.data?.columns || gridItem.props.columns || 2)
+  if (!gridItem.items) {
+    gridItem.items = createEmptyGridCells<CanvasItem[]>(gridItem.data?.columns || gridItem.columns || 2) as unknown as CanvasItem[][]
   }
   
   const newItem = createItemFromDraggedComponent()
   if (!newItem) return
   
-  if (!gridItem.props.items[cellIndex]) {
-    gridItem.props.items[cellIndex] = []
+  const gridItems = gridItem.items as CanvasItem[][]
+  if (!gridItems[cellIndex]) {
+    gridItems[cellIndex] = []
   }
-  gridItem.props.items[cellIndex] = [newItem]
+  gridItems[cellIndex] = [newItem]
   
   const updatedItems = [...props.canvasItems]
   updatedItems[gridIndex] = gridItem
@@ -691,14 +651,14 @@ function handleGroupDrop(event: DragEvent, groupElement: CanvasItem) {
   const groupItem = props.canvasItems[groupIndex]
   if (!groupItem) return
   
-  if (!groupItem.props.items) {
-    groupItem.props.items = []
+  if (!groupItem.items) {
+    groupItem.items = []
   }
   
   const newItem = createItemFromDraggedComponent()
   if (!newItem) return
   
-  groupItem.props.items = [newItem]
+  groupItem.items = [newItem]
   
   const updatedItems = [...props.canvasItems]
   updatedItems[groupIndex] = groupItem
@@ -711,44 +671,44 @@ const editingTable = ref<string | null>(null)
 
 function handleTableHeaderBlur(element: CanvasItem, colIndex: number, event: Event) {
   const target = event.target as HTMLInputElement
-  const columns = element.props.data?.columns ?? element.props.columns
+  const columns = element.data?.columns ?? element.columns
   if (!columns) return
-  if (!element.props.data) {
-    element.props.data = {}
+  if (!element.data) {
+    element.data = {}
   }
-  element.props.data.columns = element.props.data.columns ?? columns
-  element.props.data.columns[colIndex] = target.value || `컬럼 ${colIndex + 1}`
+  element.data.columns = element.data.columns ?? columns
+  element.data.columns[colIndex] = target.value || `컬럼 ${colIndex + 1}`
   editingTable.value = null
   emit('update:canvasItems', [...props.canvasItems])
 }
 
 function handleTableCellBlur(element: CanvasItem, rowIndex: number, cellIndex: number, event: Event) {
   const target = event.target as HTMLInputElement
-  const rows = element.props.data?.rows ?? element.props.rows
+  const rows = element.data?.rows ?? element.rows
   if (!rows) return
-  if (!element.props.data) {
-    element.props.data = {}
+  if (!element.data) {
+    element.data = {}
   }
-  element.props.data.rows = element.props.data.rows ?? rows
-  if (!element.props.data.rows[rowIndex]) {
-    element.props.data.rows[rowIndex] = []
+  element.data.rows = element.data.rows ?? rows
+  if (!element.data.rows[rowIndex]) {
+    element.data.rows[rowIndex] = []
   }
-  element.props.data.rows[rowIndex][cellIndex] = target.value || '데이터'
+  element.data.rows[rowIndex][cellIndex] = target.value || '데이터'
   editingTable.value = null
   emit('update:canvasItems', [...props.canvasItems])
 }
 
 function handleAddTableRow(element: CanvasItem) {
-  const columns = element.props.data?.columns ?? element.props.columns
+  const columns = element.data?.columns ?? element.columns
   if (!columns) return
-  if (!element.props.data) {
-    element.props.data = {}
+  if (!element.data) {
+    element.data = {}
   }
-  if (!element.props.data.rows) {
-    element.props.data.rows = element.props.rows ?? []
+  if (!element.data.rows) {
+    element.data.rows = element.rows ?? []
   }
   const newRow = columns.map(() => '데이터')
-  element.props.data.rows.push(newRow)
+  element.data.rows.push(newRow)
   emit('update:canvasItems', [...props.canvasItems])
 }
 </script>

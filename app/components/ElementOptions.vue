@@ -26,12 +26,12 @@
           </template>
           <i 
             v-else
-            :class="getComponentIcon(selectedItem.type)" 
+            :class="getComponentIcon(selectedItem.type || '')" 
             class="text-base text-surface-500 dark:text-surface-400 shrink-0" 
           />
           <div class="flex flex-col min-w-0 flex-1">
             <span class="text-sm font-semibold text-surface-700 dark:text-surface-200 truncate">
-              {{ getComponentName(selectedItem.type) }}
+              {{ getComponentName(selectedItem.type || '') }}
             </span>
           </div>
         </div>
@@ -343,11 +343,12 @@ interface ElementOptionsProps {
   currentPage: Page | null
   selectedIndex: number | null
   selectedItem: CanvasItem | null
+  canvasItems: CanvasItem[]
 }
 
 interface ElementOptionsEmits {
   (e: 'closeOptions'): void
-  (e: 'update'): void
+  (e: 'update', updatedItem: CanvasItem): void
 }
 
 const props = defineProps<ElementOptionsProps>()
@@ -355,11 +356,15 @@ const emit = defineEmits<ElementOptionsEmits>()
 
 const { getComponentName, getComponentIcon } = useElements()
 const { getOptionsForType, getSectionReady } = useElementOptions()
+const { cloneCanvasItems } = useCanvas()
 
 // 섹션별 ready 상태 (스타일 객체 기준으로 Typography 판단)
 const sectionReady = computed(() => {
-  const styles = props.selectedItem?.props?.styles
-  return getSectionReady(props.selectedItem?.type, styles)
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return { Layout: false, Typography: false, Appearance: false }
+  
+  const styles = currentItem.styles
+  return getSectionReady(currentItem.type || '', styles)
 })
 
 // 옵션 가져오기
@@ -408,8 +413,17 @@ const getDefaultValue = (key: string) => {
   return field?.defaultValue
 }
 
+// 현재 선택된 아이템을 canvasItems에서 id로 찾기
+const getCurrentSelectedItem = (): CanvasItem | null => {
+  if (!props.selectedItem?.id) return null
+  return props.canvasItems.find(item => item.id === props.selectedItem?.id) || null
+}
+
 const getFromStyles = (objKey: string, propKey: string) => {
-  const styles = (props.selectedItem as any).props.styles
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return undefined
+  
+  const styles = (currentItem as any).styles
   if (!styles) return undefined
   
   // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
@@ -424,15 +438,19 @@ const getFromStyles = (objKey: string, propKey: string) => {
 }
 
 const getFromLegacyProps = (objKey: string, propKey: string) => {
-  const rootProps = (props.selectedItem as any).props
-  const obj = rootProps[objKey]
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return undefined
+  
+  const selectedItem = currentItem as any
+  const obj = selectedItem[objKey]
   if (!obj || typeof obj !== 'object') return undefined
   return obj[propKey]
 }
 
 // 필드 값 가져오기 (객체 경로 지원: 'position.x', 'layout.width' 등, styles 객체 사용)
 const getFieldValue = (key: string) => {
-  if (!props.selectedItem) return undefined
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return undefined
 
   const parsed = parseKey(key)
   if (parsed) {
@@ -455,7 +473,7 @@ const getFieldValue = (key: string) => {
   }
 
   // 일반 필드 (styles 객체가 아닌 경우)
-  const value = (props.selectedItem as any).props[key]
+  const value = (currentItem as any)[key]
   if (value === undefined || value === null) {
     return getDefaultValue(key)
   }
@@ -469,69 +487,77 @@ const getFieldDisabled = (key: string) => {
 }
 
 
+// ensureStylesObject는 더 이상 사용하지 않음 (updateFieldValue에서 직접 처리)
 const ensureStylesObject = (objKey: string) => {
-  const rootProps = (props.selectedItem as any).props
-  if (!rootProps.styles) {
-    rootProps.styles = {}
-  }
-  
-  // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
-  if (objKey === 'styles') {
-    return rootProps.styles
-  }
-  
-  // 기존 구조 지원 (예: styles.position, styles.layout)
-  if (!rootProps.styles[objKey]) {
-    rootProps.styles[objKey] = {}
-  }
-  return rootProps.styles[objKey]
+  // 이 함수는 updateFieldValue에서 직접 처리하므로 사용하지 않음
+  return {}
 }
 
 // 필드 값 업데이트 (객체 경로 지원: 'position.x', 'styles.width' 등, styles 객체 사용)
 const updateFieldValue = (key: string, value: any) => {
   if (!props.selectedItem) return
 
+  // id를 사용하여 canvasItems에서 특정 아이템 찾기
+  const itemIndex = props.canvasItems.findIndex(item => item.id === props.selectedItem?.id)
+  if (itemIndex === -1) return
+
+  // 아이템을 깊은 복사하여 수정 (원본 참조 문제 방지)
+  const sourceItem = props.canvasItems[itemIndex]
+  if (!sourceItem) return
+  const clonedItems = cloneCanvasItems([sourceItem])
+  if (clonedItems.length === 0) return
+  const itemToUpdate = clonedItems[0]
+  if (!itemToUpdate) return
+
   const parsed = parseKey(key)
-  const rootProps = (props.selectedItem as any).props
+  const selectedItem = itemToUpdate as any
 
   if (parsed) {
     const { objKey, propKey } = parsed
 
     // styles가 직접 키를 가지고 있는 경우 (예: styles.width, styles.fontSize)
     if (objKey === 'styles') {
-      if (!rootProps.styles) {
-        rootProps.styles = {}
+      if (!selectedItem.styles) {
+        selectedItem.styles = {}
       }
       if (typeof value === 'number') {
-        rootProps.styles[propKey] = value
+        selectedItem.styles[propKey] = value
       } else {
-        rootProps.styles[propKey] = value ?? ''
+        selectedItem.styles[propKey] = value ?? ''
       }
     } else {
       // 기존 구조 지원 (예: position.x, layout.width)
-      const target = ensureStylesObject(objKey)
+      if (!selectedItem.styles) {
+        selectedItem.styles = {}
+      }
+      if (!selectedItem.styles[objKey]) {
+        selectedItem.styles[objKey] = {}
+      }
       if (typeof value === 'number') {
-        target[propKey] = value
+        selectedItem.styles[objKey][propKey] = value
       } else {
-        target[propKey] = value ?? ''
+        selectedItem.styles[objKey][propKey] = value ?? ''
       }
     }
   } else {
     // 일반 필드 처리 (styles 객체가 아닌 경우)
     if (typeof value === 'number') {
-      rootProps[key] = value
+      selectedItem[key] = value
     } else {
-      rootProps[key] = value ?? ''
+      selectedItem[key] = value ?? ''
     }
   }
 
-  // 변경사항 알림
-  emit('update')
+  // 변경사항 알림 (업데이트된 아이템 전달)
+  emit('update', itemToUpdate as CanvasItem)
 }
 
 // width 값 가져오기 (숫자만)
 const getWidthValue = (): number | undefined => {
-  const width = (props.selectedItem as any)?.props?.styles?.width
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return undefined
+  
+  const width = (currentItem as any)?.styles?.width
   if (!width) return undefined
   const parsed = parseSizeValue(width)
   return parsed?.value
@@ -539,7 +565,10 @@ const getWidthValue = (): number | undefined => {
 
 // width 단위 가져오기
 const getWidthUnit = (): string => {
-  const width = (props.selectedItem as any)?.props?.styles?.width
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return 'px'
+  
+  const width = (currentItem as any)?.styles?.width
   if (!width) return 'px'
   const parsed = parseSizeValue(width)
   return parsed?.unit || 'px'
@@ -547,7 +576,10 @@ const getWidthUnit = (): string => {
 
 // height 값 가져오기 (숫자만)
 const getHeightValue = (): number | undefined => {
-  const height = (props.selectedItem as any)?.props?.styles?.height
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return undefined
+  
+  const height = (currentItem as any)?.styles?.height
   if (!height) return undefined
   const parsed = parseSizeValue(height)
   return parsed?.value
@@ -555,7 +587,10 @@ const getHeightValue = (): number | undefined => {
 
 // height 단위 가져오기
 const getHeightUnit = (): string => {
-  const height = (props.selectedItem as any)?.props?.styles?.height
+  const currentItem = getCurrentSelectedItem()
+  if (!currentItem) return 'px'
+  
+  const height = (currentItem as any)?.styles?.height
   if (!height) return 'px'
   const parsed = parseSizeValue(height)
   return parsed?.unit || 'px'
@@ -564,21 +599,41 @@ const getHeightUnit = (): string => {
 // width 값 변경 핸들러
 const handleWidthChange = (value: number | null) => {
   if (!props.selectedItem || value === null) return
-  const rootProps = (props.selectedItem as any).props
-  if (!rootProps.styles) {
-    rootProps.styles = {}
+  // id를 사용하여 canvasItems에서 특정 아이템 찾기
+  const itemIndex = props.canvasItems.findIndex(item => item.id === props.selectedItem?.id)
+  if (itemIndex === -1) return
+  // 아이템을 깊은 복사하여 수정 (원본 참조 문제 방지)
+  const sourceItem = props.canvasItems[itemIndex]
+  if (!sourceItem) return
+  const clonedItems = cloneCanvasItems([sourceItem])
+  if (clonedItems.length === 0) return
+  const itemToUpdate = clonedItems[0]
+  if (!itemToUpdate) return
+  const selectedItem = itemToUpdate as any
+  if (!selectedItem.styles) {
+    selectedItem.styles = {}
   }
   const currentUnit = getWidthUnit()
-  rootProps.styles.width = formatSizeValue(value, currentUnit)
-  emit('update')
+  selectedItem.styles.width = formatSizeValue(value, currentUnit)
+  emit('update', itemToUpdate as CanvasItem)
 }
 
 // width 단위 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleWidthUnitChange = (newUnit: string) => {
   if (!props.selectedItem) return
-  const rootProps = (props.selectedItem as any).props
-  if (!rootProps.styles) {
-    rootProps.styles = {}
+  // id를 사용하여 canvasItems에서 특정 아이템 찾기
+  const itemIndex = props.canvasItems.findIndex(item => item.id === props.selectedItem?.id)
+  if (itemIndex === -1) return
+  // 아이템을 깊은 복사하여 수정 (원본 참조 문제 방지)
+  const sourceItem = props.canvasItems[itemIndex]
+  if (!sourceItem) return
+  const clonedItems = cloneCanvasItems([sourceItem])
+  if (clonedItems.length === 0) return
+  const itemToUpdate = clonedItems[0]
+  if (!itemToUpdate) return
+  const selectedItem = itemToUpdate as any
+  if (!selectedItem.styles) {
+    selectedItem.styles = {}
   }
   const currentValue = getWidthValue() || 0
   let finalValue = currentValue
@@ -588,28 +643,48 @@ const handleWidthUnitChange = (newUnit: string) => {
     finalValue = 100
   }
   
-  rootProps.styles.width = formatSizeValue(finalValue, newUnit)
-  emit('update')
+  selectedItem.styles.width = formatSizeValue(finalValue, newUnit)
+  emit('update', itemToUpdate)
 }
 
 // height 값 변경 핸들러
 const handleHeightChange = (value: number | null) => {
   if (!props.selectedItem || value === null) return
-  const rootProps = (props.selectedItem as any).props
-  if (!rootProps.styles) {
-    rootProps.styles = {}
+  // id를 사용하여 canvasItems에서 특정 아이템 찾기
+  const itemIndex = props.canvasItems.findIndex(item => item.id === props.selectedItem?.id)
+  if (itemIndex === -1) return
+  // 아이템을 깊은 복사하여 수정 (원본 참조 문제 방지)
+  const sourceItem = props.canvasItems[itemIndex]
+  if (!sourceItem) return
+  const clonedItems = cloneCanvasItems([sourceItem])
+  if (clonedItems.length === 0) return
+  const itemToUpdate = clonedItems[0]
+  if (!itemToUpdate) return
+  const selectedItem = itemToUpdate as any
+  if (!selectedItem.styles) {
+    selectedItem.styles = {}
   }
   const currentUnit = getHeightUnit()
-  rootProps.styles.height = formatSizeValue(value, currentUnit)
-  emit('update')
+  selectedItem.styles.height = formatSizeValue(value, currentUnit)
+  emit('update', itemToUpdate)
 }
 
 // height 단위 변경 핸들러 (%로 변경 시 값이 100 초과하면 100으로 제한)
 const handleHeightUnitChange = (newUnit: string) => {
   if (!props.selectedItem) return
-  const rootProps = (props.selectedItem as any).props
-  if (!rootProps.styles) {
-    rootProps.styles = {}
+  // id를 사용하여 canvasItems에서 특정 아이템 찾기
+  const itemIndex = props.canvasItems.findIndex(item => item.id === props.selectedItem?.id)
+  if (itemIndex === -1) return
+  // 아이템을 깊은 복사하여 수정 (원본 참조 문제 방지)
+  const sourceItem = props.canvasItems[itemIndex]
+  if (!sourceItem) return
+  const clonedItems = cloneCanvasItems([sourceItem])
+  if (clonedItems.length === 0) return
+  const itemToUpdate = clonedItems[0]
+  if (!itemToUpdate) return
+  const selectedItem = itemToUpdate as any
+  if (!selectedItem.styles) {
+    selectedItem.styles = {}
   }
   const currentValue = getHeightValue() || 0
   let finalValue = currentValue
@@ -619,8 +694,8 @@ const handleHeightUnitChange = (newUnit: string) => {
     finalValue = 100
   }
   
-  rootProps.styles.height = formatSizeValue(finalValue, newUnit)
-  emit('update')
+  selectedItem.styles.height = formatSizeValue(finalValue, newUnit)
+  emit('update', itemToUpdate)
 }
 </script>
 

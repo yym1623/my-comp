@@ -5,7 +5,7 @@
     class="font-bold text-surface-800 dark:text-surface-100 m-0"
     :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
-    {{ item.props.data?.text ?? item.props.text ?? '' }}
+    {{ item.data?.text ?? item.text ?? '' }}
   </h1>
   <!-- Heading 2 -->
   <h2
@@ -13,7 +13,7 @@
     class="font-semibold text-surface-800 dark:text-surface-100 m-0"
     :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
-    {{ item.props.data?.text ?? item.props.text ?? '' }}
+    {{ item.data?.text ?? item.text ?? '' }}
   </h2>
   <!-- Heading 3 -->
   <h3
@@ -21,7 +21,7 @@
     class="font-semibold text-surface-800 dark:text-surface-100 m-0"
     :style="{ ...getElementStyle(item), ...getTypographyStyle(item) }"
   >
-    {{ item.props.data?.text ?? item.props.text ?? '' }}
+    {{ item.data?.text ?? item.text ?? '' }}
   </h3>
   <!-- Spacer -->
   <div
@@ -41,9 +41,9 @@
     :style="getElementStyle(item)"
   >
     <Image
-      v-if="item.props.data?.src ?? item.props.src"
-      :src="item.props.data?.src ?? item.props.src"
-      :alt="item.props.data?.alt ?? item.props.alt ?? '이미지'"
+      v-if="item.data?.src ?? item.src"
+      :src="item.data?.src ?? item.src"
+      :alt="item.data?.alt ?? item.alt ?? '이미지'"
       class="w-full"
       :preview="isPreviewMode"
     />
@@ -64,12 +64,12 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <Textarea
       :key="`textarea-${item.id}`"
-      :model-value="item.props.data?.content ?? item.props.content ?? ''"
+      :model-value="item.data?.content ?? item.content ?? ''"
       :rows="4"
       placeholder="설명 내용을 입력하세요."
       :style="{ minHeight: '6rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -84,14 +84,14 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <InputText
       :key="`input-text-${item.id}`"
       type="text"
       :model-value="''"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '입력하세요...'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? '입력하세요...'"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
       :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -104,14 +104,14 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <InputText
       :key="`input-password-${item.id}`"
       type="password"
       :model-value="''"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '비밀번호를 입력하세요'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? '비밀번호를 입력하세요'"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
       :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -124,14 +124,14 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <InputText
       :key="`input-email-${item.id}`"
       type="email"
       :model-value="''"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? 'example@email.com'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? 'example@email.com'"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
       :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -144,13 +144,13 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <DatePicker
       :key="`input-date-${item.id}`"
       :model-value="null"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '날짜를 선택하세요'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? '날짜를 선택하세요'"
       dateFormat="yy.mm.dd"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
@@ -164,13 +164,13 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <DatePicker
       :key="`input-time-${item.id}`"
       :model-value="null"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '시간을 선택하세요'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? '시간을 선택하세요'"
       timeOnly
       hourFormat="24"
       :readonly="!isPreviewMode"
@@ -185,14 +185,14 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <Select
       :key="`select-${item.id}`"
       :model-value="null"
-      :options="item.props.data?.options ?? item.props.options ?? []"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? '선택하세요'"
+      :options="item.data?.options ?? item.options ?? []"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? '선택하세요'"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
       :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -205,14 +205,14 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <InputText
       :key="`input-url-${item.id}`"
       type="url"
       :model-value="''"
-      :placeholder="item.props.data?.placeholder ?? item.props.placeholder ?? 'https://example.com'"
+      :placeholder="item.data?.placeholder ?? item.placeholder ?? 'https://example.com'"
       :readonly="!isPreviewMode"
       :class="[{ 'edit-mode': !isPreviewMode }]"
       :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }"
@@ -225,18 +225,18 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }">
       <Checkbox
         :key="`checkbox-${item.id}`"
-        :model-value="item.props.data?.checked ?? item.props.checked ?? false"
+        :model-value="item.data?.checked ?? item.checked ?? false"
         :binary="true"
         :readonly="!isPreviewMode"
         :class="{ 'edit-mode': !isPreviewMode }"
       />
-      <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.props.data?.label ?? item.props.label }}</span>
+      <span class="text-sm text-surface-700 dark:text-surface-200">{{ item.data?.label ?? item.label }}</span>
     </div>
   </div>
   <!-- input(radio) -->
@@ -246,18 +246,18 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <div class="flex flex-col gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item) }">
       <div
-        v-for="(option, optIndex) in (item.props.data?.options ?? item.props.options ?? [])"
+        v-for="(option, optIndex) in (item.data?.options ?? item.options ?? [])"
         :key="`radio-${item.id}-${optIndex}`"
         class="flex items-center gap-2"
         :style="getFormInputStyle(item)"
       >
         <RadioButton
-          :model-value="item.props.data?.selected ?? item.props.selected ?? (item.props.data?.options ?? item.props.options)?.[0]"
+          :model-value="item.data?.selected ?? item.selected ?? (item.data?.options ?? item.options)?.[0]"
           :value="option"
           :name="`radio-${item.id}`"
           :readonly="!isPreviewMode"
@@ -274,17 +274,17 @@
     :class="{ 'edit-mode': !isPreviewMode }"
     :style="getElementStyle(item)"
   >
-    <label v-if="item.props.data?.label ?? item.props.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
-      {{ item.props.data?.label ?? item.props.label }}
+    <label v-if="item.data?.label ?? item.label" class="text-xs font-semibold text-surface-500 dark:text-surface-400">
+      {{ item.data?.label ?? item.label }}
     </label>
     <div class="flex items-center gap-2" :style="{ minHeight: '2.5rem', ...getTypographyStyle(item), ...getFormInputStyle(item) }">
       <ToggleSwitch
         :key="`toggle-${item.id}`"
-        :model-value="item.props.data?.checked ?? item.props.checked ?? false"
+        :model-value="item.data?.checked ?? item.checked ?? false"
         :readonly="!isPreviewMode"
         :class="{ 'edit-mode': !isPreviewMode }"
       />
-      <span class="text-sm text-surface-700 dark:text-surface-200">{{ (item.props.data?.checked ?? item.props.checked) ? '켜짐' : '꺼짐' }}</span>
+      <span class="text-sm text-surface-700 dark:text-surface-200">{{ (item.data?.checked ?? item.checked) ? '켜짐' : '꺼짐' }}</span>
     </div>
   </div>
   <!-- button(default) -->
@@ -296,9 +296,9 @@
   >
     <Button
       :key="`button-${item.id}`"
-      :label="item.props.data?.text ?? item.props.text ?? '버튼'"
+      :label="item.data?.text ?? item.text ?? '버튼'"
       severity="primary"
-      :outlined="item.props.data?.outlined ?? item.props.outlined ?? false"
+      :outlined="item.data?.outlined ?? item.outlined ?? false"
       :readonly="!isPreviewMode"
       :class="['button-element', { 'edit-mode': !isPreviewMode }]"
       :style="{ ...getTypographyStyle(item), ...getButtonStyle(item) }"
@@ -312,7 +312,7 @@
     :style="getPrevNextWrapperStyle(item)"
   >
     <Button
-      :label="item.props.data?.prevText ?? item.props.prevText"
+      :label="item.data?.prevText ?? item.prevText"
       severity="secondary"
       outlined
       :readonly="!isPreviewMode"
@@ -320,7 +320,7 @@
       :style="{ ...getTypographyStyle(item), ...getPrevNextButtonStyle(item) }"
     />
     <Button
-      :label="item.props.data?.nextText ?? item.props.nextText"
+      :label="item.data?.nextText ?? item.nextText"
       severity="primary"
       :readonly="!isPreviewMode"
       :class="['prevnext-button', { 'edit-mode': !isPreviewMode }]"
@@ -331,10 +331,10 @@
   <div
     v-if="item.type === 'grid'"
     class="grid"
-    :style="{ gridTemplateColumns: `repeat(${item.props.data?.columns ?? item.props.columns ?? 2}, minmax(0, 1fr))`, gap: item.props.data?.gap ?? item.props.gap ?? '1rem', ...getElementStyle(item) }"
+    :style="{ gridTemplateColumns: `repeat(${item.data?.columns ?? item.columns ?? 2}, minmax(0, 1fr))`, gap: item.data?.gap ?? item.gap ?? '1rem', ...getElementStyle(item) }"
   >
     <div
-      v-for="(cellItems, cellIndex) in (item.props.items && item.props.items.length > 0 ? item.props.items : Array(item.props.data?.columns ?? item.props.columns ?? 2).fill([]))"
+      v-for="(cellItems, cellIndex) in (item.items && item.items.length > 0 ? item.items : Array(item.data?.columns ?? item.columns ?? 2).fill([]))"
       :key="cellIndex"
       class="min-h-[60px] border border-dashed border-surface-300 dark:border-surface-600 rounded-md bg-surface-50 dark:bg-surface-900/30 p-2 transition-all"
       :class="{ 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20': isDraggingOverGrid === `${item.id}-${cellIndex}` }"
@@ -387,14 +387,14 @@
     @drop="!isPreviewMode && onGroupDrop && onGroupDrop($event, item)"
   >
     <div class="p-4 h-full">
-      <div v-if="!item.props.items || item.props.items.length === 0" class="h-full flex items-center justify-center text-xs text-surface-400">
+      <div v-if="!item.items || item.items.length === 0" class="h-full flex items-center justify-center text-xs text-surface-400">
         드래그하여 추가
       </div>
       <div v-else>
         <!-- 그룹 안의 컴포넌트 렌더링 (하나만) -->
         <ComponentRenderer
-          v-if="item.props.items[0]"
-          :item="item.props.items[0]"
+          v-if="item.items[0]"
+          :item="item.items[0]"
           :is-preview-mode="isPreviewMode"
           :get-element-style="getElementStyle"
           :get-typography-style="getTypographyStyle"
@@ -430,7 +430,7 @@
       <thead class="bg-surface-50 dark:bg-surface-800/60">
         <tr>
           <th
-            v-for="(col, i) in (item.props.data?.columns ?? item.props.columns ?? [])"
+            v-for="(col, i) in (item.data?.columns ?? item.columns ?? [])"
             :key="i"
             class="px-3 py-2 font-semibold text-surface-600 dark:text-surface-200 border-b border-surface-200 dark:border-surface-700"
           >
@@ -455,7 +455,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="(row, rowIndex) in (item.props.data?.rows ?? item.props.rows ?? [['데이터 1', '데이터 2', '데이터 3']])"
+          v-for="(row, rowIndex) in (item.data?.rows ?? item.rows ?? [['데이터 1', '데이터 2', '데이터 3']])"
           :key="rowIndex"
         >
           <td
