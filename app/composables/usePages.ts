@@ -340,16 +340,24 @@ export const usePages = () => {
 
       const elements = (pageData?.elements as any[]) || []
       
-      return elements.map((el: any) => ({
-        id: el.id || el.uid, // 기존 uid가 있으면 id로 변환
-        type: el.type,
-        props: el.props || {},
-        items: el.items ? el.items.map((item: any) => ({
-          id: item.id || item.uid,
-          type: item.type,
-          props: item.props || {}
-        })) : undefined
-      })) as CanvasItem[]
+      return elements.map((el: any) => {
+        const { id: elId, type: elType, props: elProps, items: elItems, ...elRest } = el
+        return {
+          id: elId || el.uid, // 기존 uid가 있으면 id로 변환
+          type: elType || el.type,
+          ...(elProps || {}),
+          ...elRest,
+          items: elItems ? elItems.map((item: any) => {
+            const { id: itemId, type: itemType, props: itemProps, ...itemRest } = item
+            return {
+              id: itemId || item.uid,
+              type: itemType || item.type,
+              ...(itemProps || {}),
+              ...itemRest
+            }
+          }) : undefined
+        }
+      }) as CanvasItem[]
     } catch {
       return null
     }

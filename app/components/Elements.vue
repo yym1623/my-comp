@@ -20,7 +20,7 @@
         <div class="grid gap-2">
           <div
             v-for="comp in fieldComponents"
-            :key="comp.id"
+            :key="comp.type"
             class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
             :class="[
               comp.ready === false
@@ -97,7 +97,7 @@
         <div class="grid gap-2">
           <div
             v-for="comp in formComponents"
-            :key="comp.id"
+            :key="comp.type"
             class="flex items-center gap-3 p-3 rounded-xl transition-all border relative overflow-hidden"
             :class="[
               comp.ready === false
@@ -175,7 +175,6 @@ import { H1Icon, H2Icon, H3Icon } from '@heroicons/vue/24/outline'
 import type { ComponentDef } from '~/types/component'
 
 import type { Page, CanvasItem } from '~/types/component'
-import { getComponentDefaults } from '~/utils/component'
 import { createEmptyGridCells } from '~/utils/array'
 
 interface ElementsProps {
@@ -200,7 +199,7 @@ const emit = defineEmits<ElementsEmits>()
 
 const searchQuery = ref<string>('')
 
-const { fieldComponents: allFieldComponents, formComponents: allFormComponents, generateUid } = useElements()
+const { fieldComponents: allFieldComponents, formComponents: allFormComponents, generateUid, getComponentDefaults } = useElements()
 const { getDefaultProps } = useElementOptions()
 const { showSuccess } = useAppToast()
 
@@ -218,63 +217,26 @@ const filterComponents = (components: ComponentDef[]) => {
   )
 }
 
-// 컴포넌트 추가 로직 (내부에서 처리)
+// 컴포넌트 추가
 const handleAdd = (comp: ComponentDef) => {
   if (!props.currentPage) {
     showSuccess('페이지 선택 필요', '컴포넌트를 추가하려면 먼저 페이지를 선택해주세요.')
     return
   }
 
-  const defaultStylesFromComposable = getDefaultProps().styles
-  const componentDefaults = getComponentDefaults(comp.type)
-  
-  // data 병합 (component.ts 기본값 우선, 컴포넌트 정의로 덮어쓰기)
-  const mergedData: Record<string, any> = {
-    ...componentDefaults.data,
-    ...(comp.defaultProps.data || {})
-  }
-  
-  // styles 병합 (component.ts 기본값 우선, 공통 기본값, 컴포넌트 정의 순서)
-  const mergedStyles: Record<string, any> = {
-    // 1. component.ts의 타입별 기본값 (width, height, fontSize 등)
-    ...componentDefaults.styles,
-    // 2. 공통 기본값 (position, appearance 등)
-    ...defaultStylesFromComposable,
-    // 3. 컴포넌트 정의의 styles (덮어쓰기)
-    ...(comp.defaultProps.styles || {}),
-    // position, appearance는 중첩 객체이므로 별도 병합
-    position: {
-      ...defaultStylesFromComposable.position,
-      ...(comp.defaultProps.styles?.position || {})
-    },
-    appearance: {
-      ...defaultStylesFromComposable.appearance,
-      ...(comp.defaultProps.styles?.appearance || {})
-    }
-  }
-  
-  const mergedProps: Record<string, any> = {
-    data: mergedData,
-    styles: mergedStyles
-  }
+  // uniq id할당
+  const uniqueId = generateUid()
 
   const newItem: CanvasItem = {
-    id: generateUid(),
-    type: comp.type,
-    props: mergedProps
+    ...comp.defaultProps,
+    id: uniqueId
   }
-  
-  if (comp.type === 'grid' && newItem.props.data?.columns) {
-    newItem.props.items = createEmptyGridCells(newItem.props.data.columns)
-  }
-  
-  if (comp.type === 'table' && newItem.props.data?.columns) {
-    if (!newItem.props.data.rows) {
-      newItem.props.data.rows = [newItem.props.data.columns.map(() => '데이터')]
-    }
-  }
+
   
   const updatedItems = [...props.canvasItems, newItem]
+
+  console.log("updatedItems", updatedItems)
+
   emit('update:canvasItems', updatedItems)
   
   if (props.variant === 'mobile') {

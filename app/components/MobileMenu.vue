@@ -254,10 +254,11 @@
               <div class="flex-1 overflow-hidden relative" style="flex: 0 0 60%;">
                 <div class="element-options-mobile h-full">
                   <ElementOptions
-                    @update="$emit('update:canvasItems', [...canvasItems])"
+                    @update="(updatedItem) => handleOptionsUpdate(updatedItem)"
                     :current-page="currentPage"
                     :selected-index="selectedIndex"
                     :selected-item="selectedItem ?? null"
+                    :canvas-items="canvasItems"
                     @close-options="handleCloseOptions"
                   />
                 </div>
@@ -324,6 +325,8 @@ const Draggable = draggable
 const props = defineProps<MobileMenuProps>()
 const emit = defineEmits<MobileMenuEmits>()
 
+const { cloneCanvasItems } = useCanvas()
+
 const { getComponentIcon, getComponentLabel } = useElements()
 
 const clearSelection = () => {
@@ -348,6 +351,21 @@ const handleClose = () => {
 const handleClosePanel = () => {
   clearSelection()
   emit('closePanel')
+}
+
+// 옵션 업데이트 핸들러 (id 기반으로 특정 아이템만 업데이트)
+const handleOptionsUpdate = (updatedItem: CanvasItem) => {
+  if (!updatedItem || !updatedItem.id) return
+  // 모든 아이템을 깊은 복사하여 참조 문제 방지
+  const updatedItems = props.canvasItems.map((item: CanvasItem) => {
+    if (item.id === updatedItem.id) {
+      return updatedItem // 이미 깊은 복사된 아이템
+    }
+    // 나머지 아이템도 깊은 복사하여 참조 공유 방지
+    const cloned = cloneCanvasItems([item])
+    return cloned[0] || item
+  })
+  emit('update:canvasItems', updatedItems)
 }
 
 const handleCloseOptions = () => {

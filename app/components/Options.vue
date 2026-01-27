@@ -222,10 +222,11 @@
 
     <!-- 옵션 패널 (선택된 아이템이 있을 때만 표시) -->
     <ElementOptions
-      @update="$emit('update:canvasItems', [...canvasItems])"
+      @update="(updatedItem) => handleOptionsUpdate(updatedItem)"
       :current-page="currentPage"
       :selected-index="selectedIndex"
       :selected-item="selectedItem"
+      :canvas-items="canvasItems"
       @close-options="$emit('closeOptions')"
     />
   </div>
@@ -305,6 +306,21 @@ const handleCopyItem = (index: number) => {
   emit('update:canvasItems', updatedItems)
 }
 
+// 옵션 업데이트 핸들러 (id 기반으로 특정 아이템만 업데이트)
+const handleOptionsUpdate = (updatedItem: CanvasItem) => {
+  if (!updatedItem || !updatedItem.id) return
+  // 모든 아이템을 깊은 복사하여 참조 문제 방지
+  const updatedItems = props.canvasItems.map((item: CanvasItem) => {
+    if (item.id === updatedItem.id) {
+      return updatedItem // 이미 깊은 복사된 아이템
+    }
+    // 나머지 아이템도 깊은 복사하여 참조 공유 방지
+    const cloned = cloneCanvasItems([item])
+    return cloned[0] || item
+  })
+  emit('update:canvasItems', updatedItems)
+}
+
 // 컴포넌트 삭제 로직 (내부에서 처리)
 const handleDeleteItem = (index: number) => {
   if (!props.canvasItems) return
@@ -372,13 +388,15 @@ const treeNodes = computed(() => {
       }
 
       // group이나 grid의 경우 children 추가
-      if ((item.type === 'group' || item.type === 'grid') && item.props.items) {
+      if ((item.type === 'group' || item.type === 'grid') && item.items) {
         if (item.type === 'group') {
           // group: items는 배열
-          node.children = item.props.items.map((child: any, childIndex: number) => {
+          const groupItems = (item.items as CanvasItem[]) || []
+          node.children = groupItems.map((child: CanvasItem, childIndex: number) => {
             // group 내 자식이 DB에 저장되어 있는지 확인
             const savedGroup = savedItems.find((s: any) => s.id === item.id)
-            const childIsSaved = !!savedGroup?.props?.items?.some((savedChild: any) => savedChild.id === child.id)
+            const savedGroupItems = (savedGroup?.items as CanvasItem[]) || []
+            const childIsSaved = !!savedGroupItems.some((savedChild: any) => savedChild.id === child.id)
 
             return {
               key: child.id,
@@ -389,20 +407,23 @@ const treeNodes = computed(() => {
           })
         } else if (item.type === 'grid') {
           // grid: items는 배열의 배열 (각 셀)
-          node.children = item.props.items
-            .map((cellItems: any[], cellIndex: number) => {
+          const gridItems = (item.items as CanvasItem[][]) || []
+          node.children = gridItems
+            .map((cellItems: CanvasItem[], cellIndex: number) => {
               if (!cellItems || cellItems.length === 0) return null
               const cellItem = cellItems[0] // 각 셀에는 하나만
+              if (!cellItem) return null
 
               // grid 셀 아이템이 DB에 저장되어 있는지 확인
               const savedGrid = savedItems.find((s: any) => s.id === item.id)
-              const cellIsSaved = !!savedGrid?.props?.items?.[cellIndex]?.some((savedCellItem: any) => savedCellItem.id === cellItem.id)
+              const savedGridItems = (savedGrid?.items as CanvasItem[][]) || []
+              const cellIsSaved = !!savedGridItems[cellIndex]?.some((savedCellItem: any) => savedCellItem.id === cellItem.id)
 
               return {
                 key: `${item.id}-cell-${cellIndex}`,
                 label: `셀 ${cellIndex + 1}: ${getComponentLabel(cellItem)}`,
                 icon: '', // PrimeVue 기본 아이콘 방지
-                data: { item: cellItem, cellIndex, parentIndex: index, pageId: page.id, type: cellItem.type, isSaved: cellIsSaved }
+                data: { item: cellItem, cellIndex, parentIndex: index, pageId: page.id, type: cellItem.type || '', isSaved: cellIsSaved }
               }
             })
             .filter(Boolean)
